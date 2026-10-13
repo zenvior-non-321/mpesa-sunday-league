@@ -863,8 +863,8 @@
             <form @submit.prevent="verifyAdminPassword()" class="space-y-4">
                 <div>
                     <label class="block text-xs font-bold uppercase text-gray-400 mb-2">Enter Passcode</label>
-                    <input type="password" x-model="adminPasswordInput" placeholder="Passcode: admin123" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-efootball-cyan">
-                    <p class="text-[11px] text-gray-500 mt-1">Default passcode: <code class="text-efootball-cyan">admin123</code></p>
+                    <input type="password" x-model="adminPasswordInput" placeholder="Enter passcode" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-efootball-cyan">
+                    
                 </div>
                 <div x-show="adminError" class="text-xs text-rose-400 font-semibold" x-text="adminError"></div>
                 
@@ -1197,6 +1197,7 @@
             return {
                 activeTab: 'table',
                 isAdmin: false,
+                isSuperAdmin: false,
                 openAdminModal: false,
                 adminPasswordInput: '',
                 adminError: '',
@@ -1387,14 +1388,15 @@
                 },
 
                 verifyAdminPassword() {
-                    if (this.adminPasswordInput === 'admin123' || this.adminPasswordInput === 'admin') {
+                    if (this.adminPasswordInput === 'msl2026' || this.adminPasswordInput === 'admin123') {
+                        this.isSuperAdmin = this.adminPasswordInput === 'msl2026';
                         this.isAdmin = true;
                         this.openAdminModal = false;
                         this.adminPasswordInput = '';
                         this.adminError = '';
-                        this.showToast('Admin Editing Mode Unlocked!');
+                        this.showToast(this.isSuperAdmin ? 'Super Admin Mode Unlocked!' : 'Admin Editing Mode Unlocked!');
                     } else {
-                        this.adminError = 'Incorrect passcode. Try "admin123"';
+                        this.adminError = 'Incorrect passcode.';
                     }
                 },
 
