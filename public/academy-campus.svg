@@ -1,0 +1,138 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1d63b8" />
+      <stop offset="40%" stop-color="#4a90e2" />
+      <stop offset="65%" stop-color="#8ec5fc" />
+      <stop offset="100%" stop-color="#d0e7ff" />
+    </linearGradient>
+    <linearGradient id="roofSteel" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3b444b" />
+      <stop offset="50%" stop-color="#5a6772" />
+      <stop offset="100%" stop-color="#2a3138" />
+    </linearGradient>
+    <linearGradient id="brickPavilion" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#a03b3b" />
+      <stop offset="100%" stop-color="#802626" />
+    </linearGradient>
+    <linearGradient id="creamStone" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#eae2cf" />
+      <stop offset="100%" stop-color="#d4cbb3" />
+    </linearGradient>
+    <linearGradient id="lawnGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1d3d19" />
+      <stop offset="40%" stop-color="#254e20" />
+      <stop offset="100%" stop-color="#0f240c" />
+    </linearGradient>
+    <linearGradient id="walkwayGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#8b4138" />
+      <stop offset="100%" stop-color="#5c261e" />
+    </linearGradient>
+    <linearGradient id="waterGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#00f0ff" />
+      <stop offset="100%" stop-color="#0984e3" />
+    </linearGradient>
+  </defs>
+
+  <!-- Sky -->
+  <rect x="0" y="0" width="1920" height="600" fill="url(#skyGrad)" />
+  <!-- Distant Clouds -->
+  <path d="M 100 120 Q 250 80 400 130 Q 550 170 700 120 Q 850 70 1000 110 Q 1200 160 1400 100 Q 1600 70 1800 130 L 1920 200 L 1920 0 L 0 0 Z" fill="#ffffff" opacity="0.25" />
+
+  <!-- Giant Solar Canopy Roof Structure -->
+  <polygon points="0,480 1920,480 1850,510 70,510" fill="url(#roofSteel)" />
+  <rect x="0" y="470" width="1920" height="25" fill="#323c46" />
+  
+  <!-- Roof Cantilever Truss Beams -->
+  <g stroke="#7b8a97" stroke-width="4" opacity="0.85">
+    <!-- Repeating diagonal cross-trusses -->
+    <path d="
+      M 50,510 L 90,600 M 90,510 L 50,600 M 130,510 L 170,600 M 170,510 L 130,600
+      M 210,510 L 250,600 M 250,510 L 210,600 M 290,510 L 330,600 M 330,510 L 290,600
+      M 370,510 L 410,600 M 410,510 L 370,600 M 450,510 L 490,600 M 490,510 L 450,600
+      M 530,510 L 570,600 M 570,510 L 530,600 M 610,510 L 650,600 M 650,510 L 610,600
+      M 690,510 L 730,600 M 730,510 L 690,600 M 770,510 L 810,600 M 810,510 L 770,600
+      M 850,510 L 890,600 M 890,510 L 850,600 M 930,510 L 970,600 M 970,510 L 930,600
+      M 1010,510 L 1050,600 M 1050,510 L 1010,600 M 1090,510 L 1130,600 M 1130,510 L 1090,600
+      M 1170,510 L 1210,600 M 1210,510 L 1170,600 M 1250,510 L 1290,600 M 1290,510 L 1250,600
+      M 1330,510 L 1370,600 M 1370,510 L 1330,600 M 1410,510 L 1450,600 M 1450,510 L 1410,600
+      M 1490,510 L 1530,600 M 1530,510 L 1490,600 M 1570,510 L 1610,600 M 1610,510 L 1570,600
+      M 1650,510 L 1690,600 M 1690,510 L 1650,600 M 1730,510 L 1770,600 M 1770,510 L 1730,600
+      M 1810,510 L 1850,600 M 1850,510 L 1810,600
+    " />
+  </g>
+
+  <!-- Main Building Facade Upper Level -->
+  <!-- Left Wing (Cream Stone Colonnade) -->
+  <rect x="50" y="590" width="560" height="190" fill="url(#creamStone)" />
+  <!-- Center Red Pavilion 1 (Left of Entrance) -->
+  <rect x="620" y="540" width="310" height="240" fill="url(#brickPavilion)" stroke="#5c1a1a" stroke-width="4" />
+  <!-- Center Main Portal / Breezeway -->
+  <rect x="930" y="580" width="80" height="200" fill="#1e1818" />
+  <!-- Center Red Pavilion 2 (Right of Entrance) -->
+  <rect x="1010" y="540" width="310" height="240" fill="url(#brickPavilion)" stroke="#5c1a1a" stroke-width="4" />
+  <!-- Right Wing (Cream Stone Colonnade) -->
+  <rect x="1330" y="590" width="550" height="190" fill="url(#creamStone)" />
+
+  <!-- Architectural Windows in Red Pavilions -->
+  <g fill="#213042" stroke="#ffffff" stroke-width="2">
+    <!-- Left Pavilion Windows -->
+    <rect x="645" y="590" width="45" height="55" />
+    <rect x="710" y="590" width="45" height="55" />
+    <rect x="775" y="590" width="45" height="55" />
+    <rect x="840" y="590" width="45" height="55" />
+    <rect x="645" y="690" width="45" height="65" />
+    <rect x="710" y="690" width="45" height="65" />
+    <rect x="775" y="690" width="45" height="65" />
+    <rect x="840" y="690" width="45" height="65" />
+
+    <!-- Right Pavilion Windows -->
+    <rect x="1035" y="590" width="45" height="55" />
+    <rect x="1100" y="590" width="45" height="55" />
+    <rect x="1165" y="590" width="45" height="55" />
+    <rect x="1230" y="590" width="45" height="55" />
+    <rect x="1035" y="690" width="45" height="65" />
+    <rect x="1100" y="690" width="45" height="65" />
+    <rect x="1165" y="690" width="45" height="65" />
+    <rect x="1230" y="690" width="45" height="65" />
+  </g>
+
+  <!-- Lower Colonnade Pillars & Shading -->
+  <g fill="#332c25" opacity="0.3">
+    <!-- Pillar Shadows -->
+    <rect x="90" y="640" width="18" height="140" />
+    <rect x="170" y="640" width="18" height="140" />
+    <rect x="250" y="640" width="18" height="140" />
+    <rect x="330" y="640" width="18" height="140" />
+    <rect x="410" y="640" width="18" height="140" />
+    <rect x="490" y="640" width="18" height="140" />
+    <rect x="570" y="640" width="18" height="140" />
+
+    <rect x="1370" y="640" width="18" height="140" />
+    <rect x="1450" y="640" width="18" height="140" />
+    <rect x="1530" y="640" width="18" height="140" />
+    <rect x="1610" y="640" width="18" height="140" />
+    <rect x="1690" y="640" width="18" height="140" />
+    <rect x="1770" y="640" width="18" height="140" />
+    <rect x="1850" y="640" width="18" height="140" />
+  </g>
+
+  <!-- Green Lawns & Foreground -->
+  <rect x="0" y="770" width="1920" height="310" fill="url(#lawnGrad)" />
+
+  <!-- Landscape Trees flanking sides -->
+  <g fill="#1a3d1b">
+    <circle cx="850" cy="670" r="70" opacity="0.85" />
+    <circle cx="1700" cy="740" r="110" opacity="0.9" />
+    <circle cx="150" cy="740" r="95" opacity="0.9" />
+  </g>
+
+  <!-- Central Paved Walkway leading to Entrance -->
+  <polygon points="930,770 1010,770 1090,1080 850,1080" fill="url(#walkwayGrad)" />
+
+  <!-- Center Fountain Pond -->
+  <polygon points="940,840 1000,840 1025,970 915,970" fill="url(#waterGrad)" opacity="0.8" />
+  <!-- Water Spout spray -->
+  <line x1="970" y1="895" x2="970" y2="820" stroke="#ffffff" stroke-width="4" stroke-linecap="round" />
+  <circle cx="970" cy="820" r="8" fill="#ffffff" opacity="0.8" />
+</svg>

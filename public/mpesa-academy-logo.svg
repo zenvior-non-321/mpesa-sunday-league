@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <defs>
+    <!-- Gradients -->
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a1f44" />
+      <stop offset="100%" stop-color="#051026" />
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffe600" />
+      <stop offset="100%" stop-color="#d4af37" />
+    </linearGradient>
+    <linearGradient id="greenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#43B02A" />
+      <stop offset="100%" stop-color="#2d821a" />
+    </linearGradient>
+    <filter id="dropGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+
+  <!-- Outer Rosette / Scalloped Crest Edge -->
+  <g filter="url(#dropGlow)">
+    <path d="M 250 15 
+             C 260 22, 275 22, 285 16 C 298 24, 312 26, 323 20 C 336 30, 349 34, 360 30 C 372 41, 384 47, 395 44 C 406 56, 417 64, 427 63 C 436 76, 446 86, 454 87 C 461 101, 469 113, 475 116 C 480 131, 485 145, 489 150 C 491 165, 493 181, 494 187 C 493 203, 492 219, 491 226 C 487 241, 483 257, 479 264 C 472 278, 465 293, 458 300 C 449 313, 439 326, 430 333 C 418 344, 406 355, 394 362 C 380 371, 366 380, 352 386 C 336 393, 321 400, 305 404 C 287 409, 270 414, 252 416 C 248 416, 230 414, 212 409 C 196 404, 181 398, 166 391 C 151 383, 137 375, 124 365 C 111 356, 99 346, 88 335 C 77 326, 68 314, 59 301 C 51 292, 44 278, 38 265 C 33 256, 29 242, 25 227 C 24 219, 23 203, 22 187 C 23 181, 25 165, 27 150 C 31 145, 36 131, 41 116 C 47 113, 55 101, 62 87 C 70 86, 80 76, 89 63 C 99 64, 110 56, 121 44 C 132 47, 144 41, 156 30 C 167 34, 180 30, 193 20 C 204 26, 218 24, 231 16 Z" 
+          fill="#0D2C54" stroke="#43B02A" stroke-width="6" />
+
+    <!-- Secondary Scallop ring -->
+    <circle cx="250" cy="225" r="205" fill="#0D2C54" stroke="#43B02A" stroke-width="4" stroke-dasharray="6,4" />
+
+    <!-- Inner White Medallion Ring -->
+    <circle cx="250" cy="225" r="192" fill="#ffffff" />
+    <circle cx="250" cy="225" r="182" fill="#0D2C54" />
+  </g>
+
+  <!-- Arched Upper Text: M-PESA FOUNDATION ACADEMY -->
+  <path id="textArcTop" d="M 95 240 A 162 162 0 0 1 405 240" fill="none" />
+  <text font-family="'Inter', sans-serif" font-weight="900" font-size="24" fill="#ffffff" letter-spacing="3.5">
+    <textPath href="#textArcTop" startOffset="50%" text-anchor="middle">
+      M-PESA FOUNDATION ACADEMY
+    </textPath>
+  </text>
+
+  <!-- Central Heraldic Shield -->
+  <g transform="translate(130, 95)">
+    <!-- Shield Outline & Background -->
+    <path d="M 120 10 L 225 35 C 225 125, 205 180, 120 230 C 35 180, 15 125, 15 35 Z" 
+          fill="url(#shieldGrad)" stroke="#43B02A" stroke-width="7" />
+    
+    <!-- Shield Cross Divider -->
+    <line x1="120" y1="18" x2="120" y2="150" stroke="#43B02A" stroke-width="4" />
+    <line x1="20" y1="95" x2="220" y2="95" stroke="#43B02A" stroke-width="4" />
+
+    <!-- Top Left: Thinker (Face silhouette in graduation mortarboard + question mark) -->
+    <g transform="translate(35, 30)">
+      <!-- Mortarboard Cap -->
+      <polygon points="45,15 15,28 45,38 75,28" fill="#ffffff" />
+      <rect x="38" y="37" width="14" height="7" fill="#ffffff" />
+      <!-- Silhouette Face Profile -->
+      <path d="M 45 44 C 38 46, 32 52, 33 60 C 35 68, 42 70, 44 76 C 45 80, 42 84, 38 88" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" />
+      <!-- Question mark dot -->
+      <circle cx="45" cy="78" r="3.5" fill="#ffffff" />
+    </g>
+
+    <!-- Top Right: Leader (Regal Lion profile) -->
+    <g transform="translate(135, 30)">
+      <!-- Lion Head Profile -->
+      <path d="M 65 38 C 58 30, 45 28, 35 34 C 28 39, 25 48, 22 55 C 18 63, 15 72, 22 78 C 30 84, 40 82, 48 85 C 55 88, 62 82, 68 74 C 74 65, 75 48, 65 38 Z" fill="#ffffff" />
+      <path d="M 40 45 C 36 50, 32 58, 35 64" stroke="#0D2C54" stroke-width="2.5" fill="none" />
+      <circle cx="48" cy="46" r="2.5" fill="#0D2C54" />
+      <!-- Mane streaks -->
+      <path d="M 60 48 Q 72 58 64 68 Q 68 76 56 80" stroke="#ffffff" stroke-width="3" fill="none" />
+    </g>
+
+    <!-- Bottom: Doers (Runner crossing ribbon & Graduate raising diploma + Trophy) -->
+    <g transform="translate(45, 105)">
+      <!-- Winner Trophy in Center -->
+      <path d="M 75 10 L 85 10 L 83 24 Q 80 32 75 32 Q 70 32 67 24 L 65 10 Z" fill="url(#goldGrad)" />
+      <rect x="73" y="32" width="4" height="12" fill="url(#goldGrad)" />
+      <rect x="68" y="44" width="14" height="4" fill="url(#goldGrad)" rx="1" />
+      <!-- Trophy Handles -->
+      <path d="M 65 14 Q 58 18 67 24" fill="none" stroke="#ffe600" stroke-width="2" />
+      <path d="M 85 14 Q 92 18 83 24" fill="none" stroke="#ffe600" stroke-width="2" />
+
+      <!-- Left Runner (Athlete) -->
+      <circle cx="32" cy="18" r="4.5" fill="#ffffff" />
+      <!-- Body & Running limbs -->
+      <path d="M 32 23 L 30 40 L 22 56 M 30 38 L 40 54 M 22 28 L 32 30 L 44 26" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" fill="none" />
+      <!-- Red Finish Line Ribbon -->
+      <path d="M 12 36 Q 30 42 55 36" stroke="#ff0033" stroke-width="3" fill="none" />
+
+      <!-- Right Graduate in Gown -->
+      <circle cx="118" cy="18" r="4.5" fill="#ffffff" />
+      <polygon points="118,12 110,16 118,19 126,16" fill="#ffffff" />
+      <!-- Robe & Arms raising diploma -->
+      <path d="M 118 23 L 110 55 L 126 55 Z" fill="#ffffff" />
+      <line x1="114" y1="28" x2="105" y2="16" stroke="#ffffff" stroke-width="3" stroke-linecap="round" />
+      <line x1="122" y1="28" x2="132" y2="16" stroke="#ffffff" stroke-width="3" stroke-linecap="round" />
+      <!-- Diploma scroll -->
+      <rect x="130" y="12" width="5" height="10" fill="#ffe600" rx="1" transform="rotate(20, 130, 12)" />
+    </g>
+  </g>
+
+  <!-- Supporting Hands Below Shield -->
+  <g transform="translate(100, 310)">
+    <!-- Left Hand & Suit Sleeve -->
+    <path d="M 15 70 L 50 60 L 75 60 C 95 62, 115 75, 140 76 C 146 76, 150 72, 145 68 C 135 60, 115 54, 95 52 L 60 50 L 15 56 Z" fill="#ffffff" stroke="#0D2C54" stroke-width="2" />
+    <path d="M 5 55 L 35 52 L 30 75 L 0 75 Z" fill="#0D2C54" />
+    <!-- Right Hand & Suit Sleeve -->
+    <path d="M 285 70 L 250 60 L 225 60 C 205 62, 185 75, 160 76 C 154 76, 150 72, 155 68 C 165 60, 185 54, 205 52 L 240 50 L 285 56 Z" fill="#ffffff" stroke="#0D2C54" stroke-width="2" />
+    <path d="M 295 55 L 265 52 L 270 75 L 300 75 Z" fill="#0D2C54" />
+  </g>
+
+  <!-- Motto Banner Ribbons: THINKERS • DOERS • LEADERS -->
+  <g transform="translate(60, 400)">
+    <!-- Banner 1: Thinkers -->
+    <g transform="translate(20, 10)">
+      <path d="M 0 5 L 85 0 L 95 24 L 10 28 Z" fill="#0D2C54" stroke="#43B02A" stroke-width="2.5" />
+      <text x="45" y="19" font-family="'Inter', sans-serif" font-weight="900" font-size="13" fill="#ffffff" text-anchor="middle" letter-spacing="1">THINKERS</text>
+    </g>
+    <!-- Banner 2: Doers -->
+    <g transform="translate(145, 15)">
+      <path d="M 0 0 L 90 0 L 85 25 L 5 25 Z" fill="#43B02A" stroke="#0D2C54" stroke-width="2.5" />
+      <text x="45" y="17" font-family="'Inter', sans-serif" font-weight="900" font-size="14" fill="#ffffff" text-anchor="middle" letter-spacing="1">DOERS</text>
+    </g>
+    <!-- Banner 3: Leaders -->
+    <g transform="translate(270, 10)">
+      <path d="M 10 0 L 95 5 L 85 28 L 0 24 Z" fill="#0D2C54" stroke="#43B02A" stroke-width="2.5" />
+      <text x="45" y="19" font-family="'Inter', sans-serif" font-weight="900" font-size="13" fill="#ffffff" text-anchor="middle" letter-spacing="1">LEADERS</text>
+    </g>
+  </g>
+</svg>
