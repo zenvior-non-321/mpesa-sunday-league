@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>M-Pesa Sunday League Hub</title>
+    <title>M-Pesa Sunday League Hub | Official eFootball Edition</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -12,60 +12,92 @@
             theme: {
                 extend: {
                     colors: {
-                        brand: {
-                            green: '#00D154',
-                            darkGreen: '#008a37',
-                            purple: '#38003c',
-                            purpleDark: '#240027',
-                            accent: '#00ff85',
-                            card: '#1e1b2e',
-                            border: '#2e2a45'
+                        efootball: {
+                            bg: '#090714',
+                            card: '#131024',
+                            cardLight: '#1d1936',
+                            border: '#2b254d',
+                            cyan: '#00f0ff',
+                            magenta: '#ff0077',
+                            yellow: '#ffe600',
+                            green: '#00ff85',
+                            purple: '#2a0845'
                         }
+                    },
+                    fontFamily: {
+                        header: ['Teko', 'sans-serif'],
+                        sans: ['Inter', 'sans-serif']
                     }
                 }
             }
         }
     </script>
-    <!-- Alpine.js for state management -->
+    <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Teko:wght@500;600;700&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Teko:wght@500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap');
-        
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #0f0c1b;
+            background-color: #090714;
             color: #f3f4f6;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(255, 0, 119, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(0, 240, 255, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(0, 255, 133, 0.03) 0%, transparent 60%);
+            background-attachment: fixed;
         }
         .font-header {
             font-family: 'Teko', sans-serif;
             letter-spacing: 0.5px;
         }
-        .custom-scrollbar::-webkit-scrollbar {
+        .efootball-card {
+            background: linear-gradient(135deg, rgba(19, 16, 36, 0.9) 0%, rgba(29, 25, 54, 0.8) 100%);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+        }
+        .efootball-glow-cyan {
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.25);
+        }
+        .efootball-glow-magenta {
+            box-shadow: 0 0 20px rgba(255, 0, 119, 0.25);
+        }
+        .efootball-glow-green {
+            box-shadow: 0 0 20px rgba(0, 255, 133, 0.25);
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
             width: 6px;
             height: 6px;
         }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #181528;
+        ::-webkit-scrollbar-track {
+            background: #090714;
         }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #38003c;
+        ::-webkit-scrollbar-thumb {
+            background: #2b254d;
             border-radius: 3px;
         }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #00D154;
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00f0ff;
         }
-        .glass-panel {
-            background: rgba(30, 27, 46, 0.75);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+        /* Visualizer Equalizer animation */
+        @keyframes eq-bar {
+            0%, 100% { height: 4px; }
+            50% { height: 16px; }
         }
+        .eq-bar-1 { animation: eq-bar 0.6s infinite ease-in-out; }
+        .eq-bar-2 { animation: eq-bar 0.8s infinite ease-in-out 0.2s; }
+        .eq-bar-3 { animation: eq-bar 0.5s infinite ease-in-out 0.4s; }
     </style>
 </head>
-<body x-data="leagueApp()" x-init="initApp()" class="min-h-screen flex flex-col bg-[#0f0c1b] text-gray-100 selection:bg-brand-green selection:text-black">
+<body x-data="leagueApp()" x-init="initApp()" class="min-h-screen flex flex-col text-gray-100 selection:bg-efootball-cyan selection:text-black">
 
-    <!-- Toast Notification Banner -->
+    <!-- Toast Popup Notification -->
     <div x-show="toast.show" 
          x-transition:enter="transition ease-out duration-300"
          x-transition:enter-start="opacity-0 translate-y-[-20px]"
@@ -73,58 +105,93 @@
          x-transition:leave="transition ease-in duration-200"
          x-transition:leave-start="opacity-100 translate-y-0"
          x-transition:leave-end="opacity-0 translate-y-[-20px]"
-         class="fixed top-5 right-5 z-50 bg-brand-green text-black px-5 py-3 rounded-xl shadow-2xl font-bold flex items-center gap-2 border border-emerald-300">
+         class="fixed top-5 right-5 z-50 bg-efootball-cyan text-black px-5 py-3 rounded-xl shadow-2xl font-bold flex items-center gap-2 border border-cyan-200">
         <i data-lucide="check-circle-2" class="w-5 h-5"></i>
         <span x-text="toast.message"></span>
     </div>
 
-    <!-- Top Navigation Header -->
-    <header class="sticky top-0 z-40 bg-brand-purpleDark/95 backdrop-blur-md border-b border-brand-border">
+    <!-- Header Navigation & Audio Player Bar -->
+    <header class="sticky top-0 z-40 bg-[#090714]/90 backdrop-blur-md border-b border-efootball-border">
+        <!-- Top Track Player Bar -->
+        <div class="bg-gradient-to-r from-efootball-purple via-[#131024] to-efootball-purple border-b border-efootball-border/50 py-1.5 px-4 sm:px-8">
+            <div class="max-w-7xl mx-auto flex items-center justify-between gap-4 text-xs">
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-1">
+                        <span class="w-2 h-2 rounded-full bg-efootball-cyan animate-pulse"></span>
+                        <span class="font-bold text-efootball-cyan tracking-wider uppercase text-[10px]">eFootball Soundtrack</span>
+                    </div>
+                    <span class="text-gray-400 truncate hidden md:inline" x-text="audioTracks[currentTrackIndex].title"></span>
+                </div>
+
+                <!-- Audio Controls -->
+                <div class="flex items-center gap-3">
+                    <div class="flex items-end gap-0.5 h-4 w-6 px-1" x-show="isPlayingMusic">
+                        <span class="w-1 bg-efootball-cyan rounded-full eq-bar-1"></span>
+                        <span class="w-1 bg-efootball-magenta rounded-full eq-bar-2"></span>
+                        <span class="w-1 bg-efootball-green rounded-full eq-bar-3"></span>
+                    </div>
+
+                    <button @click="toggleMusic()" class="p-1.5 bg-efootball-border/60 hover:bg-efootball-cyan hover:text-black rounded-lg transition text-efootball-cyan flex items-center gap-1 font-semibold text-[11px]">
+                        <i :data-lucide="isPlayingMusic ? 'pause' : 'play'" class="w-3.5 h-3.5"></i>
+                        <span x-text="isPlayingMusic ? 'Pause PES Music' : 'Play PES Music'"></span>
+                    </button>
+
+                    <button @click="nextTrack()" class="p-1.5 bg-efootball-border/40 hover:bg-efootball-border text-gray-300 rounded-lg transition" title="Next Soundtrack Track">
+                        <i data-lucide="skip-forward" class="w-3.5 h-3.5"></i>
+                    </button>
+
+                    <div class="hidden sm:flex items-center gap-2 pl-2 border-l border-efootball-border/60">
+                        <i data-lucide="volume-2" class="w-3.5 h-3.5 text-gray-400"></i>
+                        <input type="range" min="0" max="1" step="0.05" x-model.number="musicVolume" @input="updateVolume()" class="w-16 h-1 bg-efootball-border rounded-lg appearance-none cursor-pointer accent-efootball-cyan">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Navbar -->
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-20">
-                <!-- Logo & Brand Title -->
+                <!-- Branding -->
                 <div class="flex items-center gap-3 cursor-pointer" @click="activeTab = 'table'">
-                    <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-brand-green to-emerald-300 flex items-center justify-center text-brand-purple font-black text-2xl shadow-lg shadow-brand-green/20 transform hover:scale-105 transition-transform">
+                    <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-efootball-cyan via-emerald-400 to-efootball-magenta flex items-center justify-center text-black font-black text-2xl shadow-lg shadow-efootball-cyan/20">
                         M
                     </div>
                     <div>
                         <div class="flex items-center gap-2">
-                            <h1 class="font-header text-3xl font-bold tracking-wider leading-none text-white uppercase">M-Pesa <span class="text-brand-green">Sunday</span> League</h1>
-                            <span class="text-[10px] bg-brand-green/20 text-brand-green border border-brand-green/30 px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider">Official Hub</span>
+                            <h1 class="font-header text-3xl font-bold tracking-wider leading-none text-white uppercase">M-Pesa <span class="text-efootball-cyan">Sunday</span> League</h1>
+                            <span class="text-[10px] bg-efootball-cyan/20 text-efootball-cyan border border-efootball-cyan/30 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">PES Hub</span>
                         </div>
-                        <p class="text-xs text-gray-400 font-medium">School Football Championship 2026</p>
+                        <p class="text-xs text-gray-400 font-medium">Official School League & Tournament Portal</p>
                     </div>
                 </div>
 
-                <!-- Admin Status / Toggle Button -->
+                <!-- Admin Controller -->
                 <div class="flex items-center gap-3">
                     <template x-if="isAdmin">
-                        <div class="flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 text-amber-400 px-3 py-1.5 rounded-lg text-xs font-semibold">
-                            <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
-                            <span>ADMIN EDITING ACTIVE</span>
-                            <button @click="toggleAdmin()" class="ml-2 hover:bg-amber-500/20 p-1 rounded transition text-amber-300" title="Exit Admin Mode">
-                                <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
-                            </button>
+                        <div class="flex items-center gap-2 bg-amber-500/10 border border-amber-500/40 text-amber-300 px-3.5 py-1.5 rounded-xl text-xs font-bold">
+                            <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping"></span>
+                            <span>ADMIN EDIT UNLOCKED</span>
+                            <button @click="toggleAdmin()" class="ml-2 bg-amber-500/20 hover:bg-amber-500/40 px-2 py-0.5 rounded-lg text-amber-100 transition">Exit</button>
                         </div>
                     </template>
                     <template x-if="!isAdmin">
-                        <button @click="openAdminModal = true" class="flex items-center gap-2 bg-brand-purple border border-brand-border hover:border-brand-green text-gray-200 hover:text-brand-green px-4 py-2 rounded-xl text-xs font-semibold transition-all shadow-sm">
+                        <button @click="openAdminModal = true" class="flex items-center gap-2 bg-gradient-to-r from-efootball-cyan/20 to-efootball-green/20 hover:from-efootball-cyan hover:to-efootball-green hover:text-black border border-efootball-cyan/40 text-efootball-cyan px-4 py-2 rounded-xl text-xs font-bold transition shadow-lg">
                             <i data-lucide="lock" class="w-3.5 h-3.5"></i>
-                            <span>Admin Login</span>
+                            <span>Admin Unlock</span>
                         </button>
                     </template>
                 </div>
             </div>
 
-            <!-- Navigation Bar Tabs -->
-            <nav class="flex space-x-1 sm:space-x-2 overflow-x-auto custom-scrollbar pb-2 pt-1 border-t border-brand-border/40">
+            <!-- Navigation Tabs -->
+            <nav class="flex space-x-1 sm:space-x-2 overflow-x-auto custom-scrollbar pb-3 pt-1 border-t border-efootball-border/50">
                 <template x-for="tab in tabs" :key="tab.id">
                     <button 
                         @click="activeTab = tab.id"
                         :class="activeTab === tab.id 
-                            ? 'bg-brand-green text-black font-bold shadow-lg shadow-brand-green/20' 
-                            : 'text-gray-300 hover:bg-brand-purple/60 hover:text-white font-medium'"
-                        class="flex items-center gap-2 px-4 py-2 rounded-lg text-xs sm:text-sm whitespace-nowrap transition-all duration-200">
+                            ? 'bg-gradient-to-r from-efootball-cyan to-emerald-400 text-black font-extrabold shadow-lg shadow-efootball-cyan/20' 
+                            : 'text-gray-300 hover:bg-efootball-cardLight hover:text-white font-medium'"
+                        class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm whitespace-nowrap transition-all duration-200 uppercase tracking-wide">
                         <i :data-lucide="tab.icon" class="w-4 h-4"></i>
                         <span x-text="tab.name"></span>
                     </button>
@@ -135,38 +202,72 @@
 
     <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
 
-        <!-- Top League Banner -->
-        <div class="bg-gradient-to-r from-brand-purple via-brand-card to-brand-purpleDark rounded-2xl p-4 border border-brand-border flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xl">
-            <div class="flex items-center gap-3">
-                <span class="bg-brand-green text-black px-2.5 py-1 rounded text-xs font-black uppercase tracking-wider">Next Up</span>
-                <p class="text-sm font-medium text-gray-200">
-                    <span class="text-brand-green font-bold">Matchweek 1</span> starts <span class="font-semibold text-white">Sunday, Nov 1st</span> at School Pitch!
-                </p>
-            </div>
-            <div class="flex items-center gap-4 text-xs text-gray-400">
-                <div class="flex items-center gap-1.5"><i data-lucide="map-pin" class="w-3.5 h-3.5 text-brand-green"></i> School Pitch</div>
-                <div class="flex items-center gap-1.5"><i data-lucide="clock" class="w-3.5 h-3.5 text-brand-green"></i> Kickoffs 2:00 PM & 4:00 PM</div>
+        <!-- HERO BANNER: MATCHWEEK 1 COUNTDOWN TIMER -->
+        <div class="efootball-card rounded-3xl p-6 md:p-8 border border-efootball-border relative overflow-hidden shadow-2xl">
+            <!-- Glowing Background Orbs -->
+            <div class="absolute -right-20 -top-20 w-80 h-80 bg-efootball-cyan/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -left-20 -bottom-20 w-80 h-80 bg-efootball-magenta/10 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+                <!-- Banner Left: Matchweek 1 Info -->
+                <div class="space-y-3 max-w-xl">
+                    <div class="flex items-center gap-2">
+                        <span class="bg-gradient-to-r from-efootball-magenta to-rose-600 text-white text-[11px] font-black uppercase px-3 py-1 rounded-full tracking-wider shadow">Season Kickoff</span>
+                        <span class="text-xs text-efootball-cyan font-semibold flex items-center gap-1"><i data-lucide="map-pin" class="w-3.5 h-3.5"></i> School Pitch</span>
+                    </div>
+                    <h2 class="font-header text-4xl sm:text-5xl font-black text-white uppercase tracking-wider leading-none">
+                        MATCHWEEK 1 <span class="text-transparent bg-clip-text bg-gradient-to-r from-efootball-cyan via-emerald-300 to-efootball-green">SUNDAY NOV 1ST</span>
+                    </h2>
+                    <p class="text-sm text-gray-300">Opening clashes kick off at 2:00 PM & 4:00 PM. Samba Boys take on Grade 10 A in the blockbuster opener!</p>
+
+                    <div class="flex items-center gap-4 text-xs text-gray-400 pt-1">
+                        <div class="flex items-center gap-1.5"><i data-lucide="clock" class="w-4 h-4 text-efootball-cyan"></i> 2:00 PM & 4:00 PM Kickoffs</div>
+                        <div class="flex items-center gap-1.5"><i data-lucide="shield" class="w-4 h-4 text-efootball-magenta"></i> 5 League Clubs</div>
+                    </div>
+                </div>
+
+                <!-- Banner Right: Live Ticking Countdown Box -->
+                <div class="bg-efootball-bg/80 border border-efootball-border rounded-2xl p-5 shadow-2xl flex flex-col items-center justify-center min-w-[280px]">
+                    <span class="text-xs text-gray-400 font-bold uppercase tracking-wider mb-3 flex items-center gap-1">
+                        <i data-lucide="timer" class="w-4 h-4 text-efootball-yellow"></i> Countdown To Kickoff
+                    </span>
+
+                    <div class="grid grid-cols-4 gap-2 text-center w-full">
+                        <div class="bg-efootball-card p-2.5 rounded-xl border border-efootball-border">
+                            <span class="font-header text-3xl md:text-4xl font-black text-efootball-cyan block leading-none" x-text="countdown.days">00</span>
+                            <span class="text-[9px] font-bold text-gray-400 uppercase">Days</span>
+                        </div>
+                        <div class="bg-efootball-card p-2.5 rounded-xl border border-efootball-border">
+                            <span class="font-header text-3xl md:text-4xl font-black text-white block leading-none" x-text="countdown.hours">00</span>
+                            <span class="text-[9px] font-bold text-gray-400 uppercase">Hours</span>
+                        </div>
+                        <div class="bg-efootball-card p-2.5 rounded-xl border border-efootball-border">
+                            <span class="font-header text-3xl md:text-4xl font-black text-white block leading-none" x-text="countdown.minutes">00</span>
+                            <span class="text-[9px] font-bold text-gray-400 uppercase">Mins</span>
+                        </div>
+                        <div class="bg-efootball-card p-2.5 rounded-xl border border-efootball-border">
+                            <span class="font-header text-3xl md:text-4xl font-black text-efootball-magenta block leading-none" x-text="countdown.seconds">00</span>
+                            <span class="text-[9px] font-bold text-gray-400 uppercase">Secs</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- TAB 1: STANDINGS TABLE -->
+        <!-- TAB 1: LEAGUE TABLE -->
         <section x-show="activeTab === 'table'" x-transition:enter="transition ease-out duration-200" class="space-y-6">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 class="font-header text-4xl font-bold text-white uppercase tracking-wide">League Standings</h2>
-                    <p class="text-sm text-gray-400">Recalculated automatically when scores are saved</p>
-                </div>
-                <div class="flex items-center gap-2 text-xs text-gray-400 bg-brand-card px-3 py-1.5 rounded-lg border border-brand-border">
-                    <span class="w-2 h-2 rounded-full bg-brand-green"></span>
-                    <span>Win = 3pts | Draw = 1pt | Loss = 0pt</span>
+                    <h2 class="font-header text-4xl font-bold text-white uppercase tracking-wide">Official League Table</h2>
+                    <p class="text-sm text-gray-400">3-1-0 Point system automatically updating with match score entries</p>
                 </div>
             </div>
 
-            <div class="glass-panel rounded-2xl overflow-hidden shadow-2xl border border-brand-border">
+            <div class="efootball-card rounded-2xl overflow-hidden shadow-2xl border border-efootball-border">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="bg-brand-purpleDark/80 text-xs font-bold text-gray-400 uppercase border-b border-brand-border">
+                            <tr class="bg-efootball-bg/90 text-xs font-bold text-gray-400 uppercase border-b border-efootball-border">
                                 <th class="py-4 px-4 text-center w-12">Pos</th>
                                 <th class="py-4 px-6">Club</th>
                                 <th class="py-4 px-3 text-center">MP</th>
@@ -176,25 +277,30 @@
                                 <th class="py-4 px-3 text-center hidden md:table-cell">GF</th>
                                 <th class="py-4 px-3 text-center hidden md:table-cell">GA</th>
                                 <th class="py-4 px-3 text-center">GD</th>
-                                <th class="py-4 px-4 text-center font-black text-brand-green">Pts</th>
+                                <th class="py-4 px-4 text-center font-black text-efootball-cyan">Pts</th>
                                 <th class="py-4 px-4 text-center hidden lg:table-cell">Form</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-brand-border/50 text-sm font-medium">
+                        <tbody class="divide-y divide-efootball-border/50 text-sm font-medium">
                             <template x-for="(team, index) in sortedStandings" :key="team.id">
-                                <tr class="hover:bg-brand-purple/40 transition-colors group">
+                                <tr class="hover:bg-efootball-cardLight/60 transition-colors group">
                                     <td class="py-4 px-4 text-center font-bold">
                                         <span x-text="index + 1" :class="{
-                                            'text-brand-green font-extrabold': index === 0,
+                                            'text-efootball-cyan font-black text-base': index === 0,
                                             'text-gray-400': index !== 0
                                         }"></span>
                                     </td>
                                     <td class="py-4 px-6">
                                         <div class="flex items-center gap-3">
-                                            <div class="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs text-white shadow-md border border-white/10" :style="`background-color: ${team.color}`" x-text="team.shortCode"></div>
+                                            <!-- Team Custom Color & Kit Badge -->
+                                            <div class="w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs text-white shadow border border-white/20 relative overflow-hidden" :style="`background-color: ${team.color}`">
+                                                <span x-text="team.shortCode"></span>
+                                                <div x-show="team.kitPattern === 'stripes'" class="absolute inset-0 bg-white/20 pointer-events-none" style="background: repeating-linear-gradient(90deg, transparent, transparent 4px, rgba(255,255,255,0.3) 4px, rgba(255,255,255,0.3) 8px);"></div>
+                                                <div x-show="team.kitPattern === 'hoops'" class="absolute inset-0 bg-white/20 pointer-events-none" style="background: repeating-linear-gradient(0deg, transparent, transparent 4px, rgba(255,255,255,0.3) 4px, rgba(255,255,255,0.3) 8px);"></div>
+                                            </div>
                                             <div>
-                                                <span class="font-bold text-white group-hover:text-brand-green transition-colors" x-text="team.name"></span>
-                                                <span x-show="index === 0" class="ml-2 text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded font-bold">LEADERS</span>
+                                                <span class="font-bold text-white group-hover:text-efootball-cyan transition-colors" x-text="team.name"></span>
+                                                <span x-show="index === 0" class="ml-2 text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded font-bold">1ST PLACE</span>
                                             </div>
                                         </div>
                                     </td>
@@ -205,7 +311,7 @@
                                     <td class="py-4 px-3 text-center text-gray-400 hidden md:table-cell" x-text="team.gf"></td>
                                     <td class="py-4 px-3 text-center text-gray-400 hidden md:table-cell" x-text="team.ga"></td>
                                     <td class="py-4 px-3 text-center font-bold" :class="team.gd > 0 ? 'text-emerald-400' : (team.gd < 0 ? 'text-rose-400' : 'text-gray-400')" x-text="(team.gd > 0 ? '+' : '') + team.gd"></td>
-                                    <td class="py-4 px-4 text-center font-black text-base text-brand-green bg-brand-green/5" x-text="team.pts"></td>
+                                    <td class="py-4 px-4 text-center font-black text-base text-efootball-cyan bg-efootball-cyan/5" x-text="team.pts"></td>
                                     <td class="py-4 px-4 text-center hidden lg:table-cell">
                                         <div class="flex items-center justify-center gap-1">
                                             <template x-for="result in team.form" :key="Math.random()">
@@ -214,7 +320,7 @@
                                                         'bg-emerald-500': result === 'W',
                                                         'bg-amber-500': result === 'D',
                                                         'bg-rose-500': result === 'L',
-                                                        'bg-gray-700': result === '-'
+                                                        'bg-gray-800': result === '-'
                                                     }" x-text="result"></span>
                                             </template>
                                         </div>
@@ -227,20 +333,114 @@
             </div>
         </section>
 
-        <!-- TAB 2: FIXTURES & MATCHES -->
+        <!-- TAB 2: TOP SCORERS & STATS LEADERBOARD -->
+        <section x-show="activeTab === 'stats'" x-transition:enter="transition ease-out duration-200" class="space-y-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h2 class="font-header text-4xl font-bold text-white uppercase tracking-wide">Player Stats Leaderboard</h2>
+                    <p class="text-sm text-gray-400">Golden Boot race, top playmakers, clean sheets, and discipline records</p>
+                </div>
+                <template x-if="isAdmin">
+                    <button @click="openAddPlayerStatModal()" class="flex items-center gap-2 bg-efootball-cyan text-black font-bold px-4 py-2 rounded-xl text-xs hover:bg-cyan-300 transition shadow-lg">
+                        <i data-lucide="user-plus" class="w-4 h-4"></i>
+                        <span>Add / Edit Player Stat Record</span>
+                    </button>
+                </template>
+            </div>
+
+            <!-- Top 3 Golden Boot Highlight Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <template x-for="(topPlayer, idx) in sortedScorers.slice(0, 3)" :key="topPlayer.id">
+                    <div class="efootball-card rounded-2xl p-5 border border-efootball-border space-y-4 relative overflow-hidden group">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-black px-2.5 py-1 rounded-full uppercase"
+                                :class="{
+                                    'bg-amber-400/20 text-amber-300 border border-amber-400/40': idx === 0,
+                                    'bg-slate-300/20 text-slate-200 border border-slate-300/40': idx === 1,
+                                    'bg-amber-700/20 text-amber-500 border border-amber-700/40': idx === 2
+                                }" x-text="'#' + (idx + 1) + ' Golden Boot Contender'"></span>
+                            <i data-lucide="award" class="w-5 h-5 text-efootball-yellow"></i>
+                        </div>
+
+                        <div class="flex items-center gap-4">
+                            <div class="w-14 h-14 rounded-2xl bg-efootball-cardLight border border-efootball-border flex items-center justify-center font-header text-3xl font-black text-efootball-cyan shrink-0" x-text="topPlayer.goals"></div>
+                            <div>
+                                <h3 class="font-bold text-lg text-white group-hover:text-efootball-cyan transition-colors" x-text="topPlayer.name"></h3>
+                                <p class="text-xs text-gray-400" x-text="getTeamName(topPlayer.teamId) + ' • ' + (topPlayer.position || 'FWD')"></p>
+                            </div>
+                        </div>
+
+                        <div class="pt-3 border-t border-efootball-border/50 flex justify-between text-xs text-gray-400">
+                            <span>Assists: <strong class="text-white" x-text="topPlayer.assists"></strong></span>
+                            <span>Matches: <strong class="text-white" x-text="topPlayer.matches"></strong></span>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Full Stats Table -->
+            <div class="efootball-card rounded-2xl overflow-hidden border border-efootball-border shadow-2xl">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-efootball-bg/90 text-xs font-bold text-gray-400 uppercase border-b border-efootball-border">
+                                <th class="py-4 px-6">Player</th>
+                                <th class="py-4 px-4">Club</th>
+                                <th class="py-4 px-3 text-center">Pos</th>
+                                <th class="py-4 px-3 text-center font-bold text-efootball-yellow">Goals</th>
+                                <th class="py-4 px-3 text-center text-efootball-cyan font-bold">Assists</th>
+                                <th class="py-4 px-3 text-center text-emerald-400">Clean Sheets</th>
+                                <th class="py-4 px-3 text-center text-amber-400">Yellows</th>
+                                <th class="py-4 px-3 text-center text-rose-500">Reds</th>
+                                <template x-if="isAdmin"><th class="py-4 px-4 text-right">Edit</th></template>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-efootball-border/50 text-sm font-medium">
+                            <template x-for="p in playerStatsList" :key="p.id">
+                                <tr class="hover:bg-efootball-cardLight/50 transition-colors">
+                                    <td class="py-4 px-6 font-bold text-white" x-text="p.name"></td>
+                                    <td class="py-4 px-4">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-3.5 h-3.5 rounded" :style="`background-color: ${getTeam(p.teamId).color}`"></div>
+                                            <span class="text-xs text-gray-300 font-semibold" x-text="getTeamName(p.teamId)"></span>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-3 text-center text-xs font-mono text-gray-400" x-text="p.position || 'FWD'"></td>
+                                    <td class="py-4 px-3 text-center font-black text-base text-efootball-yellow" x-text="p.goals"></td>
+                                    <td class="py-4 px-3 text-center font-bold text-efootball-cyan" x-text="p.assists"></td>
+                                    <td class="py-4 px-3 text-center text-emerald-400" x-text="p.cleanSheets || 0"></td>
+                                    <td class="py-4 px-3 text-center text-amber-400 font-bold" x-text="p.yellowCards || 0"></td>
+                                    <td class="py-4 px-3 text-center text-rose-500 font-bold" x-text="p.redCards || 0"></td>
+                                    <template x-if="isAdmin">
+                                        <td class="py-4 px-4 text-right">
+                                            <button @click="editPlayerStat(p)" class="text-efootball-cyan hover:text-white p-1" title="Edit Player Stats">
+                                                <i data-lucide="edit" class="w-4 h-4"></i>
+                                            </button>
+                                        </td>
+                                    </template>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: FIXTURES & MATCHES -->
         <section x-show="activeTab === 'fixtures'" x-transition:enter="transition ease-out duration-200" class="space-y-6">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 class="font-header text-4xl font-bold text-white uppercase tracking-wide">Fixtures & Results</h2>
-                    <p class="text-sm text-gray-400">Match dates, kickoff times, pitches and scores (All editable by Admin)</p>
+                    <h2 class="font-header text-4xl font-bold text-white uppercase tracking-wide">Fixtures & Results Schedule</h2>
+                    <p class="text-sm text-gray-400">Weekends schedule starting Sunday, Nov 1st (Full editing in Admin Mode)</p>
                 </div>
-                <!-- Week Filter -->
+
+                <!-- Matchweek Filter -->
                 <div class="flex items-center gap-2 overflow-x-auto pb-2 custom-scrollbar">
-                    <button @click="selectedWeekFilter = 'ALL'" :class="selectedWeekFilter === 'ALL' ? 'bg-brand-green text-black font-bold' : 'bg-brand-card text-gray-400 border border-brand-border hover:text-white'" class="px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition">
+                    <button @click="selectedWeekFilter = 'ALL'" :class="selectedWeekFilter === 'ALL' ? 'bg-efootball-cyan text-black font-extrabold' : 'bg-efootball-card text-gray-400 border border-efootball-border hover:text-white'" class="px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition">
                         All Weeks
                     </button>
                     <template x-for="week in 10" :key="week">
-                        <button @click="selectedWeekFilter = week" :class="selectedWeekFilter === week ? 'bg-brand-green text-black font-bold' : 'bg-brand-card text-gray-400 border border-brand-border hover:text-white'" class="px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition">
+                        <button @click="selectedWeekFilter = week" :class="selectedWeekFilter === week ? 'bg-efootball-cyan text-black font-extrabold' : 'bg-efootball-card text-gray-400 border border-efootball-border hover:text-white'" class="px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition">
                             <span x-text="'MW ' + week"></span>
                         </button>
                     </template>
@@ -249,78 +449,74 @@
 
             <div class="space-y-8">
                 <template x-for="weekNum in filteredMatchweeks" :key="weekNum">
-                    <div class="glass-panel rounded-2xl p-6 border border-brand-border space-y-4">
-                        <div class="flex items-center justify-between border-b border-brand-border/60 pb-3">
+                    <div class="efootball-card rounded-2xl p-6 border border-efootball-border space-y-4">
+                        <div class="flex items-center justify-between border-b border-efootball-border/60 pb-3">
                             <div class="flex items-center gap-3">
-                                <span class="bg-brand-purple text-brand-green font-header text-2xl font-bold px-3 py-0.5 rounded-lg border border-brand-border" x-text="'MATCHWEEK ' + weekNum"></span>
-                                <span class="text-xs text-gray-400 font-semibold" x-text="getWeekDateDisplay(weekNum)"></span>
+                                <span class="bg-efootball-purple text-efootball-cyan font-header text-2xl font-bold px-3 py-0.5 rounded-lg border border-efootball-border" x-text="'MATCHWEEK ' + weekNum"></span>
+                                <span class="text-xs text-gray-300 font-semibold" x-text="getWeekDateDisplay(weekNum)"></span>
                             </div>
-                            <div class="text-xs bg-brand-purpleDark/80 border border-brand-border text-gray-300 px-3 py-1 rounded-full flex items-center gap-1.5">
+                            <div class="text-xs bg-efootball-bg border border-efootball-border text-gray-300 px-3 py-1 rounded-full flex items-center gap-1.5">
                                 <i data-lucide="coffee" class="w-3.5 h-3.5 text-amber-400"></i>
                                 <span>Resting Team: <strong class="text-white" x-text="getRestingTeam(weekNum)"></strong></span>
                             </div>
                         </div>
 
-                        <!-- Match Card -->
+                        <!-- Match Cards Grid -->
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                             <template x-for="match in getMatchesByWeek(weekNum)" :key="match.id">
-                                <div class="bg-brand-purpleDark/60 rounded-xl p-4 border border-brand-border hover:border-brand-purple transition-all flex flex-col justify-between space-y-3">
-                                    <div class="flex items-center justify-between text-xs text-gray-400 border-b border-brand-border/30 pb-2">
+                                <div class="bg-efootball-bg/80 rounded-xl p-4 border border-efootball-border hover:border-efootball-cyan transition-all flex flex-col justify-between space-y-3">
+                                    <div class="flex items-center justify-between text-xs text-gray-400 border-b border-efootball-border/40 pb-2">
                                         <div class="flex items-center gap-2">
-                                            <i data-lucide="calendar-clock" class="w-3.5 h-3.5 text-brand-green"></i>
+                                            <i data-lucide="calendar" class="w-3.5 h-3.5 text-efootball-cyan"></i>
                                             <span class="font-semibold text-gray-200" x-text="(match.date || getWeekDateDisplay(match.matchweek)) + ' • ' + match.time"></span>
                                         </div>
-                                        <span class="flex items-center gap-1"><i data-lucide="map-pin" class="w-3 h-3 text-brand-green"></i> <span x-text="match.venue"></span></span>
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase" :class="match.completed ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'" x-text="match.completed ? 'FINAL SCORE' : 'UPCOMING'"></span>
+                                        <span class="flex items-center gap-1"><i data-lucide="map-pin" class="w-3 h-3 text-efootball-magenta"></i> <span x-text="match.venue"></span></span>
+                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider" 
+                                              :class="{
+                                                  'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40': match.status === 'FINISHED',
+                                                  'bg-rose-500/20 text-rose-400 border border-rose-500/40 animate-pulse': match.status === 'LIVE',
+                                                  'bg-amber-500/20 text-amber-400 border border-amber-500/40': match.status === 'UPCOMING'
+                                              }" x-text="match.status"></span>
                                     </div>
 
-                                    <!-- Teams and Score Display -->
+                                    <!-- Score Display -->
                                     <div class="flex items-center justify-between py-2 px-2">
-                                        <!-- Home Team -->
                                         <div class="flex items-center gap-3 w-5/12">
-                                            <div class="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs text-white shrink-0 shadow border border-white/10" :style="`background-color: ${getTeam(match.homeId).color}`" x-text="getTeam(match.homeId).shortCode"></div>
+                                            <div class="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs text-white shrink-0 shadow border border-white/20" :style="`background-color: ${getTeam(match.homeId).color}`" x-text="getTeam(match.homeId).shortCode"></div>
                                             <span class="font-bold text-sm text-white truncate" x-text="getTeam(match.homeId).name"></span>
                                         </div>
 
-                                        <!-- Score or VS -->
                                         <div class="flex items-center justify-center w-2/12">
-                                            <template x-if="match.completed">
-                                                <div class="flex items-center gap-2 bg-brand-card border border-brand-border px-3 py-1 rounded-lg">
+                                            <template x-if="match.status !== 'UPCOMING'">
+                                                <div class="flex items-center gap-2 bg-efootball-card border border-efootball-border px-3 py-1 rounded-lg">
                                                     <span class="text-lg font-black text-white" x-text="match.homeScore"></span>
                                                     <span class="text-gray-500 text-xs font-bold">-</span>
                                                     <span class="text-lg font-black text-white" x-text="match.awayScore"></span>
                                                 </div>
                                             </template>
-                                            <template x-if="!match.completed">
-                                                <span class="text-xs font-black text-gray-500 bg-brand-card px-2.5 py-1 rounded border border-brand-border uppercase">VS</span>
+                                            <template x-if="match.status === 'UPCOMING'">
+                                                <span class="text-xs font-black text-efootball-cyan bg-efootball-card px-2.5 py-1 rounded border border-efootball-border uppercase">VS</span>
                                             </template>
                                         </div>
 
-                                        <!-- Away Team -->
                                         <div class="flex items-center justify-end gap-3 w-5/12 text-right">
                                             <span class="font-bold text-sm text-white truncate" x-text="getTeam(match.awayId).name"></span>
-                                            <div class="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs text-white shrink-0 shadow border border-white/10" :style="`background-color: ${getTeam(match.awayId).color}`" x-text="getTeam(match.awayId).shortCode"></div>
+                                            <div class="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs text-white shrink-0 shadow border border-white/20" :style="`background-color: ${getTeam(match.awayId).color}`" x-text="getTeam(match.awayId).shortCode"></div>
                                         </div>
                                     </div>
 
-                                    <!-- Scorer details if present -->
-                                    <template x-if="match.completed && match.scorers">
-                                        <div class="text-xs text-gray-400 bg-brand-card/50 p-2 rounded border border-brand-border/40 flex items-center gap-2">
-                                            <i data-lucide="futbol" class="w-3.5 h-3.5 text-brand-green shrink-0"></i>
+                                    <template x-if="match.scorers">
+                                        <div class="text-xs text-gray-300 bg-efootball-card/60 p-2 rounded-lg border border-efootball-border/50 flex items-center gap-2">
+                                            <i data-lucide="futbol" class="w-3.5 h-3.5 text-efootball-yellow shrink-0"></i>
                                             <span class="italic truncate" x-text="match.scorers"></span>
                                         </div>
                                     </template>
 
-                                    <!-- Admin Controls for Score and Fixture Date/Time -->
                                     <template x-if="isAdmin">
-                                        <div class="pt-2 border-t border-brand-border/40 flex items-center justify-end gap-2">
-                                            <button @click="editMatchDetails(match)" class="flex items-center gap-1.5 text-xs bg-brand-purple hover:bg-brand-purple/80 text-gray-200 border border-brand-border px-3 py-1 rounded-lg transition font-semibold">
-                                                <i data-lucide="calendar" class="w-3 h-3 text-brand-green"></i>
-                                                <span>Edit Date/Venue</span>
-                                            </button>
-                                            <button @click="editMatchScore(match)" class="flex items-center gap-1.5 text-xs bg-brand-green/20 hover:bg-brand-green text-brand-green hover:text-black font-semibold px-3 py-1 rounded-lg transition">
-                                                <i data-lucide="edit-3" class="w-3 h-3"></i>
-                                                <span>Edit Score</span>
+                                        <div class="pt-2 border-t border-efootball-border/40 flex items-center justify-end gap-2">
+                                            <button @click="openFixtureEditModal(match)" class="flex items-center gap-1.5 text-xs bg-efootball-cyan/20 hover:bg-efootball-cyan text-efootball-cyan hover:text-black font-bold px-3 py-1.5 rounded-lg transition">
+                                                <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                                                <span>Edit Match & Score</span>
                                             </button>
                                         </div>
                                     </template>
@@ -332,46 +528,52 @@
             </div>
         </section>
 
-        <!-- TAB 3: CLUBS & SQUAD MANAGEMENT -->
+        <!-- TAB 4: CLUBS & SQUAD MANAGEMENT -->
         <section x-show="activeTab === 'teams'" x-transition:enter="transition ease-out duration-200" class="space-y-6">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 class="font-header text-4xl font-bold text-white uppercase tracking-wide">League Clubs & Squads</h2>
-                    <p class="text-sm text-gray-400">Team names, colors, jerseys and squad rosters (Full editing in Admin Mode)</p>
+                    <h2 class="font-header text-4xl font-bold text-white uppercase tracking-wide">Clubs & Squad Customizer</h2>
+                    <p class="text-sm text-gray-400">Directly edit Team Names, Jersey Colors, Kit Patterns, and Squad rosters</p>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <template x-for="team in teams" :key="team.id">
-                    <div class="glass-panel rounded-2xl p-6 border border-brand-border space-y-5 hover:border-brand-green transition duration-300 flex flex-col justify-between">
+                    <div class="efootball-card rounded-2xl p-6 border border-efootball-border space-y-5 flex flex-col justify-between hover:border-efootball-cyan transition duration-300">
                         <div class="space-y-4">
-                            <!-- Team Header Banner -->
-                            <div class="flex items-center justify-between border-b border-brand-border pb-4">
+                            <!-- Team Branding Header -->
+                            <div class="flex items-center justify-between border-b border-efootball-border pb-4">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-12 h-12 rounded-xl flex items-center justify-center font-black text-xl text-white shadow-lg border border-white/20" :style="`background-color: ${team.color}`" x-text="team.shortCode"></div>
+                                    <div class="w-12 h-12 rounded-2xl flex items-center justify-center font-black text-xl text-white shadow-xl border border-white/20 relative overflow-hidden" :style="`background-color: ${team.color}`">
+                                        <span x-text="team.shortCode"></span>
+                                        <!-- Kit Overlay -->
+                                        <div x-show="team.kitPattern === 'stripes'" class="absolute inset-0 pointer-events-none" style="background: repeating-linear-gradient(90deg, transparent, transparent 4px, rgba(255,255,255,0.3) 4px, rgba(255,255,255,0.3) 8px);"></div>
+                                        <div x-show="team.kitPattern === 'hoops'" class="absolute inset-0 pointer-events-none" style="background: repeating-linear-gradient(0deg, transparent, transparent 4px, rgba(255,255,255,0.3) 4px, rgba(255,255,255,0.3) 8px);"></div>
+                                        <div x-show="team.kitPattern === 'sash'" class="absolute inset-0 pointer-events-none" style="background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.4) 40%, rgba(255,255,255,0.4) 60%, transparent 60%);"></div>
+                                    </div>
                                     <div>
                                         <h3 class="font-bold text-xl text-white leading-tight" x-text="team.name"></h3>
-                                        <span class="text-xs text-gray-400" x-text="'Captain: ' + team.captain"></span>
+                                        <span class="text-xs text-gray-400" x-text="'Captain: ' + (team.captain || 'N/A')"></span>
                                     </div>
                                 </div>
                                 <template x-if="isAdmin">
-                                    <button @click="openTeamEditModal(team)" class="p-2 rounded-lg bg-brand-purple hover:bg-brand-green hover:text-black text-brand-green border border-brand-border transition" title="Edit Club Details">
-                                        <i data-lucide="settings" class="w-4 h-4"></i>
+                                    <button @click="openTeamEditModal(team)" class="p-2 rounded-xl bg-efootball-purple hover:bg-efootball-cyan hover:text-black text-efootball-cyan border border-efootball-border transition" title="Edit Team Name & Kit">
+                                        <i data-lucide="palette" class="w-4 h-4"></i>
                                     </button>
                                 </template>
                             </div>
 
-                            <!-- Team Attributes -->
+                            <!-- Kit Details -->
                             <div class="space-y-2 text-xs text-gray-300">
-                                <div class="flex justify-between py-1 border-b border-brand-border/30">
+                                <div class="flex justify-between py-1 border-b border-efootball-border/40">
                                     <span class="text-gray-400">Tactical Style</span>
-                                    <span class="font-semibold text-brand-green" x-text="team.style"></span>
+                                    <span class="font-semibold text-efootball-cyan" x-text="team.style"></span>
                                 </div>
-                                <div class="flex justify-between py-1 border-b border-brand-border/30">
-                                    <span class="text-gray-400">Kit Colors</span>
+                                <div class="flex justify-between py-1 border-b border-efootball-border/40">
+                                    <span class="text-gray-400">Kit Customization</span>
                                     <div class="flex items-center gap-2">
-                                        <span class="w-3 h-3 rounded-full border border-white/20" :style="`background-color: ${team.color}`"></span>
-                                        <span class="font-semibold text-white" x-text="team.kit"></span>
+                                        <span class="w-3.5 h-3.5 rounded-full border border-white/20" :style="`background-color: ${team.color}`"></span>
+                                        <span class="font-semibold text-white capitalize" x-text="team.kitPattern + ' Pattern'"></span>
                                     </div>
                                 </div>
                             </div>
@@ -381,39 +583,92 @@
                                 <div class="flex items-center justify-between mb-2">
                                     <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Squad Roster (<span x-text="team.squad.length"></span>)</h4>
                                     <template x-if="isAdmin">
-                                        <button @click="openSquadModal(team)" class="text-[11px] text-brand-green hover:underline flex items-center gap-1 font-bold">
-                                            <i data-lucide="user-plus" class="w-3 h-3"></i> Manage Squad
+                                        <button @click="openSquadModal(team)" class="text-xs bg-efootball-cyan text-black px-2.5 py-1 rounded-lg font-bold flex items-center gap-1 hover:bg-cyan-300 transition">
+                                            <i data-lucide="users" class="w-3 h-3"></i> Edit Roster
                                         </button>
                                     </template>
                                 </div>
-                                <div class="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto custom-scrollbar p-1 bg-brand-purpleDark/40 rounded-xl border border-brand-border/40">
+                                <div class="space-y-1.5 max-h-48 overflow-y-auto custom-scrollbar p-1 bg-efootball-bg/60 rounded-xl border border-efootball-border/40">
                                     <template x-for="(player, pIdx) in team.squad" :key="pIdx">
-                                        <span class="bg-brand-purple/80 text-gray-200 text-xs px-2.5 py-1 rounded-md border border-brand-border flex items-center gap-1">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-brand-green"></span>
-                                            <span x-text="player"></span>
-                                        </span>
+                                        <div class="bg-efootball-card/80 text-gray-200 text-xs px-3 py-1.5 rounded-lg border border-efootball-border/40 flex items-center justify-between">
+                                            <div class="flex items-center gap-2">
+                                                <span class="w-5 text-center font-bold text-efootball-cyan" x-text="player.number ? '#' + player.number : '#' + (pIdx + 1)"></span>
+                                                <span class="font-medium text-white" x-text="player.name"></span>
+                                            </div>
+                                            <span class="text-[10px] bg-efootball-bg px-2 py-0.5 rounded text-gray-400 font-mono" x-text="player.position || 'FWD'"></span>
+                                        </div>
                                     </template>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="pt-3 border-t border-brand-border/40 text-xs text-gray-400 italic">
-                            <span x-text="'Motto: ' + team.motto"></span>
+                        <div class="pt-3 border-t border-efootball-border/40 text-xs text-gray-400 italic">
+                            <span x-text="'Motto: ' + (team.motto || 'Unstoppable on the pitch!')"></span>
                         </div>
                     </div>
                 </template>
             </div>
         </section>
 
-        <!-- TAB 4: NEWS & PRESS CONFERENCES -->
+        <!-- TAB 5: LEAGUE BOARD & EXECUTIVES -->
+        <section x-show="activeTab === 'board'" x-transition:enter="transition ease-out duration-200" class="space-y-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h2 class="font-header text-4xl font-bold text-white uppercase tracking-wide">League Executive Board</h2>
+                    <p class="text-sm text-gray-400">M-Pesa Sunday League Organising Committee & Executive Officials</p>
+                </div>
+                <template x-if="isAdmin">
+                    <button @click="openAddBoardModal()" class="flex items-center gap-2 bg-efootball-cyan text-black font-bold px-4 py-2 rounded-xl text-xs hover:bg-cyan-300 transition shadow-lg">
+                        <i data-lucide="user-plus" class="w-4 h-4"></i>
+                        <span>Add Board Member</span>
+                    </button>
+                </template>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <template x-for="member in boardMembers" :key="member.id">
+                    <div class="efootball-card rounded-2xl p-6 border border-efootball-border space-y-4 hover:border-efootball-magenta transition group relative">
+                        <div class="flex items-center gap-4 border-b border-efootball-border pb-4">
+                            <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-efootball-purple to-efootball-cardLight border border-efootball-border flex items-center justify-center font-header text-2xl font-black text-efootball-cyan shrink-0" x-text="getInitials(member.name)"></div>
+                            <div>
+                                <h3 class="font-bold text-lg text-white group-hover:text-efootball-cyan transition-colors" x-text="member.name"></h3>
+                                <span class="text-xs bg-efootball-magenta/20 text-efootball-magenta border border-efootball-magenta/30 px-2 py-0.5 rounded font-bold uppercase text-[10px]" x-text="member.role"></span>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2 text-xs text-gray-300">
+                            <div class="flex items-center gap-2 text-gray-400">
+                                <i data-lucide="mail" class="w-3.5 h-3.5 text-efootball-cyan"></i>
+                                <span x-text="member.email || 'board@mpesaleague.org'"></span>
+                            </div>
+                            <div class="flex items-center gap-2 text-gray-400">
+                                <i data-lucide="phone" class="w-3.5 h-3.5 text-efootball-cyan"></i>
+                                <span x-text="member.phone || '+254 700 000000'"></span>
+                            </div>
+                            <p class="text-gray-300 text-xs italic pt-2" x-text="member.bio || 'Dedicated to ensuring fair play and elite organization.'"></p>
+                        </div>
+
+                        <template x-if="isAdmin">
+                            <div class="pt-3 border-t border-efootball-border/40 flex justify-end gap-2">
+                                <button @click="deleteBoardMember(member.id)" class="text-xs text-rose-400 hover:text-rose-300 p-1 flex items-center gap-1">
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Remove
+                                </button>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+            </div>
+        </section>
+
+        <!-- TAB 6: NEWS & PRESS CONFERENCES -->
         <section x-show="activeTab === 'news'" x-transition:enter="transition ease-out duration-200" class="space-y-6">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h2 class="font-header text-4xl font-bold text-white uppercase tracking-wide">News & Press Room</h2>
-                    <p class="text-sm text-gray-400">Official league announcements, pre-match pressers & manager interviews</p>
+                    <p class="text-sm text-gray-400">Pre-match press conferences and league announcements</p>
                 </div>
                 <template x-if="isAdmin">
-                    <button @click="openPostModal('news')" class="flex items-center gap-2 bg-brand-green text-black font-bold px-4 py-2 rounded-xl text-xs hover:bg-emerald-400 transition shadow-lg shadow-brand-green/20">
+                    <button @click="openPostModal('news')" class="flex items-center gap-2 bg-efootball-cyan text-black font-bold px-4 py-2 rounded-xl text-xs hover:bg-cyan-300 transition shadow-lg">
                         <i data-lucide="plus-circle" class="w-4 h-4"></i>
                         <span>Publish News Article</span>
                     </button>
@@ -422,33 +677,28 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <template x-for="item in newsArticles" :key="item.id">
-                    <div class="glass-panel rounded-2xl overflow-hidden border border-brand-border flex flex-col justify-between hover:border-brand-purple transition-all group">
+                    <div class="efootball-card rounded-2xl overflow-hidden border border-efootball-border flex flex-col justify-between hover:border-efootball-cyan transition group">
                         <div>
                             <template x-if="item.videoUrl">
                                 <div class="aspect-video bg-black relative">
                                     <iframe :src="getEmbedUrl(item.videoUrl)" class="w-full h-full" frameborder="0" allowfullscreen></iframe>
                                 </div>
                             </template>
-                            <template x-if="!item.videoUrl && item.imageUrl">
-                                <div class="h-48 overflow-hidden relative">
-                                    <img :src="item.imageUrl" :alt="item.title" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-                                </div>
-                            </template>
 
                             <div class="p-5 space-y-3">
                                 <div class="flex items-center justify-between text-xs text-gray-400">
-                                    <span class="bg-brand-purple text-brand-green px-2 py-0.5 rounded font-bold uppercase text-[10px]" x-text="item.category"></span>
+                                    <span class="bg-efootball-purple text-efootball-cyan px-2 py-0.5 rounded font-bold uppercase text-[10px]" x-text="item.category"></span>
                                     <span x-text="item.date"></span>
                                 </div>
-                                <h3 class="font-bold text-lg text-white group-hover:text-brand-green transition-colors leading-snug" x-text="item.title"></h3>
+                                <h3 class="font-bold text-lg text-white group-hover:text-efootball-cyan transition-colors leading-snug" x-text="item.title"></h3>
                                 <p class="text-sm text-gray-300 leading-relaxed" x-text="item.content"></p>
                             </div>
                         </div>
 
-                        <div class="p-5 pt-0 flex items-center justify-between border-t border-brand-border/30 mt-4">
+                        <div class="p-5 pt-0 flex items-center justify-between border-t border-efootball-border/30 mt-4">
                             <span class="text-xs text-gray-400 font-medium" x-text="'By ' + item.author"></span>
                             <template x-if="isAdmin">
-                                <button @click="deleteNewsItem(item.id)" class="text-rose-400 hover:text-rose-300 text-xs font-semibold p-1 hover:bg-rose-500/10 rounded transition">
+                                <button @click="deleteNewsItem(item.id)" class="text-rose-400 hover:text-rose-300 text-xs font-semibold p-1">
                                     <i data-lucide="trash-2" class="w-4 h-4"></i>
                                 </button>
                             </template>
@@ -458,39 +708,31 @@
             </div>
         </section>
 
-        <!-- TAB 5: HIGHLIGHTS -->
+        <!-- TAB 7: HIGHLIGHTS -->
         <section x-show="activeTab === 'highlights'" x-transition:enter="transition ease-out duration-200" class="space-y-6">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 class="font-header text-4xl font-bold text-white uppercase tracking-wide">Match Highlights</h2>
-                    <p class="text-sm text-gray-400">Watch top goals, key moments, and weekly recap videos</p>
+                    <h2 class="font-header text-4xl font-bold text-white uppercase tracking-wide">Video Highlights Gallery</h2>
+                    <p class="text-sm text-gray-400">Watch goals, skill showcases, and match recaps</p>
                 </div>
                 <template x-if="isAdmin">
-                    <button @click="openPostModal('highlight')" class="flex items-center gap-2 bg-brand-green text-black font-bold px-4 py-2 rounded-xl text-xs hover:bg-emerald-400 transition shadow-lg shadow-brand-green/20">
+                    <button @click="openPostModal('highlight')" class="flex items-center gap-2 bg-efootball-cyan text-black font-bold px-4 py-2 rounded-xl text-xs hover:bg-cyan-300 transition shadow-lg">
                         <i data-lucide="video" class="w-4 h-4"></i>
-                        <span>Upload Highlight Reel</span>
+                        <span>Add Video Highlight</span>
                     </button>
                 </template>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <template x-for="item in highlightVideos" :key="item.id">
-                    <div class="glass-panel rounded-2xl overflow-hidden border border-brand-border space-y-4 p-4">
-                        <div class="aspect-video bg-black rounded-xl overflow-hidden border border-brand-border/60">
-                            <template x-if="isYouTube(item.videoUrl)">
-                                <iframe :src="getEmbedUrl(item.videoUrl)" class="w-full h-full" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-                            </template>
-                            <template x-if="!isYouTube(item.videoUrl)">
-                                <video controls class="w-full h-full object-cover">
-                                    <source :src="item.videoUrl" type="video/mp4">
-                                    Your browser does not support video playback.
-                                </video>
-                            </template>
+                    <div class="efootball-card rounded-2xl overflow-hidden border border-efootball-border space-y-4 p-4">
+                        <div class="aspect-video bg-black rounded-xl overflow-hidden border border-efootball-border">
+                            <iframe :src="getEmbedUrl(item.videoUrl)" class="w-full h-full" frameborder="0" allowfullscreen></iframe>
                         </div>
 
                         <div class="space-y-2">
                             <div class="flex items-center justify-between text-xs text-gray-400">
-                                <span class="bg-brand-green/20 text-brand-green px-2 py-0.5 rounded font-bold uppercase text-[10px]" x-text="item.matchweek"></span>
+                                <span class="bg-efootball-cyan/20 text-efootball-cyan px-2 py-0.5 rounded font-bold uppercase text-[10px]" x-text="item.matchweek"></span>
                                 <span x-text="item.date"></span>
                             </div>
                             <h3 class="font-bold text-lg text-white" x-text="item.title"></h3>
@@ -498,7 +740,7 @@
                         </div>
 
                         <template x-if="isAdmin">
-                            <div class="pt-2 border-t border-brand-border/40 flex justify-end">
+                            <div class="pt-2 border-t border-efootball-border/40 flex justify-end">
                                 <button @click="deleteHighlight(item.id)" class="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1">
                                     <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Remove
                                 </button>
@@ -509,54 +751,54 @@
             </div>
         </section>
 
-        <!-- TAB 6: INJURY & SUSPENSION HUB -->
+        <!-- TAB 8: INJURY & SUSPENSION TRACKER -->
         <section x-show="activeTab === 'injuries'" x-transition:enter="transition ease-out duration-200" class="space-y-6">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 class="font-header text-4xl font-bold text-white uppercase tracking-wide">Injury & Suspension Hub</h2>
-                    <p class="text-sm text-gray-400">Official player status, medical updates, and card bans</p>
+                    <h2 class="font-header text-4xl font-bold text-white uppercase tracking-wide">Injuries & Card Suspensions</h2>
+                    <p class="text-sm text-gray-400">Player medical reports, red card bans, and yellow card accumulation</p>
                 </div>
                 <template x-if="isAdmin">
-                    <button @click="openInjuryModal()" class="flex items-center gap-2 bg-brand-green text-black font-bold px-4 py-2 rounded-xl text-xs hover:bg-emerald-400 transition shadow-lg shadow-brand-green/20">
-                        <i data-lucide="user-plus" class="w-4 h-4"></i>
-                        <span>Add Status Update</span>
+                    <button @click="openInjuryModal()" class="flex items-center gap-2 bg-efootball-cyan text-black font-bold px-4 py-2 rounded-xl text-xs hover:bg-cyan-300 transition shadow-lg">
+                        <i data-lucide="user-minus" class="w-4 h-4"></i>
+                        <span>Add Status Report</span>
                     </button>
                 </template>
             </div>
 
-            <div class="glass-panel rounded-2xl overflow-hidden border border-brand-border shadow-xl">
+            <div class="efootball-card rounded-2xl overflow-hidden border border-efootball-border shadow-xl">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="bg-brand-purpleDark/80 text-xs font-bold text-gray-400 uppercase border-b border-brand-border">
+                            <tr class="bg-efootball-bg/90 text-xs font-bold text-gray-400 uppercase border-b border-efootball-border">
                                 <th class="py-4 px-6">Player Name</th>
                                 <th class="py-4 px-4">Club</th>
                                 <th class="py-4 px-4">Status</th>
-                                <th class="py-4 px-4">Reason / Injury</th>
+                                <th class="py-4 px-4">Reason / Sanction Details</th>
                                 <th class="py-4 px-4">Expected Return</th>
                                 <template x-if="isAdmin"><th class="py-4 px-4 text-right">Actions</th></template>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-brand-border/50 text-sm font-medium">
+                        <tbody class="divide-y divide-efootball-border/50 text-sm font-medium">
                             <template x-for="report in injuryReports" :key="report.id">
-                                <tr class="hover:bg-brand-purple/30 transition-colors">
+                                <tr class="hover:bg-efootball-cardLight/50 transition-colors">
                                     <td class="py-4 px-6 font-bold text-white" x-text="report.playerName"></td>
                                     <td class="py-4 px-4">
                                         <div class="flex items-center gap-2">
-                                            <div class="w-4 h-4 rounded" :style="`background-color: ${getTeam(report.teamId).color}`"></div>
-                                            <span class="text-gray-300 text-xs font-semibold" x-text="getTeam(report.teamId).name"></span>
+                                            <div class="w-3.5 h-3.5 rounded" :style="`background-color: ${getTeam(report.teamId).color}`"></div>
+                                            <span class="text-gray-300 text-xs font-semibold" x-text="getTeamName(report.teamId)"></span>
                                         </div>
                                     </td>
                                     <td class="py-4 px-4">
                                         <span class="px-2.5 py-1 rounded-md text-xs font-bold uppercase"
                                             :class="{
-                                                'bg-rose-500/20 text-rose-400 border border-rose-500/30': report.status === 'SUSPENDED' || report.status === 'OUT',
-                                                'bg-amber-500/20 text-amber-400 border border-amber-500/30': report.status === 'DOUBTFUL',
-                                                'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30': report.status === 'FIT'
+                                                'bg-rose-500/20 text-rose-400 border border-rose-500/40': report.status === 'SUSPENDED' || report.status === 'OUT',
+                                                'bg-amber-500/20 text-amber-400 border border-amber-500/40': report.status === 'DOUBTFUL',
+                                                'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40': report.status === 'FIT'
                                             }" x-text="report.status"></span>
                                     </td>
                                     <td class="py-4 px-4 text-gray-300 text-xs" x-text="report.details"></td>
-                                    <td class="py-4 px-4 text-xs font-mono text-brand-green" x-text="report.returnDate"></td>
+                                    <td class="py-4 px-4 text-xs font-mono text-efootball-cyan" x-text="report.returnDate"></td>
                                     <template x-if="isAdmin">
                                         <td class="py-4 px-4 text-right">
                                             <button @click="deleteInjuryReport(report.id)" class="text-rose-400 hover:text-rose-300 p-1">
@@ -572,15 +814,15 @@
             </div>
         </section>
 
-        <!-- TAB 7: RULES & REGULATIONS -->
+        <!-- TAB 9: RULES & REGULATIONS -->
         <section x-show="activeTab === 'rules'" x-transition:enter="transition ease-out duration-200" class="space-y-6">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 class="font-header text-4xl font-bold text-white uppercase tracking-wide">League Rules & Regulations</h2>
-                    <p class="text-sm text-gray-400">Official tournament guidelines, disciplinary frameworks, and matchday rules</p>
+                    <h2 class="font-header text-4xl font-bold text-white uppercase tracking-wide">Rules & Regulations</h2>
+                    <p class="text-sm text-gray-400">Official tournament framework, substitutions (Max 7), and discipline</p>
                 </div>
                 <template x-if="isAdmin">
-                    <button @click="openAddRuleModal()" class="flex items-center gap-2 bg-brand-green text-black font-bold px-4 py-2 rounded-xl text-xs hover:bg-emerald-400 transition shadow-lg shadow-brand-green/20">
+                    <button @click="openAddRuleModal()" class="flex items-center gap-2 bg-efootball-cyan text-black font-bold px-4 py-2 rounded-xl text-xs hover:bg-cyan-300 transition shadow-lg">
                         <i data-lucide="plus" class="w-4 h-4"></i>
                         <span>Add Custom Rule</span>
                     </button>
@@ -589,14 +831,14 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <template x-for="rule in leagueRules" :key="rule.id">
-                    <div class="glass-panel rounded-2xl p-6 border border-brand-border space-y-3 relative group">
+                    <div class="efootball-card rounded-2xl p-6 border border-efootball-border space-y-3 relative group">
                         <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-lg bg-brand-purple text-brand-green flex items-center justify-center font-bold text-sm border border-brand-border">
-                                <i :data-lucide="rule.icon || 'shield-alert'" class="w-4 h-4"></i>
+                            <div class="w-9 h-9 rounded-xl bg-efootball-purple text-efootball-cyan flex items-center justify-center font-bold text-sm border border-efootball-border">
+                                <i :data-lucide="rule.icon || 'shield-check'" class="w-4 h-4"></i>
                             </div>
                             <h3 class="font-bold text-lg text-white" x-text="rule.title"></h3>
                         </div>
-                        <p class="text-sm text-gray-300 leading-relaxed pl-11" x-text="rule.description"></p>
+                        <p class="text-sm text-gray-300 leading-relaxed pl-12" x-text="rule.description"></p>
                         
                         <template x-if="isAdmin">
                             <button @click="deleteRule(rule.id)" class="absolute top-4 right-4 text-rose-400 hover:text-rose-300 opacity-0 group-hover:opacity-100 transition p-1">
@@ -610,115 +852,112 @@
 
     </main>
 
-    <!-- MODAL 1: Admin Passcode Login Modal -->
+    <!-- MODAL 1: Admin Passcode Login -->
     <div x-show="openAdminModal" x-transition.opacity class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div @click.outside="openAdminModal = false" class="glass-panel rounded-2xl max-w-md w-full p-6 border border-brand-border space-y-6 shadow-2xl">
-            <div class="flex items-center justify-between border-b border-brand-border pb-4">
-                <h3 class="font-header text-3xl font-bold text-white uppercase">Admin Passcode Login</h3>
+        <div @click.outside="openAdminModal = false" class="efootball-card rounded-2xl max-w-md w-full p-6 border border-efootball-border space-y-6 shadow-2xl">
+            <div class="flex items-center justify-between border-b border-efootball-border pb-4">
+                <h3 class="font-header text-3xl font-bold text-white uppercase">Admin Unlock</h3>
                 <button @click="openAdminModal = false" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             
             <form @submit.prevent="verifyAdminPassword()" class="space-y-4">
                 <div>
                     <label class="block text-xs font-bold uppercase text-gray-400 mb-2">Enter Passcode</label>
-                    <input type="password" x-model="adminPasswordInput" placeholder="Passcode (default: admin123)" class="w-full bg-brand-purpleDark border border-brand-border rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brand-green">
-                    <p class="text-[11px] text-gray-500 mt-1">Default password: <code class="text-brand-green">admin123</code></p>
+                    <input type="password" x-model="adminPasswordInput" placeholder="Passcode: admin123" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-efootball-cyan">
+                    <p class="text-[11px] text-gray-500 mt-1">Default passcode: <code class="text-efootball-cyan">admin123</code></p>
                 </div>
                 <div x-show="adminError" class="text-xs text-rose-400 font-semibold" x-text="adminError"></div>
                 
                 <div class="flex justify-end gap-3 pt-2">
                     <button type="button" @click="openAdminModal = false" class="px-4 py-2 rounded-xl text-xs font-semibold text-gray-400 hover:text-white">Cancel</button>
-                    <button type="submit" class="bg-brand-green text-black font-bold px-6 py-2 rounded-xl text-xs hover:bg-emerald-400 transition">Unlock Admin Controls</button>
+                    <button type="submit" class="bg-efootball-cyan text-black font-bold px-6 py-2 rounded-xl text-xs hover:bg-cyan-300 transition">Unlock Admin Mode</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- MODAL 2: Score Update Modal -->
-    <div x-show="openScoreModal" x-transition.opacity class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div @click.outside="openScoreModal = false" class="glass-panel rounded-2xl max-w-lg w-full p-6 border border-brand-border space-y-6 shadow-2xl">
-            <div class="flex items-center justify-between border-b border-brand-border pb-4">
-                <h3 class="font-header text-3xl font-bold text-white uppercase">Update Match Score</h3>
-                <button @click="openScoreModal = false" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
-            </div>
-
-            <template x-if="editingMatch">
-                <form @submit.prevent="saveMatchScore()" class="space-y-6">
-                    <div class="grid grid-cols-2 gap-4 text-center">
-                        <div class="bg-brand-purpleDark p-4 rounded-xl border border-brand-border space-y-2">
-                            <span class="font-bold text-sm text-white block" x-text="getTeam(editingMatch.homeId).name"></span>
-                            <input type="number" min="0" x-model.number="editingMatch.homeScore" class="w-20 text-center text-3xl font-black bg-brand-card border border-brand-border rounded-lg py-2 text-brand-green focus:outline-none focus:border-brand-green mx-auto">
-                        </div>
-                        <div class="bg-brand-purpleDark p-4 rounded-xl border border-brand-border space-y-2">
-                            <span class="font-bold text-sm text-white block" x-text="getTeam(editingMatch.awayId).name"></span>
-                            <input type="number" min="0" x-model.number="editingMatch.awayScore" class="w-20 text-center text-3xl font-black bg-brand-card border border-brand-border rounded-lg py-2 text-brand-green focus:outline-none focus:border-brand-green mx-auto">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-gray-400 mb-2">Goalscorers Summary</label>
-                        <input type="text" x-model="editingMatch.scorers" placeholder="e.g. Samba Boys: Alex 12', John 45' | DP 2 A: Otieno 78'" class="w-full bg-brand-purpleDark border border-brand-border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-brand-green">
-                    </div>
-
-                    <div class="flex items-center gap-2">
-                        <input type="checkbox" id="completedCheck" x-model="editingMatch.completed" class="rounded bg-brand-purpleDark border-brand-border text-brand-green focus:ring-brand-green">
-                        <label for="completedCheck" class="text-xs font-semibold text-gray-300">Mark match as FINAL & update standings</label>
-                    </div>
-
-                    <div class="flex justify-end gap-3 pt-4 border-t border-brand-border">
-                        <button type="button" @click="openScoreModal = false" class="px-4 py-2 rounded-xl text-xs font-semibold text-gray-400 hover:text-white">Cancel</button>
-                        <button type="submit" class="bg-brand-green text-black font-bold px-6 py-2 rounded-xl text-xs hover:bg-emerald-400 transition">Save & Recalculate Table</button>
-                    </div>
-                </form>
-            </template>
-        </div>
-    </div>
-
-    <!-- MODAL 3: Fixture Date & Time Edit Modal -->
+    <!-- MODAL 2: Fixture & Score Editor -->
     <div x-show="openFixtureModal" x-transition.opacity class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div @click.outside="openFixtureModal = false" class="glass-panel rounded-2xl max-w-lg w-full p-6 border border-brand-border space-y-6 shadow-2xl">
-            <div class="flex items-center justify-between border-b border-brand-border pb-4">
-                <h3 class="font-header text-3xl font-bold text-white uppercase">Edit Fixture Schedule</h3>
+        <div @click.outside="openFixtureModal = false" class="efootball-card rounded-2xl max-w-lg w-full p-6 border border-efootball-border space-y-6 shadow-2xl">
+            <div class="flex items-center justify-between border-b border-efootball-border pb-4">
+                <h3 class="font-header text-3xl font-bold text-white uppercase">Manage Fixture & Score</h3>
                 <button @click="openFixtureModal = false" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
 
             <template x-if="editingFixture">
                 <form @submit.prevent="saveFixtureDetails()" class="space-y-4">
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Matchweek</label>
-                            <input type="number" min="1" max="10" x-model.number="editingFixture.matchweek" class="w-full bg-brand-purpleDark border border-brand-border rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-brand-green">
+                            <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Home Team</label>
+                            <select x-model.number="editingFixture.homeId" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-efootball-cyan">
+                                <template x-for="t in teams" :key="t.id">
+                                    <option :value="t.id" x-text="t.name"></option>
+                                </template>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Away Team</label>
+                            <select x-model.number="editingFixture.awayId" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-efootball-cyan">
+                                <template x-for="t in teams" :key="t.id">
+                                    <option :value="t.id" x-text="t.name"></option>
+                                </template>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-3 bg-efootball-bg p-3 rounded-xl border border-efootball-border">
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1 text-center">Home Goals</label>
+                            <input type="number" min="0" x-model.number="editingFixture.homeScore" class="w-full bg-efootball-card border border-efootball-border rounded-lg py-1.5 text-center font-bold text-lg text-white">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1 text-center">Match Status</label>
+                            <select x-model="editingFixture.status" class="w-full bg-efootball-card border border-efootball-border rounded-lg py-2 text-xs text-center font-bold text-efootball-cyan">
+                                <option value="UPCOMING">UPCOMING</option>
+                                <option value="LIVE">LIVE</option>
+                                <option value="FINISHED">FINISHED</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1 text-center">Away Goals</label>
+                            <input type="number" min="0" x-model.number="editingFixture.awayScore" class="w-full bg-efootball-card border border-efootball-border rounded-lg py-1.5 text-center font-bold text-lg text-white">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Date</label>
+                            <input type="text" x-model="editingFixture.date" placeholder="Nov 1, 2026" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
                         </div>
                         <div>
                             <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Kickoff Time</label>
-                            <input type="text" x-model="editingFixture.time" placeholder="e.g. 2:00 PM" class="w-full bg-brand-purpleDark border border-brand-border rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-brand-green">
+                            <input type="text" x-model="editingFixture.time" placeholder="2:00 PM" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Venue</label>
+                            <input type="text" x-model="editingFixture.venue" placeholder="School Pitch" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Fixture Date</label>
-                        <input type="text" x-model="editingFixture.date" placeholder="e.g. Sunday, Nov 1, 2026" class="w-full bg-brand-purpleDark border border-brand-border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-brand-green">
+                        <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Goalscorers Summary</label>
+                        <input type="text" x-model="editingFixture.scorers" placeholder="e.g. Kevin 12', Brian 88' | Emmanuel 45'" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-4 py-2 text-xs text-white">
                     </div>
 
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Pitch / Venue</label>
-                        <input type="text" x-model="editingFixture.venue" placeholder="e.g. School Pitch Ground 1" class="w-full bg-brand-purpleDark border border-brand-border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-brand-green">
-                    </div>
-
-                    <div class="flex justify-end gap-3 pt-4 border-t border-brand-border">
+                    <div class="flex justify-end gap-3 pt-4 border-t border-efootball-border">
                         <button type="button" @click="openFixtureModal = false" class="px-4 py-2 rounded-xl text-xs font-semibold text-gray-400 hover:text-white">Cancel</button>
-                        <button type="submit" class="bg-brand-green text-black font-bold px-6 py-2 rounded-xl text-xs hover:bg-emerald-400 transition">Save Fixture Schedule</button>
+                        <button type="submit" class="bg-efootball-cyan text-black font-bold px-6 py-2 rounded-xl text-xs hover:bg-cyan-300 transition">Save Match & Recalculate</button>
                     </div>
                 </form>
             </template>
         </div>
     </div>
 
-    <!-- MODAL 4: Team Profile & Branding Edit Modal -->
+    <!-- MODAL 3: Club Branding & Kit Customizer -->
     <div x-show="openTeamModal" x-transition.opacity class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div @click.outside="openTeamModal = false" class="glass-panel rounded-2xl max-w-md w-full p-6 border border-brand-border space-y-6 shadow-2xl">
-            <div class="flex items-center justify-between border-b border-brand-border pb-4">
-                <h3 class="font-header text-3xl font-bold text-white uppercase">Edit Club Details</h3>
+        <div @click.outside="openTeamModal = false" class="efootball-card rounded-2xl max-w-md w-full p-6 border border-efootball-border space-y-6 shadow-2xl">
+            <div class="flex items-center justify-between border-b border-efootball-border pb-4">
+                <h3 class="font-header text-3xl font-bold text-white uppercase">Edit Club Details & Kit</h3>
                 <button @click="openTeamModal = false" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
 
@@ -727,111 +966,191 @@
                     <div class="grid grid-cols-3 gap-3">
                         <div class="col-span-2">
                             <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Team Name</label>
-                            <input type="text" x-model="editingTeam.name" required class="w-full bg-brand-purpleDark border border-brand-border rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-brand-green">
+                            <input type="text" x-model="editingTeam.name" required class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-efootball-cyan">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Badge Code</label>
-                            <input type="text" x-model="editingTeam.shortCode" maxlength="4" required class="w-full bg-brand-purpleDark border border-brand-border rounded-xl px-3 py-2 text-xs text-white text-center font-bold focus:outline-none focus:border-brand-green">
+                            <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Short Code</label>
+                            <input type="text" x-model="editingTeam.shortCode" maxlength="4" required class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white text-center font-bold focus:outline-none focus:border-efootball-cyan uppercase">
                         </div>
                     </div>
 
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Club Primary Color</label>
+                            <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Primary Color</label>
                             <div class="flex items-center gap-2">
                                 <input type="color" x-model="editingTeam.color" class="w-10 h-9 rounded bg-transparent border-0 cursor-pointer">
-                                <input type="text" x-model="editingTeam.color" class="w-full bg-brand-purpleDark border border-brand-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none">
+                                <input type="text" x-model="editingTeam.color" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
                             </div>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Kit Colors</label>
-                            <input type="text" x-model="editingTeam.kit" placeholder="e.g. Green & White" class="w-full bg-brand-purpleDark border border-brand-border rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-brand-green">
+                            <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Kit Pattern Style</label>
+                            <select x-model="editingTeam.kitPattern" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white capitalize">
+                                <option value="solid">Solid Color</option>
+                                <option value="stripes">Vertical Stripes</option>
+                                <option value="hoops">Horizontal Hoops</option>
+                                <option value="sash">Diagonal Sash</option>
+                            </select>
                         </div>
                     </div>
 
                     <div>
                         <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Team Captain</label>
-                        <input type="text" x-model="editingTeam.captain" class="w-full bg-brand-purpleDark border border-brand-border rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-brand-green">
+                        <input type="text" x-model="editingTeam.captain" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-4 py-2 text-xs text-white focus:outline-none">
                     </div>
 
                     <div>
                         <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Tactical Playstyle</label>
-                        <input type="text" x-model="editingTeam.style" placeholder="e.g. High Pressing Attack" class="w-full bg-brand-purpleDark border border-brand-border rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-brand-green">
+                        <input type="text" x-model="editingTeam.style" placeholder="High Press Counter" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-4 py-2 text-xs text-white focus:outline-none">
                     </div>
 
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Team Motto / Manager Note</label>
-                        <input type="text" x-model="editingTeam.motto" class="w-full bg-brand-purpleDark border border-brand-border rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-brand-green">
-                    </div>
-
-                    <div class="flex justify-end gap-3 pt-4 border-t border-brand-border">
+                    <div class="flex justify-end gap-3 pt-4 border-t border-efootball-border">
                         <button type="button" @click="openTeamModal = false" class="px-4 py-2 rounded-xl text-xs font-semibold text-gray-400 hover:text-white">Cancel</button>
-                        <button type="submit" class="bg-brand-green text-black font-bold px-6 py-2 rounded-xl text-xs hover:bg-emerald-400 transition">Save Club Changes</button>
+                        <button type="submit" class="bg-efootball-cyan text-black font-bold px-6 py-2 rounded-xl text-xs hover:bg-cyan-300 transition">Save Club Changes</button>
                     </div>
                 </form>
             </template>
         </div>
     </div>
 
-    <!-- MODAL 5: Squad Player Roster Edit Modal -->
+    <!-- MODAL 4: Player Stats Record Editor -->
+    <div x-show="openPlayerStatModal" x-transition.opacity class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div @click.outside="openPlayerStatModal = false" class="efootball-card rounded-2xl max-w-md w-full p-6 border border-efootball-border space-y-6 shadow-2xl">
+            <div class="flex items-center justify-between border-b border-efootball-border pb-4">
+                <h3 class="font-header text-3xl font-bold text-white uppercase">Player Stat Record</h3>
+                <button @click="openPlayerStatModal = false" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+
+            <template x-if="editingPlayerStat">
+                <form @submit.prevent="savePlayerStatRecord()" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Player Name</label>
+                        <input type="text" x-model="editingPlayerStat.name" required class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-4 py-2 text-xs text-white">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Club</label>
+                            <select x-model.number="editingPlayerStat.teamId" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
+                                <template x-for="t in teams" :key="t.id">
+                                    <option :value="t.id" x-text="t.name"></option>
+                                </template>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Position</label>
+                            <select x-model="editingPlayerStat.position" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
+                                <option value="FWD">FWD</option>
+                                <option value="MID">MID</option>
+                                <option value="DEF">DEF</option>
+                                <option value="GK">GK</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-2 bg-efootball-bg p-3 rounded-xl border border-efootball-border">
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1 text-center">Goals</label>
+                            <input type="number" min="0" x-model.number="editingPlayerStat.goals" class="w-full bg-efootball-card border border-efootball-border rounded-lg py-1.5 text-center font-bold text-efootball-yellow text-base">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1 text-center">Assists</label>
+                            <input type="number" min="0" x-model.number="editingPlayerStat.assists" class="w-full bg-efootball-card border border-efootball-border rounded-lg py-1.5 text-center font-bold text-efootball-cyan text-base">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1 text-center">Clean Sheets</label>
+                            <input type="number" min="0" x-model.number="editingPlayerStat.cleanSheets" class="w-full bg-efootball-card border border-efootball-border rounded-lg py-1.5 text-center font-bold text-emerald-400 text-base">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Yellow Cards</label>
+                            <input type="number" min="0" x-model.number="editingPlayerStat.yellowCards" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-amber-400 font-bold">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Red Cards</label>
+                            <input type="number" min="0" x-model.number="editingPlayerStat.redCards" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-rose-500 font-bold">
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end gap-3 pt-4 border-t border-efootball-border">
+                        <button type="button" @click="openPlayerStatModal = false" class="px-4 py-2 rounded-xl text-xs font-semibold text-gray-400 hover:text-white">Cancel</button>
+                        <button type="submit" class="bg-efootball-cyan text-black font-bold px-6 py-2 rounded-xl text-xs hover:bg-cyan-300 transition">Save Player Stats</button>
+                    </div>
+                </form>
+            </template>
+        </div>
+    </div>
+
+    <!-- MODAL 5: Squad Player Editor -->
     <div x-show="openSquadManagerModal" x-transition.opacity class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div @click.outside="openSquadManagerModal = false" class="glass-panel rounded-2xl max-w-lg w-full p-6 border border-brand-border space-y-6 shadow-2xl">
-            <div class="flex items-center justify-between border-b border-brand-border pb-4">
+        <div @click.outside="openSquadManagerModal = false" class="efootball-card rounded-2xl max-w-lg w-full p-6 border border-efootball-border space-y-6 shadow-2xl">
+            <div class="flex items-center justify-between border-b border-efootball-border pb-4">
                 <div>
-                    <h3 class="font-header text-3xl font-bold text-white uppercase">Manage Squad Players</h3>
-                    <p class="text-xs text-gray-400" x-text="editingTeam ? editingTeam.name : ''"></p>
+                    <h3 class="font-header text-3xl font-bold text-white uppercase">Squad Player Roster</h3>
+                    <p class="text-xs text-efootball-cyan font-semibold" x-text="editingTeam ? editingTeam.name : ''"></p>
                 </div>
                 <button @click="openSquadManagerModal = false" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
 
-            <!-- Add Player Input -->
-            <div class="flex gap-2">
-                <input type="text" x-model="newPlayerName" placeholder="Enter new player name & number..." class="flex-1 bg-brand-purpleDark border border-brand-border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-brand-green">
-                <button @click="addPlayerToSquad()" class="bg-brand-green text-black font-bold px-4 py-2.5 rounded-xl text-xs hover:bg-emerald-400 transition flex items-center gap-1">
-                    <i data-lucide="plus" class="w-4 h-4"></i> Add
+            <!-- Add Player Inputs -->
+            <div class="grid grid-cols-12 gap-2 bg-efootball-bg p-3 rounded-xl border border-efootball-border">
+                <input type="number" min="1" max="99" x-model.number="newPlayerNumber" placeholder="#" class="col-span-2 bg-efootball-card border border-efootball-border rounded-xl px-2 py-2 text-xs text-center text-white font-bold">
+                <input type="text" x-model="newPlayerName" placeholder="Player full name..." class="col-span-5 bg-efootball-card border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
+                <select x-model="newPlayerPosition" class="col-span-3 bg-efootball-card border border-efootball-border rounded-xl px-2 py-2 text-xs text-white font-semibold">
+                    <option value="GK">GK</option>
+                    <option value="DEF">DEF</option>
+                    <option value="MID">MID</option>
+                    <option value="FWD">FWD</option>
+                </select>
+                <button @click="addPlayerToSquad()" class="col-span-2 bg-efootball-cyan text-black font-bold rounded-xl text-xs hover:bg-cyan-300 transition flex items-center justify-center">
+                    Add
                 </button>
             </div>
 
-            <!-- Player List -->
-            <div class="space-y-2 max-h-60 overflow-y-auto custom-scrollbar p-1">
+            <div class="space-y-2 max-h-64 overflow-y-auto custom-scrollbar p-1">
                 <template x-for="(player, idx) in editingSquadList" :key="idx">
-                    <div class="flex items-center justify-between bg-brand-purpleDark/80 p-2.5 rounded-xl border border-brand-border/60">
-                        <div class="flex items-center gap-2">
-                            <i data-lucide="user" class="w-3.5 h-3.5 text-brand-green"></i>
-                            <input type="text" x-model="editingSquadList[idx]" class="bg-transparent text-xs text-white font-semibold focus:outline-none focus:border-b focus:border-brand-green">
-                        </div>
-                        <button @click="removePlayerFromSquad(idx)" class="text-rose-400 hover:text-rose-300 p-1" title="Remove Player">
-                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                    <div class="grid grid-cols-12 gap-2 bg-efootball-bg/80 p-2 rounded-xl border border-efootball-border/60 items-center">
+                        <input type="number" x-model.number="player.number" class="col-span-2 bg-efootball-card text-center text-xs text-efootball-cyan font-bold py-1.5 rounded-lg border border-efootball-border">
+                        <input type="text" x-model="player.name" class="col-span-6 bg-efootball-card text-xs text-white font-semibold py-1.5 px-3 rounded-lg border border-efootball-border">
+                        <select x-model="player.position" class="col-span-3 bg-efootball-card text-xs text-gray-300 font-semibold py-1.5 px-2 rounded-lg border border-efootball-border">
+                            <option value="GK">GK</option>
+                            <option value="DEF">DEF</option>
+                            <option value="MID">MID</option>
+                            <option value="FWD">FWD</option>
+                        </select>
+                        <button @click="removePlayerFromSquad(idx)" class="col-span-1 text-rose-400 hover:text-rose-300 flex justify-center">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
                         </button>
                     </div>
                 </template>
             </div>
 
-            <div class="flex justify-end gap-3 pt-4 border-t border-brand-border">
+            <div class="flex justify-end gap-3 pt-4 border-t border-efootball-border">
                 <button type="button" @click="openSquadManagerModal = false" class="px-4 py-2 rounded-xl text-xs font-semibold text-gray-400 hover:text-white">Cancel</button>
-                <button type="button" @click="saveSquadChanges()" class="bg-brand-green text-black font-bold px-6 py-2 rounded-xl text-xs hover:bg-emerald-400 transition">Save Roster</button>
+                <button type="button" @click="saveSquadChanges()" class="bg-efootball-cyan text-black font-bold px-6 py-2 rounded-xl text-xs hover:bg-cyan-300 transition">Save Roster</button>
             </div>
         </div>
     </div>
 
     <!-- MODAL 6: Media / News Post Modal -->
     <div x-show="openMediaModal" x-transition.opacity class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div @click.outside="openMediaModal = false" class="glass-panel rounded-2xl max-w-lg w-full p-6 border border-brand-border space-y-6 shadow-2xl">
-            <div class="flex items-center justify-between border-b border-brand-border pb-4">
-                <h3 class="font-header text-3xl font-bold text-white uppercase" x-text="mediaModalType === 'news' ? 'Publish News Article' : 'Upload Match Highlights'"></h3>
+        <div @click.outside="openMediaModal = false" class="efootball-card rounded-2xl max-w-lg w-full p-6 border border-efootball-border space-y-6 shadow-2xl">
+            <div class="flex items-center justify-between border-b border-efootball-border pb-4">
+                <h3 class="font-header text-3xl font-bold text-white uppercase" x-text="mediaModalType === 'news' ? 'Publish News Article' : 'Upload Video Highlight'"></h3>
                 <button @click="openMediaModal = false" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
 
             <form @submit.prevent="saveMediaPost()" class="space-y-4">
                 <div>
                     <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Title</label>
-                    <input type="text" x-model="newPost.title" required placeholder="e.g. Samba Boys Secures Victory" class="w-full bg-brand-purpleDark border border-brand-border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-brand-green">
+                    <input type="text" x-model="newPost.title" required placeholder="Article title..." class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-4 py-2.5 text-xs text-white">
                 </div>
 
                 <template x-if="mediaModalType === 'news'">
                     <div>
                         <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Category</label>
-                        <select x-model="newPost.category" class="w-full bg-brand-purpleDark border border-brand-border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-brand-green">
+                        <select x-model="newPost.category" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-4 py-2.5 text-xs text-white">
                             <option value="Match Report">Match Report</option>
                             <option value="Press Conference">Press Conference</option>
                             <option value="League Update">League Update</option>
@@ -840,39 +1159,39 @@
                 </template>
 
                 <div>
-                    <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Video Link (YouTube URL or MP4 Link)</label>
-                    <input type="text" x-model="newPost.videoUrl" placeholder="https://www.youtube.com/watch?v=..." class="w-full bg-brand-purpleDark border border-brand-border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-brand-green">
+                    <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Video Link (YouTube URL)</label>
+                    <input type="text" x-model="newPost.videoUrl" placeholder="https://www.youtube.com/watch?v=..." class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-4 py-2.5 text-xs text-white">
                 </div>
 
                 <div>
                     <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Content / Description</label>
-                    <textarea x-model="newPost.content" rows="4" required placeholder="Provide story notes or highlights details..." class="w-full bg-brand-purpleDark border border-brand-border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-brand-green"></textarea>
+                    <textarea x-model="newPost.content" rows="4" required class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-4 py-2.5 text-xs text-white"></textarea>
                 </div>
 
                 <div class="flex justify-end gap-3 pt-2">
                     <button type="button" @click="openMediaModal = false" class="px-4 py-2 rounded-xl text-xs font-semibold text-gray-400 hover:text-white">Cancel</button>
-                    <button type="submit" class="bg-brand-green text-black font-bold px-6 py-2 rounded-xl text-xs hover:bg-emerald-400 transition">Publish Post</button>
+                    <button type="submit" class="bg-efootball-cyan text-black font-bold px-6 py-2 rounded-xl text-xs hover:bg-cyan-300 transition">Publish Post</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <footer class="border-t border-brand-border bg-brand-purpleDark py-8 mt-12 text-xs text-gray-400">
+    <footer class="border-t border-efootball-border bg-efootball-bg/90 py-8 mt-12 text-xs text-gray-400">
         <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
             <div class="flex items-center gap-2">
-                <div class="w-6 h-6 rounded bg-brand-green text-black font-bold flex items-center justify-center text-xs">M</div>
-                <span class="font-bold text-white uppercase tracking-wider">M-Pesa Sunday League Hub</span>
-                <span>• Official Tournament Hub</span>
+                <div class="w-6 h-6 rounded-lg bg-efootball-cyan text-black font-black flex items-center justify-center text-xs">M</div>
+                <span class="font-bold text-white uppercase tracking-wider">M-Pesa Sunday League PES Edition</span>
+                <span>• Official School League</span>
             </div>
             <div class="flex items-center gap-4">
                 <button @click="resetToDefaults()" class="text-gray-500 hover:text-rose-400 transition text-[11px] underline">Reset All Data to Defaults</button>
                 <span class="text-gray-600">|</span>
-                <span>Kickoff: Nov 1st, 2026</span>
+                <span>Matchweek 1 Starts: Nov 1st</span>
             </div>
         </div>
     </footer>
 
-    <!-- Alpine App Logic Script -->
+    <!-- JavaScript Application Logic -->
     <script>
         function leagueApp() {
             return {
@@ -883,10 +1202,24 @@
                 adminError: '',
 
                 toast: { show: false, message: '' },
-                
-                openScoreModal: false,
-                editingMatch: null,
 
+                // Countdown State
+                countdown: { days: '00', hours: '00', minutes: '00', seconds: '00' },
+                countdownInterval: null,
+
+                // Web Audio API eFootball Player
+                audioCtx: null,
+                isPlayingMusic: false,
+                musicVolume: 0.3,
+                currentTrackIndex: 0,
+                synthInterval: null,
+                audioTracks: [
+                    { id: 1, title: 'eFootball Menu Synth Wave Beat' },
+                    { id: 2, title: 'PES Matchday Stadium Anthem' },
+                    { id: 3, title: 'M-Pesa League Championship Funk' }
+                ],
+
+                // Modals
                 openFixtureModal: false,
                 editingFixture: null,
 
@@ -896,6 +1229,11 @@
                 openSquadManagerModal: false,
                 editingSquadList: [],
                 newPlayerName: '',
+                newPlayerNumber: '',
+                newPlayerPosition: 'FWD',
+
+                openPlayerStatModal: false,
+                editingPlayerStat: null,
 
                 openMediaModal: false,
                 mediaModalType: 'news',
@@ -905,16 +1243,20 @@
 
                 tabs: [
                     { id: 'table', name: 'Standings', icon: 'trophy' },
-                    { id: 'fixtures', name: 'Fixtures & Scores', icon: 'calendar' },
-                    { id: 'teams', name: 'Clubs & Squads', icon: 'users' },
-                    { id: 'news', name: 'News & Press', icon: 'newspaper' },
-                    { id: 'highlights', name: 'Video Highlights', icon: 'film' },
+                    { id: 'stats', name: 'Player Stats', icon: 'award' },
+                    { id: 'fixtures', name: 'Fixtures', icon: 'calendar' },
+                    { id: 'teams', name: 'Clubs & Kits', icon: 'users' },
+                    { id: 'board', name: 'League Board', icon: 'briefcase' },
+                    { id: 'news', name: 'News Room', icon: 'newspaper' },
+                    { id: 'highlights', name: 'Highlights', icon: 'film' },
                     { id: 'injuries', name: 'Injuries & Bans', icon: 'activity' },
-                    { id: 'rules', name: 'Rules & Regs', icon: 'book-open' }
+                    { id: 'rules', name: 'Rules', icon: 'book-open' }
                 ],
 
                 teams: [],
                 matches: [],
+                playerStatsList: [],
+                boardMembers: [],
                 newsArticles: [],
                 highlightVideos: [],
                 injuryReports: [],
@@ -923,6 +1265,7 @@
                 initApp() {
                     this.loadStoredData();
                     this.recalculateStandings();
+                    this.startCountdown();
                     this.$nextTick(() => { lucide.createIcons(); });
                 },
 
@@ -932,8 +1275,115 @@
                     setTimeout(() => { this.toast.show = false; }, 3000);
                 },
 
+                // Countdown Timer Logic
+                startCountdown() {
+                    const targetDate = new Date('November 1, 2026 14:00:00').getTime();
+                    
+                    const updateTimer = () => {
+                        const now = new Date().getTime();
+                        const diff = targetDate - now;
+
+                        if (diff <= 0) {
+                            this.countdown = { days: '00', hours: '00', minutes: '00', seconds: '00' };
+                            return;
+                        }
+
+                        const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+                        const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                        const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                        const s = Math.floor((diff % (1000 * 60)) / 1000);
+
+                        this.countdown = {
+                            days: String(d).padStart(2, '0'),
+                            hours: String(h).padStart(2, '0'),
+                            minutes: String(m).padStart(2, '0'),
+                            seconds: String(s).padStart(2, '0')
+                        };
+                    };
+
+                    updateTimer();
+                    this.countdownInterval = setInterval(updateTimer, 1000);
+                },
+
+                // Web Audio API Synthesized PES Music Loop
+                toggleMusic() {
+                    if (this.isPlayingMusic) {
+                        this.stopMusic();
+                    } else {
+                        this.playSynthesizedPESBeat();
+                    }
+                },
+
+                playSynthesizedPESBeat() {
+                    try {
+                        if (!this.audioCtx) {
+                            this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                        }
+                        if (this.audioCtx.state === 'suspended') {
+                            this.audioCtx.resume();
+                        }
+
+                        this.isPlayingMusic = true;
+                        let step = 0;
+                        const notes = [110, 130.81, 146.83, 164.81, 196, 220, 246.94];
+
+                        this.synthInterval = setInterval(() => {
+                            if (!this.isPlayingMusic || !this.audioCtx) return;
+
+                            const osc = this.audioCtx.createOscillator();
+                            const gain = this.audioCtx.createGain();
+
+                            osc.type = step % 4 === 0 ? 'triangle' : 'sine';
+                            const note = notes[(step * (this.currentTrackIndex + 1)) % notes.length];
+                            osc.frequency.setValueAtTime(note, this.audioCtx.currentTime);
+
+                            gain.gain.setValueAtTime(this.musicVolume * 0.15, this.audioCtx.currentTime);
+                            gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + 0.3);
+
+                            osc.connect(gain);
+                            gain.connect(this.audioCtx.destination);
+
+                            osc.start();
+                            osc.stop(this.audioCtx.currentTime + 0.3);
+
+                            step++;
+                        }, 250);
+
+                    } catch (e) {
+                        console.log('Web Audio setup:', e);
+                    }
+                },
+
+                stopMusic() {
+                    this.isPlayingMusic = false;
+                    if (this.synthInterval) clearInterval(this.synthInterval);
+                },
+
+                nextTrack() {
+                    this.currentTrackIndex = (this.currentTrackIndex + 1) % this.audioTracks.length;
+                    if (this.isPlayingMusic) {
+                        this.stopMusic();
+                        this.playSynthesizedPESBeat();
+                    }
+                    this.showToast('Soundtrack: ' + this.audioTracks[this.currentTrackIndex].title);
+                },
+
+                updateVolume() {
+                    // Volume controlled in Web Audio gain
+                },
+
+                // Helper Helpers
                 getTeam(id) {
-                    return this.teams.find(t => t.id === id) || { name: 'Unknown', color: '#666', shortCode: 'UNK' };
+                    return this.teams.find(t => t.id === id) || { name: 'Unknown Team', color: '#666', shortCode: 'UNK', kitPattern: 'solid' };
+                },
+
+                getTeamName(id) {
+                    return this.getTeam(id).name;
+                },
+
+                getInitials(name) {
+                    if (!name) return 'EX';
+                    return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
                 },
 
                 verifyAdminPassword() {
@@ -942,23 +1392,22 @@
                         this.openAdminModal = false;
                         this.adminPasswordInput = '';
                         this.adminError = '';
-                        this.showToast('Admin Mode Enabled! You can now edit all sections.');
+                        this.showToast('Admin Editing Mode Unlocked!');
                     } else {
-                        this.adminError = 'Incorrect passcode. Try admin123.';
+                        this.adminError = 'Incorrect passcode. Try "admin123"';
                     }
                 },
 
                 toggleAdmin() {
                     this.isAdmin = !this.isAdmin;
-                    this.showToast(this.isAdmin ? 'Admin Mode Activated' : 'Exited Admin Mode');
+                    this.showToast(this.isAdmin ? 'Admin Mode Unlocked' : 'Exited Admin Mode');
                 },
 
                 getWeekDateDisplay(weekNum) {
-                    // Check if custom date exists on matches
                     const matchInWeek = this.matches.find(m => m.matchweek === weekNum && m.date);
-                    if (matchInWeek) return matchInWeek.date;
+                    if (matchInWeek && matchInWeek.date) return matchInWeek.date;
 
-                    const startDate = new Date(2026, 10, 1); 
+                    const startDate = new Date(2026, 10, 1);
                     const weekDate = new Date(startDate);
                     weekDate.setDate(startDate.getDate() + (weekNum - 1) * 7);
                     const options = { weekday: 'short', month: 'short', day: 'numeric' };
@@ -968,7 +1417,7 @@
                 getRestingTeam(weekNum) {
                     const restingMap = { 1: 5, 2: 4, 3: 3, 4: 2, 5: 1, 6: 5, 7: 4, 8: 3, 9: 2, 10: 1 };
                     const teamId = restingMap[weekNum];
-                    return this.getTeam(teamId).name;
+                    return this.getTeamName(teamId);
                 },
 
                 get filteredMatchweeks() {
@@ -988,6 +1437,10 @@
                     });
                 },
 
+                get sortedScorers() {
+                    return [...this.playerStatsList].sort((a, b) => b.goals - a.goals);
+                },
+
                 computedStandings: [],
 
                 recalculateStandings() {
@@ -996,11 +1449,12 @@
                         name: t.name,
                         shortCode: t.shortCode,
                         color: t.color,
+                        kitPattern: t.kitPattern || 'solid',
                         mp: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, gd: 0, pts: 0,
                         form: []
                     }));
 
-                    this.matches.filter(m => m.completed).forEach(m => {
+                    this.matches.filter(m => m.status === 'FINISHED').forEach(m => {
                         const home = stats.find(s => s.id === m.homeId);
                         const away = stats.find(s => s.id === m.awayId);
 
@@ -1032,29 +1486,9 @@
                     this.saveStoredData();
                 },
 
-                // Score Edit
-                editMatchScore(match) {
-                    this.editingMatch = { ...match };
-                    this.openScoreModal = true;
-                },
-
-                saveMatchScore() {
-                    const idx = this.matches.findIndex(m => m.id === this.editingMatch.id);
-                    if (idx !== -1) {
-                        this.matches[idx] = { ...this.editingMatch };
-                        this.recalculateStandings();
-                        this.openScoreModal = false;
-                        this.showToast('Match score updated!');
-                        this.$nextTick(() => lucide.createIcons());
-                    }
-                },
-
-                // Fixture Date & Time Edit
-                editMatchDetails(match) {
-                    this.editingFixture = { ...match };
-                    if (!this.editingFixture.date) {
-                        this.editingFixture.date = this.getWeekDateDisplay(match.matchweek);
-                    }
+                // Fixture Modal
+                openFixtureEditModal(match) {
+                    this.editingFixture = JSON.parse(JSON.stringify(match));
                     this.openFixtureModal = true;
                 },
 
@@ -1062,13 +1496,13 @@
                     const idx = this.matches.findIndex(m => m.id === this.editingFixture.id);
                     if (idx !== -1) {
                         this.matches[idx] = { ...this.editingFixture };
-                        this.saveStoredData();
+                        this.recalculateStandings();
                         this.openFixtureModal = false;
-                        this.showToast('Fixture date & time updated!');
+                        this.showToast('Fixture & Scores Updated!');
                     }
                 },
 
-                // Team Details Edit
+                // Team & Kit Customizer
                 openTeamEditModal(team) {
                     this.editingTeam = JSON.parse(JSON.stringify(team));
                     this.openTeamModal = true;
@@ -1079,24 +1513,50 @@
                     if (idx !== -1) {
                         this.teams[idx] = { ...this.editingTeam };
                         this.recalculateStandings();
-                        this.saveStoredData();
                         this.openTeamModal = false;
-                        this.showToast('Team details & colors updated!');
+                        this.showToast('Club Customization Saved!');
                     }
                 },
 
-                // Squad Management
+                // Player Stats Editing
+                openAddPlayerStatModal() {
+                    this.editingPlayerStat = { id: Date.now(), name: '', teamId: this.teams[0].id, position: 'FWD', goals: 0, assists: 0, cleanSheets: 0, yellowCards: 0, redCards: 0 };
+                    this.openPlayerStatModal = true;
+                },
+
+                editPlayerStat(p) {
+                    this.editingPlayerStat = JSON.parse(JSON.stringify(p));
+                    this.openPlayerStatModal = true;
+                },
+
+                savePlayerStatRecord() {
+                    const idx = this.playerStatsList.findIndex(p => p.id === this.editingPlayerStat.id);
+                    if (idx !== -1) {
+                        this.playerStatsList[idx] = { ...this.editingPlayerStat };
+                    } else {
+                        this.playerStatsList.push({ ...this.editingPlayerStat });
+                    }
+                    this.saveStoredData();
+                    this.openPlayerStatModal = false;
+                    this.showToast('Player Stats Saved!');
+                },
+
+                // Squad Roster Management
                 openSquadModal(team) {
                     this.editingTeam = team;
-                    this.editingSquadList = [...team.squad];
-                    this.newPlayerName = '';
+                    this.editingSquadList = JSON.parse(JSON.stringify(team.squad));
                     this.openSquadManagerModal = true;
                 },
 
                 addPlayerToSquad() {
                     if (this.newPlayerName.trim()) {
-                        this.editingSquadList.push(this.newPlayerName.trim());
+                        this.editingSquadList.push({
+                            name: this.newPlayerName.trim(),
+                            number: this.newPlayerNumber || (this.editingSquadList.length + 1),
+                            position: this.newPlayerPosition
+                        });
                         this.newPlayerName = '';
+                        this.newPlayerNumber = '';
                     }
                 },
 
@@ -1107,18 +1567,37 @@
                 saveSquadChanges() {
                     const idx = this.teams.findIndex(t => t.id === this.editingTeam.id);
                     if (idx !== -1) {
-                        this.teams[idx].squad = [...this.editingSquadList];
+                        this.teams[idx].squad = JSON.parse(JSON.stringify(this.editingSquadList));
                         this.saveStoredData();
                         this.openSquadManagerModal = false;
-                        this.showToast('Squad roster saved successfully!');
+                        this.showToast('Squad Roster Updated!');
                     }
                 },
 
-                // Media & News
-                isYouTube(url) {
-                    return url && (url.includes('youtube.com') || url.includes('youtu.be'));
+                // Board Members
+                openAddBoardModal() {
+                    const name = prompt("Board Member Full Name:");
+                    if (!name) return;
+                    const role = prompt("Executive Role:", "Operations Director");
+                    this.boardMembers.push({
+                        id: Date.now(),
+                        name: name,
+                        role: role || 'Executive Member',
+                        email: 'committee@mpesaleague.org',
+                        phone: '+254 700 123456',
+                        bio: 'Supervising matchday execution and disciplinary rules.'
+                    });
+                    this.saveStoredData();
+                    this.showToast('Board Member Added!');
                 },
 
+                deleteBoardMember(id) {
+                    this.boardMembers = this.boardMembers.filter(b => b.id !== id);
+                    this.saveStoredData();
+                    this.showToast('Board Member Removed!');
+                },
+
+                // Media & News
                 getEmbedUrl(url) {
                     if (!url) return '';
                     if (url.includes('youtube.com/watch?v=')) return url.replace('watch?v=', 'embed/');
@@ -1147,7 +1626,7 @@
                         this.highlightVideos.unshift({
                             id: Date.now(),
                             title: this.newPost.title,
-                            matchweek: 'Matchweek Highlight',
+                            matchweek: 'Highlight Reel',
                             date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
                             videoUrl: this.newPost.videoUrl || 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
                             description: this.newPost.content
@@ -1155,104 +1634,115 @@
                     }
                     this.openMediaModal = false;
                     this.saveStoredData();
-                    this.showToast('Post published!');
-                    this.$nextTick(() => lucide.createIcons());
+                    this.showToast('Post Published!');
                 },
 
                 deleteNewsItem(id) {
                     this.newsArticles = this.newsArticles.filter(n => n.id !== id);
                     this.saveStoredData();
-                    this.showToast('Article deleted');
+                    this.showToast('Article Deleted');
                 },
 
                 deleteHighlight(id) {
                     this.highlightVideos = this.highlightVideos.filter(h => h.id !== id);
                     this.saveStoredData();
-                    this.showToast('Highlight removed');
+                    this.showToast('Highlight Removed');
                 },
 
                 openInjuryModal() {
                     const name = prompt("Player Name:");
                     if (!name) return;
-                    const details = prompt("Injury / Card Suspension Details:");
-                    const returnDate = prompt("Expected Return Date (e.g. Nov 15):", "Matchweek 3");
-                    
+                    const details = prompt("Injury or Suspension details:");
                     this.injuryReports.push({
                         id: Date.now(),
                         playerName: name,
                         teamId: this.teams[0].id,
                         status: 'SUSPENDED',
-                        details: details || 'Accumulated Yellow Cards',
-                        returnDate: returnDate || 'Next Match'
+                        details: details || '1 Match ban',
+                        returnDate: 'Matchweek 2'
                     });
                     this.saveStoredData();
-                    this.showToast('Injury status recorded');
+                    this.showToast('Injury report recorded!');
                 },
 
                 deleteInjuryReport(id) {
                     this.injuryReports = this.injuryReports.filter(i => i.id !== id);
                     this.saveStoredData();
-                    this.showToast('Report removed');
+                    this.showToast('Report Deleted');
                 },
 
                 openAddRuleModal() {
                     const title = prompt("Rule Title:");
                     if (!title) return;
-                    const desc = prompt("Rule Details & Regulations:");
+                    const desc = prompt("Rule Description:");
                     this.leagueRules.push({
                         id: Date.now(),
                         title: title,
-                        description: desc || 'Standard tournament rule applies.',
+                        description: desc || 'Official league policy.',
                         icon: 'shield-check'
                     });
                     this.saveStoredData();
-                    this.showToast('Rule added');
-                    this.$nextTick(() => lucide.createIcons());
+                    this.showToast('Rule Added!');
                 },
 
                 deleteRule(id) {
                     this.leagueRules = this.leagueRules.filter(r => r.id !== id);
                     this.saveStoredData();
-                    this.showToast('Rule removed');
+                    this.showToast('Rule Removed!');
                 },
 
                 loadStoredData() {
-                    const storedTeams = localStorage.getItem('mpesa_league_teams');
-                    const storedMatches = localStorage.getItem('mpesa_league_matches');
-                    const storedNews = localStorage.getItem('mpesa_league_news');
-                    const storedHighlights = localStorage.getItem('mpesa_league_highlights');
-                    const storedInjuries = localStorage.getItem('mpesa_league_injuries');
-                    const storedRules = localStorage.getItem('mpesa_league_rules');
+                    const storedTeams = localStorage.getItem('mpesa_pes_teams_v3');
+                    const storedMatches = localStorage.getItem('mpesa_pes_matches_v3');
+                    const storedStats = localStorage.getItem('mpesa_pes_stats_v3');
+                    const storedBoard = localStorage.getItem('mpesa_pes_board_v3');
+                    const storedNews = localStorage.getItem('mpesa_pes_news_v3');
+                    const storedHighlights = localStorage.getItem('mpesa_pes_highlights_v3');
+                    const storedInjuries = localStorage.getItem('mpesa_pes_injuries_v3');
+                    const storedRules = localStorage.getItem('mpesa_pes_rules_v3');
 
                     this.teams = storedTeams ? JSON.parse(storedTeams) : [
-                        { id: 1, name: 'Samba Boys', shortCode: 'SMB', color: '#00D154', captain: 'Kevin Omondi', style: 'Attacking Possession', kit: 'Green & White', squad: ['Kevin O. (#10)', 'Brian M. (#7)', 'Dan K. (#1)', 'Steve O. (#4)', 'Sammy T. (#8)', 'Dennis R. (#11)', 'Victor N. (#5)'], motto: 'Joga Bonito on the pitch!' },
-                        { id: 2, name: 'Grade 10 A', shortCode: 'G10A', color: '#3b82f6', captain: 'Emmanuel Kip', style: 'High Press Counter', kit: 'Royal Blue & Yellow', squad: ['Emmanuel K. (#9)', 'John D. (#1)', 'David M. (#3)', 'Paul N. (#6)', 'George W. (#8)', 'Luke P. (#14)', 'Mark S. (#17)'], motto: 'Relentless speed and stamina.' },
-                        { id: 3, name: 'Grade 10 B', shortCode: 'G10B', color: '#f59e0b', captain: 'Joshua Mutua', style: 'Compact Defensive', kit: 'Amber & Black', squad: ['Joshua M. (#5)', 'Caleb O. (#1)', 'Titus K. (#4)', 'Erick O. (#7)', 'Ian M. (#10)', 'Kelvin P. (#12)', 'James L. (#15)'], motto: 'Unbreakable spirit.' },
-                        { id: 4, name: 'DP 2 A', shortCode: 'DP2A', color: '#e11d48', captain: 'Collins Wekesa', style: 'Direct Tactical', kit: 'Crimson Red', squad: ['Collins W. (#8)', 'Peter A. (#1)', 'Moses O. (#2)', 'Francis N. (#5)', 'Simon T. (#10)', 'Alex R. (#11)', 'Bernard M. (#9)'], motto: 'Senior dominance.' },
-                        { id: 5, name: 'DP 2 B', shortCode: 'DP2B', color: '#8b5cf6', captain: 'Hassan Ali', style: 'Technical Passing', kit: 'Purple & White', squad: ['Hassan A. (#10)', 'Yusuf K. (#1)', 'Rashid M. (#6)', 'Omar S. (#7)', 'Salim B. (#8)', 'Tariq H. (#14)', 'Zaid N. (#20)'], motto: 'Control the tempo.' }
+                        { id: 1, name: 'Samba Boys', shortCode: 'SMB', color: '#00ff85', kitPattern: 'stripes', captain: 'Kevin Omondi', style: 'Attacking Possession', squad: [ { name: 'Kevin Omondi', number: 10, position: 'FWD' }, { name: 'Brian Mwangi', number: 7, position: 'MID' }, { name: 'Dan Kiprop', number: 1, position: 'GK' }, { name: 'Steve Otieno', number: 4, position: 'DEF' } ], motto: 'Joga Bonito on the pitch!' },
+                        { id: 2, name: 'Grade 10 A', shortCode: 'G10A', color: '#00f0ff', kitPattern: 'solid', captain: 'Emmanuel Kip', style: 'High Press Counter', squad: [ { name: 'Emmanuel Kip', number: 9, position: 'FWD' }, { name: 'John Doe', number: 1, position: 'GK' }, { name: 'David Maina', number: 3, position: 'DEF' } ], motto: 'Relentless speed & stamina.' },
+                        { id: 3, name: 'Grade 10 B', shortCode: 'G10B', color: '#ffe600', kitPattern: 'hoops', captain: 'Joshua Mutua', style: 'Compact Defense', squad: [ { name: 'Joshua Mutua', number: 5, position: 'DEF' }, { name: 'Caleb Otieno', number: 1, position: 'GK' }, { name: 'Ian Mercer', number: 10, position: 'MID' } ], motto: 'Unbreakable spirit.' },
+                        { id: 4, name: 'DP 2 A', shortCode: 'DP2A', color: '#ff0077', kitPattern: 'sash', captain: 'Collins Wekesa', style: 'Direct Tactical', squad: [ { name: 'Collins Wekesa', number: 8, position: 'MID' }, { name: 'Peter Akatsa', number: 1, position: 'GK' }, { name: 'Alex Rono', number: 11, position: 'FWD' } ], motto: 'Senior dominance.' },
+                        { id: 5, name: 'DP 2 B', shortCode: 'DP2B', color: '#a855f7', kitPattern: 'solid', captain: 'Hassan Ali', style: 'Technical Passing', squad: [ { name: 'Hassan Ali', number: 10, position: 'MID' }, { name: 'Yusuf Khan', number: 1, position: 'GK' }, { name: 'Rashid Mohamed', number: 6, position: 'DEF' } ], motto: 'Control the tempo.' }
                     ];
 
                     this.matches = storedMatches ? JSON.parse(storedMatches) : this.generateDefaultFixtures();
 
+                    this.playerStatsList = storedStats ? JSON.parse(storedStats) : [
+                        { id: 1, name: 'Kevin Omondi', teamId: 1, position: 'FWD', goals: 5, assists: 3, cleanSheets: 0, yellowCards: 1, redCards: 0 },
+                        { id: 2, name: 'Emmanuel Kip', teamId: 2, position: 'FWD', goals: 4, assists: 1, cleanSheets: 0, yellowCards: 2, redCards: 0 },
+                        { id: 3, name: 'Alex Rono', teamId: 4, position: 'FWD', goals: 3, assists: 2, cleanSheets: 0, yellowCards: 0, redCards: 0 },
+                        { id: 4, name: 'Hassan Ali', teamId: 5, position: 'MID', goals: 2, assists: 4, cleanSheets: 0, yellowCards: 1, redCards: 0 }
+                    ];
+
+                    this.boardMembers = storedBoard ? JSON.parse(storedBoard) : [
+                        { id: 1, name: 'Dr. Michael Ndung\'u', role: 'Executive League Chairman', email: 'chairman@mpesaleague.org', phone: '+254 711 000111', bio: 'Head of sports committee overseeing school league execution.' },
+                        { id: 2, name: 'Coach Patrick Waweru', role: 'Head Referees Commissioner', email: 'referees@mpesaleague.org', phone: '+254 722 000222', bio: 'Oversees officiating standards and red/yellow card discipline.' },
+                        { id: 3, name: 'Sarah Omwamba', role: 'Chief Operations & Scheduling Officer', email: 'ops@mpesaleague.org', phone: '+254 733 000333', bio: 'Manages pitch allocations, weekend match times and logistics.' }
+                    ];
+
                     this.newsArticles = storedNews ? JSON.parse(storedNews) : [
-                        { id: 1, title: "M-Pesa Sunday League Season Ready for Nov 1st Kickoff!", category: "League Announcement", date: "Oct 28, 2026", author: "League Management", content: "The official schedule for the premier school championship has been finalized. 5 teams will compete in a full 10-week round robin home-and-away format at the School Pitch.", videoUrl: "" },
-                        { id: 2, title: "Samba Boys & DP 2 A Managers Speak Ahead of Opening Matchday", category: "Press Conference", date: "Oct 30, 2026", author: "Press Officer", content: "In the pre-match presser, Samba Boys manager expressed full confidence in their possession strategy, while DP 2 A promised tactical discipline.", videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" }
+                        { id: 1, title: "Matchweek 1 Official Kickoff Scheduled for Nov 1st!", category: "League Announcement", date: "Oct 28, 2026", author: "League Admin", content: "All 5 clubs are ready for the opening matchweek. Samba Boys vs Grade 10 A will open the championship at 2:00 PM.", videoUrl: "" },
+                        { id: 2, title: "Pre-Match Press Conference: Samba Boys Captain Speaks Out", category: "Press Conference", date: "Oct 30, 2026", author: "Press Officer", content: "Kevin Omondi expects a fast-paced game against Grade 10 A in the opening derby.", videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" }
                     ];
 
                     this.highlightVideos = storedHighlights ? JSON.parse(storedHighlights) : [
-                        { id: 101, title: "Pre-Season Showcase Highlights", matchweek: "Pre-Season", date: "Oct 25, 2026", videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", description: "Top individual goal displays and long-range screeners captured during early practice matches." }
+                        { id: 101, title: "Pre-Season Goals & Skill Compilation", matchweek: "Pre-Season", date: "Oct 25, 2026", videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", description: "Top long-range goals and dribbles during pre-season training." }
                     ];
 
                     this.injuryReports = storedInjuries ? JSON.parse(storedInjuries) : [
-                        { id: 1, playerName: "Brian Mwangi", teamId: 1, status: "DOUBTFUL", details: "Ankle sprain during practice session", returnDate: "Matchweek 2" },
-                        { id: 2, playerName: "George Wekesa", teamId: 2, status: "SUSPENDED", details: "Red Card sanction from previous tournament", returnDate: "Matchweek 2" }
+                        { id: 1, playerName: "Brian Mwangi", teamId: 1, status: "DOUBTFUL", details: "Ankle sprain in training", returnDate: "Matchweek 2" },
+                        { id: 2, playerName: "George Wekesa", teamId: 2, status: "SUSPENDED", details: "Red Card ban", returnDate: "Matchweek 2" }
                     ];
 
                     this.leagueRules = storedRules ? JSON.parse(storedRules) : [
-                        { id: 1, title: "7 Substitutions Rule", description: "Each team is allowed a maximum of 7 substitutions per match across 3 stoppage windows to maintain game pace.", icon: "users" },
-                        { id: 2, title: "Red Card & Yellow Card Bans", description: "Direct Red Card carries an automatic 1-match ban (up to 3 for unsportsmanlike behavior). 5 accumulated yellow cards lead to a 1-match suspension.", icon: "alert-octagon" },
-                        { id: 3, title: "Forfeit & No-Show Penalty", description: "If a team fails to field at least 7 players within 15 minutes of scheduled kickoff, a 3-0 default victory is awarded to the opponent.", icon: "x-circle" },
-                        { id: 4, title: "3-1-0 Points Framework", description: "3 Points for a Win, 1 Point for a Draw, 0 Points for a Loss. Tiebreakers: Points > Goal Difference > Goals For.", icon: "award" }
+                        { id: 1, title: "Max 7 Substitutions Allowed", description: "Teams may perform up to 7 substitutions across 3 stoppage windows per match.", icon: "users" },
+                        { id: 2, title: "Red Cards & Yellow Card Accumulation", description: "Direct Red Card = 1 Match Ban. 5 Accumulated Yellow Cards = 1 Match Suspension.", icon: "alert-triangle" },
+                        { id: 3, title: "No-Show & Forfeit Rule (3-0)", description: "Failing to field 7 players within 15 mins of kickoff results in an automatic 3-0 default loss.", icon: "x-circle" },
+                        { id: 4, title: "3-1-0 Point Ranking System", description: "3 Points for a Win, 1 Point for a Draw, 0 Points for a Loss. Tiebreakers: GD > GF.", icon: "award" }
                     ];
                 },
 
@@ -1270,37 +1760,13 @@
 
                     round1.forEach(w => {
                         w.matches.forEach(m => {
-                            allMatches.push({
-                                id: idCounter++,
-                                matchweek: w.week,
-                                time: m.time,
-                                date: '',
-                                venue: 'School Pitch',
-                                homeId: m.h,
-                                awayId: m.a,
-                                homeScore: 0,
-                                awayScore: 0,
-                                completed: false,
-                                scorers: ''
-                            });
+                            allMatches.push({ id: idCounter++, matchweek: w.week, time: m.time, date: '', venue: 'School Pitch', homeId: m.h, awayId: m.a, homeScore: 0, awayScore: 0, status: 'UPCOMING', scorers: '' });
                         });
                     });
 
                     round1.forEach(w => {
                         w.matches.forEach(m => {
-                            allMatches.push({
-                                id: idCounter++,
-                                matchweek: w.week + 5,
-                                time: m.time,
-                                date: '',
-                                venue: 'School Pitch',
-                                homeId: m.a,
-                                awayId: m.h,
-                                homeScore: 0,
-                                awayScore: 0,
-                                completed: false,
-                                scorers: ''
-                            });
+                            allMatches.push({ id: idCounter++, matchweek: w.week + 5, time: m.time, date: '', venue: 'School Pitch', homeId: m.a, awayId: m.h, homeScore: 0, awayScore: 0, status: 'UPCOMING', scorers: '' });
                         });
                     });
 
@@ -1308,16 +1774,18 @@
                 },
 
                 saveStoredData() {
-                    localStorage.setItem('mpesa_league_teams', JSON.stringify(this.teams));
-                    localStorage.setItem('mpesa_league_matches', JSON.stringify(this.matches));
-                    localStorage.setItem('mpesa_league_news', JSON.stringify(this.newsArticles));
-                    localStorage.setItem('mpesa_league_highlights', JSON.stringify(this.highlightVideos));
-                    localStorage.setItem('mpesa_league_injuries', JSON.stringify(this.injuryReports));
-                    localStorage.setItem('mpesa_league_rules', JSON.stringify(this.leagueRules));
+                    localStorage.setItem('mpesa_pes_teams_v3', JSON.stringify(this.teams));
+                    localStorage.setItem('mpesa_pes_matches_v3', JSON.stringify(this.matches));
+                    localStorage.setItem('mpesa_pes_stats_v3', JSON.stringify(this.playerStatsList));
+                    localStorage.setItem('mpesa_pes_board_v3', JSON.stringify(this.boardMembers));
+                    localStorage.setItem('mpesa_pes_news_v3', JSON.stringify(this.newsArticles));
+                    localStorage.setItem('mpesa_pes_highlights_v3', JSON.stringify(this.highlightVideos));
+                    localStorage.setItem('mpesa_pes_injuries_v3', JSON.stringify(this.injuryReports));
+                    localStorage.setItem('mpesa_pes_rules_v3', JSON.stringify(this.leagueRules));
                 },
 
                 resetToDefaults() {
-                    if (confirm("Reset all custom edits back to defaults?")) {
+                    if (confirm("Reset all league data and edits back to original defaults?")) {
                         localStorage.clear();
                         location.reload();
                     }
@@ -1328,5 +1796,5 @@
 </body>
 </html>
 apps-fileview.texmex_20261001.00_p0
-mpesa_sunday_league_hub.html
-Displaying mpesa_sunday_league_hub.html.
+mpesa_sunday_league_hub (2).html
+Displaying mpesa_sunday_league_hub (2).html.
