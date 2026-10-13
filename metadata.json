@@ -1,0 +1,5 @@
+{
+  "name": "M-Pesa Sunday League Hub",
+  "description": "Official eFootball Edition portal for M-Pesa Sunday League featuring tables, player stats leaderboard, fixtures, clubs, and squad management.",
+  "capabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
