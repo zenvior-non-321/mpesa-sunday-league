@@ -10,3 +10,5 @@
 > the editor, so keep the branch in a working state.
 
 <!-- LOVABLE:END -->
+
+- Keep public league appointments in `public/league-officials.js`, separate from portal access records, so public titles never grant permissions.
