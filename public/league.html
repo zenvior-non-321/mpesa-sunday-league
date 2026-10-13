@@ -1,0 +1,1332 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M-Pesa Sunday League Hub</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            green: '#00D154',
+                            darkGreen: '#008a37',
+                            purple: '#38003c',
+                            purpleDark: '#240027',
+                            accent: '#00ff85',
+                            card: '#1e1b2e',
+                            border: '#2e2a45'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Alpine.js for state management -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Teko:wght@500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f0c1b;
+            color: #f3f4f6;
+        }
+        .font-header {
+            font-family: 'Teko', sans-serif;
+            letter-spacing: 0.5px;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #181528;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #38003c;
+            border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #00D154;
+        }
+        .glass-panel {
+            background: rgba(30, 27, 46, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+    </style>
+</head>
+<body x-data="leagueApp()" x-init="initApp()" class="min-h-screen flex flex-col bg-[#0f0c1b] text-gray-100 selection:bg-brand-green selection:text-black">
+
+    <!-- Toast Notification Banner -->
+    <div x-show="toast.show" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 translate-y-[-20px]"
+         x-transition:enter-end="opacity-100 translate-y-0"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100 translate-y-0"
+         x-transition:leave-end="opacity-0 translate-y-[-20px]"
+         class="fixed top-5 right-5 z-50 bg-brand-green text-black px-5 py-3 rounded-xl shadow-2xl font-bold flex items-center gap-2 border border-emerald-300">
+        <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+        <span x-text="toast.message"></span>
+    </div>
+
+    <!-- Top Navigation Header -->
+    <header class="sticky top-0 z-40 bg-brand-purpleDark/95 backdrop-blur-md border-b border-brand-border">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <!-- Logo & Brand Title -->
+                <div class="flex items-center gap-3 cursor-pointer" @click="activeTab = 'table'">
+                    <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-brand-green to-emerald-300 flex items-center justify-center text-brand-purple font-black text-2xl shadow-lg shadow-brand-green/20 transform hover:scale-105 transition-transform">
+                        M
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h1 class="font-header text-3xl font-bold tracking-wider leading-none text-white uppercase">M-Pesa <span class="text-brand-green">Sunday</span> League</h1>
+                            <span class="text-[10px] bg-brand-green/20 text-brand-green border border-brand-green/30 px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider">Official Hub</span>
+                        </div>
+                        <p class="text-xs text-gray-400 font-medium">School Football Championship 2026</p>
+                    </div>
+                </div>
+
+                <!-- Admin Status / Toggle Button -->
+                <div class="flex items-center gap-3">
+                    <template x-if="isAdmin">
+                        <div class="flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 text-amber-400 px-3 py-1.5 rounded-lg text-xs font-semibold">
+                            <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+                            <span>ADMIN EDITING ACTIVE</span>
+                            <button @click="toggleAdmin()" class="ml-2 hover:bg-amber-500/20 p-1 rounded transition text-amber-300" title="Exit Admin Mode">
+                                <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                    </template>
+                    <template x-if="!isAdmin">
+                        <button @click="openAdminModal = true" class="flex items-center gap-2 bg-brand-purple border border-brand-border hover:border-brand-green text-gray-200 hover:text-brand-green px-4 py-2 rounded-xl text-xs font-semibold transition-all shadow-sm">
+                            <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+                            <span>Admin Login</span>
+                        </button>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Navigation Bar Tabs -->
+            <nav class="flex space-x-1 sm:space-x-2 overflow-x-auto custom-scrollbar pb-2 pt-1 border-t border-brand-border/40">
+                <template x-for="tab in tabs" :key="tab.id">
+                    <button 
+                        @click="activeTab = tab.id"
+                        :class="activeTab === tab.id 
+                            ? 'bg-brand-green text-black font-bold shadow-lg shadow-brand-green/20' 
+                            : 'text-gray-300 hover:bg-brand-purple/60 hover:text-white font-medium'"
+                        class="flex items-center gap-2 px-4 py-2 rounded-lg text-xs sm:text-sm whitespace-nowrap transition-all duration-200">
+                        <i :data-lucide="tab.icon" class="w-4 h-4"></i>
+                        <span x-text="tab.name"></span>
+                    </button>
+                </template>
+            </nav>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+        <!-- Top League Banner -->
+        <div class="bg-gradient-to-r from-brand-purple via-brand-card to-brand-purpleDark rounded-2xl p-4 border border-brand-border flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xl">
+            <div class="flex items-center gap-3">
+                <span class="bg-brand-green text-black px-2.5 py-1 rounded text-xs font-black uppercase tracking-wider">Next Up</span>
+                <p class="text-sm font-medium text-gray-200">
+                    <span class="text-brand-green font-bold">Matchweek 1</span> starts <span class="font-semibold text-white">Sunday, Nov 1st</span> at School Pitch!
+                </p>
+            </div>
+            <div class="flex items-center gap-4 text-xs text-gray-400">
+                <div class="flex items-center gap-1.5"><i data-lucide="map-pin" class="w-3.5 h-3.5 text-brand-green"></i> School Pitch</div>
+                <div class="flex items-center gap-1.5"><i data-lucide="clock" class="w-3.5 h-3.5 text-brand-green"></i> Kickoffs 2:00 PM & 4:00 PM</div>
+            </div>
+        </div>
+
+        <!-- TAB 1: STANDINGS TABLE -->
+        <section x-show="activeTab === 'table'" x-transition:enter="transition ease-out duration-200" class="space-y-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h2 class="font-header text-4xl font-bold text-white uppercase tracking-wide">League Standings</h2>
+                    <p class="text-sm text-gray-400">Recalculated automatically when scores are saved</p>
+                </div>
+                <div class="flex items-center gap-2 text-xs text-gray-400 bg-brand-card px-3 py-1.5 rounded-lg border border-brand-border">
+                    <span class="w-2 h-2 rounded-full bg-brand-green"></span>
+                    <span>Win = 3pts | Draw = 1pt | Loss = 0pt</span>
+                </div>
+            </div>
+
+            <div class="glass-panel rounded-2xl overflow-hidden shadow-2xl border border-brand-border">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-brand-purpleDark/80 text-xs font-bold text-gray-400 uppercase border-b border-brand-border">
+                                <th class="py-4 px-4 text-center w-12">Pos</th>
+                                <th class="py-4 px-6">Club</th>
+                                <th class="py-4 px-3 text-center">MP</th>
+                                <th class="py-4 px-3 text-center">W</th>
+                                <th class="py-4 px-3 text-center">D</th>
+                                <th class="py-4 px-3 text-center">L</th>
+                                <th class="py-4 px-3 text-center hidden md:table-cell">GF</th>
+                                <th class="py-4 px-3 text-center hidden md:table-cell">GA</th>
+                                <th class="py-4 px-3 text-center">GD</th>
+                                <th class="py-4 px-4 text-center font-black text-brand-green">Pts</th>
+                                <th class="py-4 px-4 text-center hidden lg:table-cell">Form</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-brand-border/50 text-sm font-medium">
+                            <template x-for="(team, index) in sortedStandings" :key="team.id">
+                                <tr class="hover:bg-brand-purple/40 transition-colors group">
+                                    <td class="py-4 px-4 text-center font-bold">
+                                        <span x-text="index + 1" :class="{
+                                            'text-brand-green font-extrabold': index === 0,
+                                            'text-gray-400': index !== 0
+                                        }"></span>
+                                    </td>
+                                    <td class="py-4 px-6">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs text-white shadow-md border border-white/10" :style="`background-color: ${team.color}`" x-text="team.shortCode"></div>
+                                            <div>
+                                                <span class="font-bold text-white group-hover:text-brand-green transition-colors" x-text="team.name"></span>
+                                                <span x-show="index === 0" class="ml-2 text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded font-bold">LEADERS</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-3 text-center font-semibold text-gray-300" x-text="team.mp"></td>
+                                    <td class="py-4 px-3 text-center text-emerald-400 font-semibold" x-text="team.w"></td>
+                                    <td class="py-4 px-3 text-center text-amber-400 font-semibold" x-text="team.d"></td>
+                                    <td class="py-4 px-3 text-center text-rose-400 font-semibold" x-text="team.l"></td>
+                                    <td class="py-4 px-3 text-center text-gray-400 hidden md:table-cell" x-text="team.gf"></td>
+                                    <td class="py-4 px-3 text-center text-gray-400 hidden md:table-cell" x-text="team.ga"></td>
+                                    <td class="py-4 px-3 text-center font-bold" :class="team.gd > 0 ? 'text-emerald-400' : (team.gd < 0 ? 'text-rose-400' : 'text-gray-400')" x-text="(team.gd > 0 ? '+' : '') + team.gd"></td>
+                                    <td class="py-4 px-4 text-center font-black text-base text-brand-green bg-brand-green/5" x-text="team.pts"></td>
+                                    <td class="py-4 px-4 text-center hidden lg:table-cell">
+                                        <div class="flex items-center justify-center gap-1">
+                                            <template x-for="result in team.form" :key="Math.random()">
+                                                <span class="w-5 h-5 rounded flex items-center justify-center text-[10px] font-bold text-white uppercase"
+                                                    :class="{
+                                                        'bg-emerald-500': result === 'W',
+                                                        'bg-amber-500': result === 'D',
+                                                        'bg-rose-500': result === 'L',
+                                                        'bg-gray-700': result === '-'
+                                                    }" x-text="result"></span>
+                                            </template>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: FIXTURES & MATCHES -->
+        <section x-show="activeTab === 'fixtures'" x-transition:enter="transition ease-out duration-200" class="space-y-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h2 class="font-header text-4xl font-bold text-white uppercase tracking-wide">Fixtures & Results</h2>
+                    <p class="text-sm text-gray-400">Match dates, kickoff times, pitches and scores (All editable by Admin)</p>
+                </div>
+                <!-- Week Filter -->
+                <div class="flex items-center gap-2 overflow-x-auto pb-2 custom-scrollbar">
+                    <button @click="selectedWeekFilter = 'ALL'" :class="selectedWeekFilter === 'ALL' ? 'bg-brand-green text-black font-bold' : 'bg-brand-card text-gray-400 border border-brand-border hover:text-white'" class="px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition">
+                        All Weeks
+                    </button>
+                    <template x-for="week in 10" :key="week">
+                        <button @click="selectedWeekFilter = week" :class="selectedWeekFilter === week ? 'bg-brand-green text-black font-bold' : 'bg-brand-card text-gray-400 border border-brand-border hover:text-white'" class="px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition">
+                            <span x-text="'MW ' + week"></span>
+                        </button>
+                    </template>
+                </div>
+            </div>
+
+            <div class="space-y-8">
+                <template x-for="weekNum in filteredMatchweeks" :key="weekNum">
+                    <div class="glass-panel rounded-2xl p-6 border border-brand-border space-y-4">
+                        <div class="flex items-center justify-between border-b border-brand-border/60 pb-3">
+                            <div class="flex items-center gap-3">
+                                <span class="bg-brand-purple text-brand-green font-header text-2xl font-bold px-3 py-0.5 rounded-lg border border-brand-border" x-text="'MATCHWEEK ' + weekNum"></span>
+                                <span class="text-xs text-gray-400 font-semibold" x-text="getWeekDateDisplay(weekNum)"></span>
+                            </div>
+                            <div class="text-xs bg-brand-purpleDark/80 border border-brand-border text-gray-300 px-3 py-1 rounded-full flex items-center gap-1.5">
+                                <i data-lucide="coffee" class="w-3.5 h-3.5 text-amber-400"></i>
+                                <span>Resting Team: <strong class="text-white" x-text="getRestingTeam(weekNum)"></strong></span>
+                            </div>
+                        </div>
+
+                        <!-- Match Card -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                            <template x-for="match in getMatchesByWeek(weekNum)" :key="match.id">
+                                <div class="bg-brand-purpleDark/60 rounded-xl p-4 border border-brand-border hover:border-brand-purple transition-all flex flex-col justify-between space-y-3">
+                                    <div class="flex items-center justify-between text-xs text-gray-400 border-b border-brand-border/30 pb-2">
+                                        <div class="flex items-center gap-2">
+                                            <i data-lucide="calendar-clock" class="w-3.5 h-3.5 text-brand-green"></i>
+                                            <span class="font-semibold text-gray-200" x-text="(match.date || getWeekDateDisplay(match.matchweek)) + ' • ' + match.time"></span>
+                                        </div>
+                                        <span class="flex items-center gap-1"><i data-lucide="map-pin" class="w-3 h-3 text-brand-green"></i> <span x-text="match.venue"></span></span>
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase" :class="match.completed ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'" x-text="match.completed ? 'FINAL SCORE' : 'UPCOMING'"></span>
+                                    </div>
+
+                                    <!-- Teams and Score Display -->
+                                    <div class="flex items-center justify-between py-2 px-2">
+                                        <!-- Home Team -->
+                                        <div class="flex items-center gap-3 w-5/12">
+                                            <div class="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs text-white shrink-0 shadow border border-white/10" :style="`background-color: ${getTeam(match.homeId).color}`" x-text="getTeam(match.homeId).shortCode"></div>
+                                            <span class="font-bold text-sm text-white truncate" x-text="getTeam(match.homeId).name"></span>
+                                        </div>
+
+                                        <!-- Score or VS -->
+                                        <div class="flex items-center justify-center w-2/12">
+                                            <template x-if="match.completed">
+                                                <div class="flex items-center gap-2 bg-brand-card border border-brand-border px-3 py-1 rounded-lg">
+                                                    <span class="text-lg font-black text-white" x-text="match.homeScore"></span>
+                                                    <span class="text-gray-500 text-xs font-bold">-</span>
+                                                    <span class="text-lg font-black text-white" x-text="match.awayScore"></span>
+                                                </div>
+                                            </template>
+                                            <template x-if="!match.completed">
+                                                <span class="text-xs font-black text-gray-500 bg-brand-card px-2.5 py-1 rounded border border-brand-border uppercase">VS</span>
+                                            </template>
+                                        </div>
+
+                                        <!-- Away Team -->
+                                        <div class="flex items-center justify-end gap-3 w-5/12 text-right">
+                                            <span class="font-bold text-sm text-white truncate" x-text="getTeam(match.awayId).name"></span>
+                                            <div class="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs text-white shrink-0 shadow border border-white/10" :style="`background-color: ${getTeam(match.awayId).color}`" x-text="getTeam(match.awayId).shortCode"></div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Scorer details if present -->
+                                    <template x-if="match.completed && match.scorers">
+                                        <div class="text-xs text-gray-400 bg-brand-card/50 p-2 rounded border border-brand-border/40 flex items-center gap-2">
+                                            <i data-lucide="futbol" class="w-3.5 h-3.5 text-brand-green shrink-0"></i>
+                                            <span class="italic truncate" x-text="match.scorers"></span>
+                                        </div>
+                                    </template>
+
+                                    <!-- Admin Controls for Score and Fixture Date/Time -->
+                                    <template x-if="isAdmin">
+                                        <div class="pt-2 border-t border-brand-border/40 flex items-center justify-end gap-2">
+                                            <button @click="editMatchDetails(match)" class="flex items-center gap-1.5 text-xs bg-brand-purple hover:bg-brand-purple/80 text-gray-200 border border-brand-border px-3 py-1 rounded-lg transition font-semibold">
+                                                <i data-lucide="calendar" class="w-3 h-3 text-brand-green"></i>
+                                                <span>Edit Date/Venue</span>
+                                            </button>
+                                            <button @click="editMatchScore(match)" class="flex items-center gap-1.5 text-xs bg-brand-green/20 hover:bg-brand-green text-brand-green hover:text-black font-semibold px-3 py-1 rounded-lg transition">
+                                                <i data-lucide="edit-3" class="w-3 h-3"></i>
+                                                <span>Edit Score</span>
+                                            </button>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </section>
+
+        <!-- TAB 3: CLUBS & SQUAD MANAGEMENT -->
+        <section x-show="activeTab === 'teams'" x-transition:enter="transition ease-out duration-200" class="space-y-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h2 class="font-header text-4xl font-bold text-white uppercase tracking-wide">League Clubs & Squads</h2>
+                    <p class="text-sm text-gray-400">Team names, colors, jerseys and squad rosters (Full editing in Admin Mode)</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <template x-for="team in teams" :key="team.id">
+                    <div class="glass-panel rounded-2xl p-6 border border-brand-border space-y-5 hover:border-brand-green transition duration-300 flex flex-col justify-between">
+                        <div class="space-y-4">
+                            <!-- Team Header Banner -->
+                            <div class="flex items-center justify-between border-b border-brand-border pb-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-12 h-12 rounded-xl flex items-center justify-center font-black text-xl text-white shadow-lg border border-white/20" :style="`background-color: ${team.color}`" x-text="team.shortCode"></div>
+                                    <div>
+                                        <h3 class="font-bold text-xl text-white leading-tight" x-text="team.name"></h3>
+                                        <span class="text-xs text-gray-400" x-text="'Captain: ' + team.captain"></span>
+                                    </div>
+                                </div>
+                                <template x-if="isAdmin">
+                                    <button @click="openTeamEditModal(team)" class="p-2 rounded-lg bg-brand-purple hover:bg-brand-green hover:text-black text-brand-green border border-brand-border transition" title="Edit Club Details">
+                                        <i data-lucide="settings" class="w-4 h-4"></i>
+                                    </button>
+                                </template>
+                            </div>
+
+                            <!-- Team Attributes -->
+                            <div class="space-y-2 text-xs text-gray-300">
+                                <div class="flex justify-between py-1 border-b border-brand-border/30">
+                                    <span class="text-gray-400">Tactical Style</span>
+                                    <span class="font-semibold text-brand-green" x-text="team.style"></span>
+                                </div>
+                                <div class="flex justify-between py-1 border-b border-brand-border/30">
+                                    <span class="text-gray-400">Kit Colors</span>
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-3 h-3 rounded-full border border-white/20" :style="`background-color: ${team.color}`"></span>
+                                        <span class="font-semibold text-white" x-text="team.kit"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Squad Roster List -->
+                            <div>
+                                <div class="flex items-center justify-between mb-2">
+                                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Squad Roster (<span x-text="team.squad.length"></span>)</h4>
+                                    <template x-if="isAdmin">
+                                        <button @click="openSquadModal(team)" class="text-[11px] text-brand-green hover:underline flex items-center gap-1 font-bold">
+                                            <i data-lucide="user-plus" class="w-3 h-3"></i> Manage Squad
+                                        </button>
+                                    </template>
+                                </div>
+                                <div class="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto custom-scrollbar p-1 bg-brand-purpleDark/40 rounded-xl border border-brand-border/40">
+                                    <template x-for="(player, pIdx) in team.squad" :key="pIdx">
+                                        <span class="bg-brand-purple/80 text-gray-200 text-xs px-2.5 py-1 rounded-md border border-brand-border flex items-center gap-1">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-brand-green"></span>
+                                            <span x-text="player"></span>
+                                        </span>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pt-3 border-t border-brand-border/40 text-xs text-gray-400 italic">
+                            <span x-text="'Motto: ' + team.motto"></span>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </section>
+
+        <!-- TAB 4: NEWS & PRESS CONFERENCES -->
+        <section x-show="activeTab === 'news'" x-transition:enter="transition ease-out duration-200" class="space-y-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h2 class="font-header text-4xl font-bold text-white uppercase tracking-wide">News & Press Room</h2>
+                    <p class="text-sm text-gray-400">Official league announcements, pre-match pressers & manager interviews</p>
+                </div>
+                <template x-if="isAdmin">
+                    <button @click="openPostModal('news')" class="flex items-center gap-2 bg-brand-green text-black font-bold px-4 py-2 rounded-xl text-xs hover:bg-emerald-400 transition shadow-lg shadow-brand-green/20">
+                        <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                        <span>Publish News Article</span>
+                    </button>
+                </template>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <template x-for="item in newsArticles" :key="item.id">
+                    <div class="glass-panel rounded-2xl overflow-hidden border border-brand-border flex flex-col justify-between hover:border-brand-purple transition-all group">
+                        <div>
+                            <template x-if="item.videoUrl">
+                                <div class="aspect-video bg-black relative">
+                                    <iframe :src="getEmbedUrl(item.videoUrl)" class="w-full h-full" frameborder="0" allowfullscreen></iframe>
+                                </div>
+                            </template>
+                            <template x-if="!item.videoUrl && item.imageUrl">
+                                <div class="h-48 overflow-hidden relative">
+                                    <img :src="item.imageUrl" :alt="item.title" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                                </div>
+                            </template>
+
+                            <div class="p-5 space-y-3">
+                                <div class="flex items-center justify-between text-xs text-gray-400">
+                                    <span class="bg-brand-purple text-brand-green px-2 py-0.5 rounded font-bold uppercase text-[10px]" x-text="item.category"></span>
+                                    <span x-text="item.date"></span>
+                                </div>
+                                <h3 class="font-bold text-lg text-white group-hover:text-brand-green transition-colors leading-snug" x-text="item.title"></h3>
+                                <p class="text-sm text-gray-300 leading-relaxed" x-text="item.content"></p>
+                            </div>
+                        </div>
+
+                        <div class="p-5 pt-0 flex items-center justify-between border-t border-brand-border/30 mt-4">
+                            <span class="text-xs text-gray-400 font-medium" x-text="'By ' + item.author"></span>
+                            <template x-if="isAdmin">
+                                <button @click="deleteNewsItem(item.id)" class="text-rose-400 hover:text-rose-300 text-xs font-semibold p-1 hover:bg-rose-500/10 rounded transition">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </section>
+
+        <!-- TAB 5: HIGHLIGHTS -->
+        <section x-show="activeTab === 'highlights'" x-transition:enter="transition ease-out duration-200" class="space-y-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h2 class="font-header text-4xl font-bold text-white uppercase tracking-wide">Match Highlights</h2>
+                    <p class="text-sm text-gray-400">Watch top goals, key moments, and weekly recap videos</p>
+                </div>
+                <template x-if="isAdmin">
+                    <button @click="openPostModal('highlight')" class="flex items-center gap-2 bg-brand-green text-black font-bold px-4 py-2 rounded-xl text-xs hover:bg-emerald-400 transition shadow-lg shadow-brand-green/20">
+                        <i data-lucide="video" class="w-4 h-4"></i>
+                        <span>Upload Highlight Reel</span>
+                    </button>
+                </template>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <template x-for="item in highlightVideos" :key="item.id">
+                    <div class="glass-panel rounded-2xl overflow-hidden border border-brand-border space-y-4 p-4">
+                        <div class="aspect-video bg-black rounded-xl overflow-hidden border border-brand-border/60">
+                            <template x-if="isYouTube(item.videoUrl)">
+                                <iframe :src="getEmbedUrl(item.videoUrl)" class="w-full h-full" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                            </template>
+                            <template x-if="!isYouTube(item.videoUrl)">
+                                <video controls class="w-full h-full object-cover">
+                                    <source :src="item.videoUrl" type="video/mp4">
+                                    Your browser does not support video playback.
+                                </video>
+                            </template>
+                        </div>
+
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between text-xs text-gray-400">
+                                <span class="bg-brand-green/20 text-brand-green px-2 py-0.5 rounded font-bold uppercase text-[10px]" x-text="item.matchweek"></span>
+                                <span x-text="item.date"></span>
+                            </div>
+                            <h3 class="font-bold text-lg text-white" x-text="item.title"></h3>
+                            <p class="text-xs text-gray-300" x-text="item.description"></p>
+                        </div>
+
+                        <template x-if="isAdmin">
+                            <div class="pt-2 border-t border-brand-border/40 flex justify-end">
+                                <button @click="deleteHighlight(item.id)" class="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1">
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Remove
+                                </button>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+            </div>
+        </section>
+
+        <!-- TAB 6: INJURY & SUSPENSION HUB -->
+        <section x-show="activeTab === 'injuries'" x-transition:enter="transition ease-out duration-200" class="space-y-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h2 class="font-header text-4xl font-bold text-white uppercase tracking-wide">Injury & Suspension Hub</h2>
+                    <p class="text-sm text-gray-400">Official player status, medical updates, and card bans</p>
+                </div>
+                <template x-if="isAdmin">
+                    <button @click="openInjuryModal()" class="flex items-center gap-2 bg-brand-green text-black font-bold px-4 py-2 rounded-xl text-xs hover:bg-emerald-400 transition shadow-lg shadow-brand-green/20">
+                        <i data-lucide="user-plus" class="w-4 h-4"></i>
+                        <span>Add Status Update</span>
+                    </button>
+                </template>
+            </div>
+
+            <div class="glass-panel rounded-2xl overflow-hidden border border-brand-border shadow-xl">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-brand-purpleDark/80 text-xs font-bold text-gray-400 uppercase border-b border-brand-border">
+                                <th class="py-4 px-6">Player Name</th>
+                                <th class="py-4 px-4">Club</th>
+                                <th class="py-4 px-4">Status</th>
+                                <th class="py-4 px-4">Reason / Injury</th>
+                                <th class="py-4 px-4">Expected Return</th>
+                                <template x-if="isAdmin"><th class="py-4 px-4 text-right">Actions</th></template>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-brand-border/50 text-sm font-medium">
+                            <template x-for="report in injuryReports" :key="report.id">
+                                <tr class="hover:bg-brand-purple/30 transition-colors">
+                                    <td class="py-4 px-6 font-bold text-white" x-text="report.playerName"></td>
+                                    <td class="py-4 px-4">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-4 h-4 rounded" :style="`background-color: ${getTeam(report.teamId).color}`"></div>
+                                            <span class="text-gray-300 text-xs font-semibold" x-text="getTeam(report.teamId).name"></span>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-4">
+                                        <span class="px-2.5 py-1 rounded-md text-xs font-bold uppercase"
+                                            :class="{
+                                                'bg-rose-500/20 text-rose-400 border border-rose-500/30': report.status === 'SUSPENDED' || report.status === 'OUT',
+                                                'bg-amber-500/20 text-amber-400 border border-amber-500/30': report.status === 'DOUBTFUL',
+                                                'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30': report.status === 'FIT'
+                                            }" x-text="report.status"></span>
+                                    </td>
+                                    <td class="py-4 px-4 text-gray-300 text-xs" x-text="report.details"></td>
+                                    <td class="py-4 px-4 text-xs font-mono text-brand-green" x-text="report.returnDate"></td>
+                                    <template x-if="isAdmin">
+                                        <td class="py-4 px-4 text-right">
+                                            <button @click="deleteInjuryReport(report.id)" class="text-rose-400 hover:text-rose-300 p-1">
+                                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                            </button>
+                                        </td>
+                                    </template>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 7: RULES & REGULATIONS -->
+        <section x-show="activeTab === 'rules'" x-transition:enter="transition ease-out duration-200" class="space-y-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h2 class="font-header text-4xl font-bold text-white uppercase tracking-wide">League Rules & Regulations</h2>
+                    <p class="text-sm text-gray-400">Official tournament guidelines, disciplinary frameworks, and matchday rules</p>
+                </div>
+                <template x-if="isAdmin">
+                    <button @click="openAddRuleModal()" class="flex items-center gap-2 bg-brand-green text-black font-bold px-4 py-2 rounded-xl text-xs hover:bg-emerald-400 transition shadow-lg shadow-brand-green/20">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                        <span>Add Custom Rule</span>
+                    </button>
+                </template>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <template x-for="rule in leagueRules" :key="rule.id">
+                    <div class="glass-panel rounded-2xl p-6 border border-brand-border space-y-3 relative group">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-brand-purple text-brand-green flex items-center justify-center font-bold text-sm border border-brand-border">
+                                <i :data-lucide="rule.icon || 'shield-alert'" class="w-4 h-4"></i>
+                            </div>
+                            <h3 class="font-bold text-lg text-white" x-text="rule.title"></h3>
+                        </div>
+                        <p class="text-sm text-gray-300 leading-relaxed pl-11" x-text="rule.description"></p>
+                        
+                        <template x-if="isAdmin">
+                            <button @click="deleteRule(rule.id)" class="absolute top-4 right-4 text-rose-400 hover:text-rose-300 opacity-0 group-hover:opacity-100 transition p-1">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </template>
+                    </div>
+                </template>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL 1: Admin Passcode Login Modal -->
+    <div x-show="openAdminModal" x-transition.opacity class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div @click.outside="openAdminModal = false" class="glass-panel rounded-2xl max-w-md w-full p-6 border border-brand-border space-y-6 shadow-2xl">
+            <div class="flex items-center justify-between border-b border-brand-border pb-4">
+                <h3 class="font-header text-3xl font-bold text-white uppercase">Admin Passcode Login</h3>
+                <button @click="openAdminModal = false" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            
+            <form @submit.prevent="verifyAdminPassword()" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-gray-400 mb-2">Enter Passcode</label>
+                    <input type="password" x-model="adminPasswordInput" placeholder="Passcode (default: admin123)" class="w-full bg-brand-purpleDark border border-brand-border rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brand-green">
+                    <p class="text-[11px] text-gray-500 mt-1">Default password: <code class="text-brand-green">admin123</code></p>
+                </div>
+                <div x-show="adminError" class="text-xs text-rose-400 font-semibold" x-text="adminError"></div>
+                
+                <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" @click="openAdminModal = false" class="px-4 py-2 rounded-xl text-xs font-semibold text-gray-400 hover:text-white">Cancel</button>
+                    <button type="submit" class="bg-brand-green text-black font-bold px-6 py-2 rounded-xl text-xs hover:bg-emerald-400 transition">Unlock Admin Controls</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: Score Update Modal -->
+    <div x-show="openScoreModal" x-transition.opacity class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div @click.outside="openScoreModal = false" class="glass-panel rounded-2xl max-w-lg w-full p-6 border border-brand-border space-y-6 shadow-2xl">
+            <div class="flex items-center justify-between border-b border-brand-border pb-4">
+                <h3 class="font-header text-3xl font-bold text-white uppercase">Update Match Score</h3>
+                <button @click="openScoreModal = false" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+
+            <template x-if="editingMatch">
+                <form @submit.prevent="saveMatchScore()" class="space-y-6">
+                    <div class="grid grid-cols-2 gap-4 text-center">
+                        <div class="bg-brand-purpleDark p-4 rounded-xl border border-brand-border space-y-2">
+                            <span class="font-bold text-sm text-white block" x-text="getTeam(editingMatch.homeId).name"></span>
+                            <input type="number" min="0" x-model.number="editingMatch.homeScore" class="w-20 text-center text-3xl font-black bg-brand-card border border-brand-border rounded-lg py-2 text-brand-green focus:outline-none focus:border-brand-green mx-auto">
+                        </div>
+                        <div class="bg-brand-purpleDark p-4 rounded-xl border border-brand-border space-y-2">
+                            <span class="font-bold text-sm text-white block" x-text="getTeam(editingMatch.awayId).name"></span>
+                            <input type="number" min="0" x-model.number="editingMatch.awayScore" class="w-20 text-center text-3xl font-black bg-brand-card border border-brand-border rounded-lg py-2 text-brand-green focus:outline-none focus:border-brand-green mx-auto">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-gray-400 mb-2">Goalscorers Summary</label>
+                        <input type="text" x-model="editingMatch.scorers" placeholder="e.g. Samba Boys: Alex 12', John 45' | DP 2 A: Otieno 78'" class="w-full bg-brand-purpleDark border border-brand-border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-brand-green">
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" id="completedCheck" x-model="editingMatch.completed" class="rounded bg-brand-purpleDark border-brand-border text-brand-green focus:ring-brand-green">
+                        <label for="completedCheck" class="text-xs font-semibold text-gray-300">Mark match as FINAL & update standings</label>
+                    </div>
+
+                    <div class="flex justify-end gap-3 pt-4 border-t border-brand-border">
+                        <button type="button" @click="openScoreModal = false" class="px-4 py-2 rounded-xl text-xs font-semibold text-gray-400 hover:text-white">Cancel</button>
+                        <button type="submit" class="bg-brand-green text-black font-bold px-6 py-2 rounded-xl text-xs hover:bg-emerald-400 transition">Save & Recalculate Table</button>
+                    </div>
+                </form>
+            </template>
+        </div>
+    </div>
+
+    <!-- MODAL 3: Fixture Date & Time Edit Modal -->
+    <div x-show="openFixtureModal" x-transition.opacity class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div @click.outside="openFixtureModal = false" class="glass-panel rounded-2xl max-w-lg w-full p-6 border border-brand-border space-y-6 shadow-2xl">
+            <div class="flex items-center justify-between border-b border-brand-border pb-4">
+                <h3 class="font-header text-3xl font-bold text-white uppercase">Edit Fixture Schedule</h3>
+                <button @click="openFixtureModal = false" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+
+            <template x-if="editingFixture">
+                <form @submit.prevent="saveFixtureDetails()" class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Matchweek</label>
+                            <input type="number" min="1" max="10" x-model.number="editingFixture.matchweek" class="w-full bg-brand-purpleDark border border-brand-border rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-brand-green">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Kickoff Time</label>
+                            <input type="text" x-model="editingFixture.time" placeholder="e.g. 2:00 PM" class="w-full bg-brand-purpleDark border border-brand-border rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-brand-green">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Fixture Date</label>
+                        <input type="text" x-model="editingFixture.date" placeholder="e.g. Sunday, Nov 1, 2026" class="w-full bg-brand-purpleDark border border-brand-border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-brand-green">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Pitch / Venue</label>
+                        <input type="text" x-model="editingFixture.venue" placeholder="e.g. School Pitch Ground 1" class="w-full bg-brand-purpleDark border border-brand-border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-brand-green">
+                    </div>
+
+                    <div class="flex justify-end gap-3 pt-4 border-t border-brand-border">
+                        <button type="button" @click="openFixtureModal = false" class="px-4 py-2 rounded-xl text-xs font-semibold text-gray-400 hover:text-white">Cancel</button>
+                        <button type="submit" class="bg-brand-green text-black font-bold px-6 py-2 rounded-xl text-xs hover:bg-emerald-400 transition">Save Fixture Schedule</button>
+                    </div>
+                </form>
+            </template>
+        </div>
+    </div>
+
+    <!-- MODAL 4: Team Profile & Branding Edit Modal -->
+    <div x-show="openTeamModal" x-transition.opacity class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div @click.outside="openTeamModal = false" class="glass-panel rounded-2xl max-w-md w-full p-6 border border-brand-border space-y-6 shadow-2xl">
+            <div class="flex items-center justify-between border-b border-brand-border pb-4">
+                <h3 class="font-header text-3xl font-bold text-white uppercase">Edit Club Details</h3>
+                <button @click="openTeamModal = false" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+
+            <template x-if="editingTeam">
+                <form @submit.prevent="saveTeamDetails()" class="space-y-4">
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="col-span-2">
+                            <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Team Name</label>
+                            <input type="text" x-model="editingTeam.name" required class="w-full bg-brand-purpleDark border border-brand-border rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-brand-green">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Badge Code</label>
+                            <input type="text" x-model="editingTeam.shortCode" maxlength="4" required class="w-full bg-brand-purpleDark border border-brand-border rounded-xl px-3 py-2 text-xs text-white text-center font-bold focus:outline-none focus:border-brand-green">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Club Primary Color</label>
+                            <div class="flex items-center gap-2">
+                                <input type="color" x-model="editingTeam.color" class="w-10 h-9 rounded bg-transparent border-0 cursor-pointer">
+                                <input type="text" x-model="editingTeam.color" class="w-full bg-brand-purpleDark border border-brand-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Kit Colors</label>
+                            <input type="text" x-model="editingTeam.kit" placeholder="e.g. Green & White" class="w-full bg-brand-purpleDark border border-brand-border rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-brand-green">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Team Captain</label>
+                        <input type="text" x-model="editingTeam.captain" class="w-full bg-brand-purpleDark border border-brand-border rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-brand-green">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Tactical Playstyle</label>
+                        <input type="text" x-model="editingTeam.style" placeholder="e.g. High Pressing Attack" class="w-full bg-brand-purpleDark border border-brand-border rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-brand-green">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Team Motto / Manager Note</label>
+                        <input type="text" x-model="editingTeam.motto" class="w-full bg-brand-purpleDark border border-brand-border rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-brand-green">
+                    </div>
+
+                    <div class="flex justify-end gap-3 pt-4 border-t border-brand-border">
+                        <button type="button" @click="openTeamModal = false" class="px-4 py-2 rounded-xl text-xs font-semibold text-gray-400 hover:text-white">Cancel</button>
+                        <button type="submit" class="bg-brand-green text-black font-bold px-6 py-2 rounded-xl text-xs hover:bg-emerald-400 transition">Save Club Changes</button>
+                    </div>
+                </form>
+            </template>
+        </div>
+    </div>
+
+    <!-- MODAL 5: Squad Player Roster Edit Modal -->
+    <div x-show="openSquadManagerModal" x-transition.opacity class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div @click.outside="openSquadManagerModal = false" class="glass-panel rounded-2xl max-w-lg w-full p-6 border border-brand-border space-y-6 shadow-2xl">
+            <div class="flex items-center justify-between border-b border-brand-border pb-4">
+                <div>
+                    <h3 class="font-header text-3xl font-bold text-white uppercase">Manage Squad Players</h3>
+                    <p class="text-xs text-gray-400" x-text="editingTeam ? editingTeam.name : ''"></p>
+                </div>
+                <button @click="openSquadManagerModal = false" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+
+            <!-- Add Player Input -->
+            <div class="flex gap-2">
+                <input type="text" x-model="newPlayerName" placeholder="Enter new player name & number..." class="flex-1 bg-brand-purpleDark border border-brand-border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-brand-green">
+                <button @click="addPlayerToSquad()" class="bg-brand-green text-black font-bold px-4 py-2.5 rounded-xl text-xs hover:bg-emerald-400 transition flex items-center gap-1">
+                    <i data-lucide="plus" class="w-4 h-4"></i> Add
+                </button>
+            </div>
+
+            <!-- Player List -->
+            <div class="space-y-2 max-h-60 overflow-y-auto custom-scrollbar p-1">
+                <template x-for="(player, idx) in editingSquadList" :key="idx">
+                    <div class="flex items-center justify-between bg-brand-purpleDark/80 p-2.5 rounded-xl border border-brand-border/60">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="user" class="w-3.5 h-3.5 text-brand-green"></i>
+                            <input type="text" x-model="editingSquadList[idx]" class="bg-transparent text-xs text-white font-semibold focus:outline-none focus:border-b focus:border-brand-green">
+                        </div>
+                        <button @click="removePlayerFromSquad(idx)" class="text-rose-400 hover:text-rose-300 p-1" title="Remove Player">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                </template>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-4 border-t border-brand-border">
+                <button type="button" @click="openSquadManagerModal = false" class="px-4 py-2 rounded-xl text-xs font-semibold text-gray-400 hover:text-white">Cancel</button>
+                <button type="button" @click="saveSquadChanges()" class="bg-brand-green text-black font-bold px-6 py-2 rounded-xl text-xs hover:bg-emerald-400 transition">Save Roster</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 6: Media / News Post Modal -->
+    <div x-show="openMediaModal" x-transition.opacity class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div @click.outside="openMediaModal = false" class="glass-panel rounded-2xl max-w-lg w-full p-6 border border-brand-border space-y-6 shadow-2xl">
+            <div class="flex items-center justify-between border-b border-brand-border pb-4">
+                <h3 class="font-header text-3xl font-bold text-white uppercase" x-text="mediaModalType === 'news' ? 'Publish News Article' : 'Upload Match Highlights'"></h3>
+                <button @click="openMediaModal = false" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+
+            <form @submit.prevent="saveMediaPost()" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Title</label>
+                    <input type="text" x-model="newPost.title" required placeholder="e.g. Samba Boys Secures Victory" class="w-full bg-brand-purpleDark border border-brand-border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-brand-green">
+                </div>
+
+                <template x-if="mediaModalType === 'news'">
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Category</label>
+                        <select x-model="newPost.category" class="w-full bg-brand-purpleDark border border-brand-border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-brand-green">
+                            <option value="Match Report">Match Report</option>
+                            <option value="Press Conference">Press Conference</option>
+                            <option value="League Update">League Update</option>
+                        </select>
+                    </div>
+                </template>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Video Link (YouTube URL or MP4 Link)</label>
+                    <input type="text" x-model="newPost.videoUrl" placeholder="https://www.youtube.com/watch?v=..." class="w-full bg-brand-purpleDark border border-brand-border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-brand-green">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Content / Description</label>
+                    <textarea x-model="newPost.content" rows="4" required placeholder="Provide story notes or highlights details..." class="w-full bg-brand-purpleDark border border-brand-border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-brand-green"></textarea>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" @click="openMediaModal = false" class="px-4 py-2 rounded-xl text-xs font-semibold text-gray-400 hover:text-white">Cancel</button>
+                    <button type="submit" class="bg-brand-green text-black font-bold px-6 py-2 rounded-xl text-xs hover:bg-emerald-400 transition">Publish Post</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer class="border-t border-brand-border bg-brand-purpleDark py-8 mt-12 text-xs text-gray-400">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-2">
+                <div class="w-6 h-6 rounded bg-brand-green text-black font-bold flex items-center justify-center text-xs">M</div>
+                <span class="font-bold text-white uppercase tracking-wider">M-Pesa Sunday League Hub</span>
+                <span>• Official Tournament Hub</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <button @click="resetToDefaults()" class="text-gray-500 hover:text-rose-400 transition text-[11px] underline">Reset All Data to Defaults</button>
+                <span class="text-gray-600">|</span>
+                <span>Kickoff: Nov 1st, 2026</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Alpine App Logic Script -->
+    <script>
+        function leagueApp() {
+            return {
+                activeTab: 'table',
+                isAdmin: false,
+                openAdminModal: false,
+                adminPasswordInput: '',
+                adminError: '',
+
+                toast: { show: false, message: '' },
+                
+                openScoreModal: false,
+                editingMatch: null,
+
+                openFixtureModal: false,
+                editingFixture: null,
+
+                openTeamModal: false,
+                editingTeam: null,
+
+                openSquadManagerModal: false,
+                editingSquadList: [],
+                newPlayerName: '',
+
+                openMediaModal: false,
+                mediaModalType: 'news',
+                newPost: { title: '', category: 'Match Report', videoUrl: '', content: '' },
+
+                selectedWeekFilter: 'ALL',
+
+                tabs: [
+                    { id: 'table', name: 'Standings', icon: 'trophy' },
+                    { id: 'fixtures', name: 'Fixtures & Scores', icon: 'calendar' },
+                    { id: 'teams', name: 'Clubs & Squads', icon: 'users' },
+                    { id: 'news', name: 'News & Press', icon: 'newspaper' },
+                    { id: 'highlights', name: 'Video Highlights', icon: 'film' },
+                    { id: 'injuries', name: 'Injuries & Bans', icon: 'activity' },
+                    { id: 'rules', name: 'Rules & Regs', icon: 'book-open' }
+                ],
+
+                teams: [],
+                matches: [],
+                newsArticles: [],
+                highlightVideos: [],
+                injuryReports: [],
+                leagueRules: [],
+
+                initApp() {
+                    this.loadStoredData();
+                    this.recalculateStandings();
+                    this.$nextTick(() => { lucide.createIcons(); });
+                },
+
+                showToast(msg) {
+                    this.toast.message = msg;
+                    this.toast.show = true;
+                    setTimeout(() => { this.toast.show = false; }, 3000);
+                },
+
+                getTeam(id) {
+                    return this.teams.find(t => t.id === id) || { name: 'Unknown', color: '#666', shortCode: 'UNK' };
+                },
+
+                verifyAdminPassword() {
+                    if (this.adminPasswordInput === 'admin123' || this.adminPasswordInput === 'admin') {
+                        this.isAdmin = true;
+                        this.openAdminModal = false;
+                        this.adminPasswordInput = '';
+                        this.adminError = '';
+                        this.showToast('Admin Mode Enabled! You can now edit all sections.');
+                    } else {
+                        this.adminError = 'Incorrect passcode. Try admin123.';
+                    }
+                },
+
+                toggleAdmin() {
+                    this.isAdmin = !this.isAdmin;
+                    this.showToast(this.isAdmin ? 'Admin Mode Activated' : 'Exited Admin Mode');
+                },
+
+                getWeekDateDisplay(weekNum) {
+                    // Check if custom date exists on matches
+                    const matchInWeek = this.matches.find(m => m.matchweek === weekNum && m.date);
+                    if (matchInWeek) return matchInWeek.date;
+
+                    const startDate = new Date(2026, 10, 1); 
+                    const weekDate = new Date(startDate);
+                    weekDate.setDate(startDate.getDate() + (weekNum - 1) * 7);
+                    const options = { weekday: 'short', month: 'short', day: 'numeric' };
+                    return weekDate.toLocaleDateString('en-US', options);
+                },
+
+                getRestingTeam(weekNum) {
+                    const restingMap = { 1: 5, 2: 4, 3: 3, 4: 2, 5: 1, 6: 5, 7: 4, 8: 3, 9: 2, 10: 1 };
+                    const teamId = restingMap[weekNum];
+                    return this.getTeam(teamId).name;
+                },
+
+                get filteredMatchweeks() {
+                    if (this.selectedWeekFilter === 'ALL') return Array.from({length: 10}, (_, i) => i + 1);
+                    return [parseInt(this.selectedWeekFilter)];
+                },
+
+                getMatchesByWeek(weekNum) {
+                    return this.matches.filter(m => m.matchweek === weekNum);
+                },
+
+                get sortedStandings() {
+                    return [...this.computedStandings].sort((a, b) => {
+                        if (b.pts !== a.pts) return b.pts - a.pts;
+                        if (b.gd !== a.gd) return b.gd - a.gd;
+                        return b.gf - a.gf;
+                    });
+                },
+
+                computedStandings: [],
+
+                recalculateStandings() {
+                    const stats = this.teams.map(t => ({
+                        id: t.id,
+                        name: t.name,
+                        shortCode: t.shortCode,
+                        color: t.color,
+                        mp: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, gd: 0, pts: 0,
+                        form: []
+                    }));
+
+                    this.matches.filter(m => m.completed).forEach(m => {
+                        const home = stats.find(s => s.id === m.homeId);
+                        const away = stats.find(s => s.id === m.awayId);
+
+                        if (home && away) {
+                            home.mp++; away.mp++;
+                            home.gf += m.homeScore; home.ga += m.awayScore;
+                            away.gf += m.awayScore; away.ga += m.homeScore;
+
+                            if (m.homeScore > m.awayScore) {
+                                home.w++; home.pts += 3; home.form.push('W');
+                                away.l++; away.form.push('L');
+                            } else if (m.homeScore < m.awayScore) {
+                                away.w++; away.pts += 3; away.form.push('W');
+                                home.l++; home.form.push('L');
+                            } else {
+                                home.d++; home.pts += 1; home.form.push('D');
+                                away.d++; away.pts += 1; away.form.push('D');
+                            }
+                        }
+                    });
+
+                    stats.forEach(s => {
+                        s.gd = s.gf - s.ga;
+                        s.form = s.form.slice(-5);
+                        while (s.form.length < 5) s.form.unshift('-');
+                    });
+
+                    this.computedStandings = stats;
+                    this.saveStoredData();
+                },
+
+                // Score Edit
+                editMatchScore(match) {
+                    this.editingMatch = { ...match };
+                    this.openScoreModal = true;
+                },
+
+                saveMatchScore() {
+                    const idx = this.matches.findIndex(m => m.id === this.editingMatch.id);
+                    if (idx !== -1) {
+                        this.matches[idx] = { ...this.editingMatch };
+                        this.recalculateStandings();
+                        this.openScoreModal = false;
+                        this.showToast('Match score updated!');
+                        this.$nextTick(() => lucide.createIcons());
+                    }
+                },
+
+                // Fixture Date & Time Edit
+                editMatchDetails(match) {
+                    this.editingFixture = { ...match };
+                    if (!this.editingFixture.date) {
+                        this.editingFixture.date = this.getWeekDateDisplay(match.matchweek);
+                    }
+                    this.openFixtureModal = true;
+                },
+
+                saveFixtureDetails() {
+                    const idx = this.matches.findIndex(m => m.id === this.editingFixture.id);
+                    if (idx !== -1) {
+                        this.matches[idx] = { ...this.editingFixture };
+                        this.saveStoredData();
+                        this.openFixtureModal = false;
+                        this.showToast('Fixture date & time updated!');
+                    }
+                },
+
+                // Team Details Edit
+                openTeamEditModal(team) {
+                    this.editingTeam = JSON.parse(JSON.stringify(team));
+                    this.openTeamModal = true;
+                },
+
+                saveTeamDetails() {
+                    const idx = this.teams.findIndex(t => t.id === this.editingTeam.id);
+                    if (idx !== -1) {
+                        this.teams[idx] = { ...this.editingTeam };
+                        this.recalculateStandings();
+                        this.saveStoredData();
+                        this.openTeamModal = false;
+                        this.showToast('Team details & colors updated!');
+                    }
+                },
+
+                // Squad Management
+                openSquadModal(team) {
+                    this.editingTeam = team;
+                    this.editingSquadList = [...team.squad];
+                    this.newPlayerName = '';
+                    this.openSquadManagerModal = true;
+                },
+
+                addPlayerToSquad() {
+                    if (this.newPlayerName.trim()) {
+                        this.editingSquadList.push(this.newPlayerName.trim());
+                        this.newPlayerName = '';
+                    }
+                },
+
+                removePlayerFromSquad(idx) {
+                    this.editingSquadList.splice(idx, 1);
+                },
+
+                saveSquadChanges() {
+                    const idx = this.teams.findIndex(t => t.id === this.editingTeam.id);
+                    if (idx !== -1) {
+                        this.teams[idx].squad = [...this.editingSquadList];
+                        this.saveStoredData();
+                        this.openSquadManagerModal = false;
+                        this.showToast('Squad roster saved successfully!');
+                    }
+                },
+
+                // Media & News
+                isYouTube(url) {
+                    return url && (url.includes('youtube.com') || url.includes('youtu.be'));
+                },
+
+                getEmbedUrl(url) {
+                    if (!url) return '';
+                    if (url.includes('youtube.com/watch?v=')) return url.replace('watch?v=', 'embed/');
+                    if (url.includes('youtu.be/')) return url.replace('youtu.be/', 'www.youtube.com/embed/');
+                    return url;
+                },
+
+                openPostModal(type) {
+                    this.mediaModalType = type;
+                    this.newPost = { title: '', category: type === 'news' ? 'Match Report' : 'Highlight Reel', videoUrl: '', content: '' };
+                    this.openMediaModal = true;
+                },
+
+                saveMediaPost() {
+                    if (this.mediaModalType === 'news') {
+                        this.newsArticles.unshift({
+                            id: Date.now(),
+                            title: this.newPost.title,
+                            category: this.newPost.category,
+                            date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                            author: 'League Admin',
+                            content: this.newPost.content,
+                            videoUrl: this.newPost.videoUrl
+                        });
+                    } else {
+                        this.highlightVideos.unshift({
+                            id: Date.now(),
+                            title: this.newPost.title,
+                            matchweek: 'Matchweek Highlight',
+                            date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                            videoUrl: this.newPost.videoUrl || 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+                            description: this.newPost.content
+                        });
+                    }
+                    this.openMediaModal = false;
+                    this.saveStoredData();
+                    this.showToast('Post published!');
+                    this.$nextTick(() => lucide.createIcons());
+                },
+
+                deleteNewsItem(id) {
+                    this.newsArticles = this.newsArticles.filter(n => n.id !== id);
+                    this.saveStoredData();
+                    this.showToast('Article deleted');
+                },
+
+                deleteHighlight(id) {
+                    this.highlightVideos = this.highlightVideos.filter(h => h.id !== id);
+                    this.saveStoredData();
+                    this.showToast('Highlight removed');
+                },
+
+                openInjuryModal() {
+                    const name = prompt("Player Name:");
+                    if (!name) return;
+                    const details = prompt("Injury / Card Suspension Details:");
+                    const returnDate = prompt("Expected Return Date (e.g. Nov 15):", "Matchweek 3");
+                    
+                    this.injuryReports.push({
+                        id: Date.now(),
+                        playerName: name,
+                        teamId: this.teams[0].id,
+                        status: 'SUSPENDED',
+                        details: details || 'Accumulated Yellow Cards',
+                        returnDate: returnDate || 'Next Match'
+                    });
+                    this.saveStoredData();
+                    this.showToast('Injury status recorded');
+                },
+
+                deleteInjuryReport(id) {
+                    this.injuryReports = this.injuryReports.filter(i => i.id !== id);
+                    this.saveStoredData();
+                    this.showToast('Report removed');
+                },
+
+                openAddRuleModal() {
+                    const title = prompt("Rule Title:");
+                    if (!title) return;
+                    const desc = prompt("Rule Details & Regulations:");
+                    this.leagueRules.push({
+                        id: Date.now(),
+                        title: title,
+                        description: desc || 'Standard tournament rule applies.',
+                        icon: 'shield-check'
+                    });
+                    this.saveStoredData();
+                    this.showToast('Rule added');
+                    this.$nextTick(() => lucide.createIcons());
+                },
+
+                deleteRule(id) {
+                    this.leagueRules = this.leagueRules.filter(r => r.id !== id);
+                    this.saveStoredData();
+                    this.showToast('Rule removed');
+                },
+
+                loadStoredData() {
+                    const storedTeams = localStorage.getItem('mpesa_league_teams');
+                    const storedMatches = localStorage.getItem('mpesa_league_matches');
+                    const storedNews = localStorage.getItem('mpesa_league_news');
+                    const storedHighlights = localStorage.getItem('mpesa_league_highlights');
+                    const storedInjuries = localStorage.getItem('mpesa_league_injuries');
+                    const storedRules = localStorage.getItem('mpesa_league_rules');
+
+                    this.teams = storedTeams ? JSON.parse(storedTeams) : [
+                        { id: 1, name: 'Samba Boys', shortCode: 'SMB', color: '#00D154', captain: 'Kevin Omondi', style: 'Attacking Possession', kit: 'Green & White', squad: ['Kevin O. (#10)', 'Brian M. (#7)', 'Dan K. (#1)', 'Steve O. (#4)', 'Sammy T. (#8)', 'Dennis R. (#11)', 'Victor N. (#5)'], motto: 'Joga Bonito on the pitch!' },
+                        { id: 2, name: 'Grade 10 A', shortCode: 'G10A', color: '#3b82f6', captain: 'Emmanuel Kip', style: 'High Press Counter', kit: 'Royal Blue & Yellow', squad: ['Emmanuel K. (#9)', 'John D. (#1)', 'David M. (#3)', 'Paul N. (#6)', 'George W. (#8)', 'Luke P. (#14)', 'Mark S. (#17)'], motto: 'Relentless speed and stamina.' },
+                        { id: 3, name: 'Grade 10 B', shortCode: 'G10B', color: '#f59e0b', captain: 'Joshua Mutua', style: 'Compact Defensive', kit: 'Amber & Black', squad: ['Joshua M. (#5)', 'Caleb O. (#1)', 'Titus K. (#4)', 'Erick O. (#7)', 'Ian M. (#10)', 'Kelvin P. (#12)', 'James L. (#15)'], motto: 'Unbreakable spirit.' },
+                        { id: 4, name: 'DP 2 A', shortCode: 'DP2A', color: '#e11d48', captain: 'Collins Wekesa', style: 'Direct Tactical', kit: 'Crimson Red', squad: ['Collins W. (#8)', 'Peter A. (#1)', 'Moses O. (#2)', 'Francis N. (#5)', 'Simon T. (#10)', 'Alex R. (#11)', 'Bernard M. (#9)'], motto: 'Senior dominance.' },
+                        { id: 5, name: 'DP 2 B', shortCode: 'DP2B', color: '#8b5cf6', captain: 'Hassan Ali', style: 'Technical Passing', kit: 'Purple & White', squad: ['Hassan A. (#10)', 'Yusuf K. (#1)', 'Rashid M. (#6)', 'Omar S. (#7)', 'Salim B. (#8)', 'Tariq H. (#14)', 'Zaid N. (#20)'], motto: 'Control the tempo.' }
+                    ];
+
+                    this.matches = storedMatches ? JSON.parse(storedMatches) : this.generateDefaultFixtures();
+
+                    this.newsArticles = storedNews ? JSON.parse(storedNews) : [
+                        { id: 1, title: "M-Pesa Sunday League Season Ready for Nov 1st Kickoff!", category: "League Announcement", date: "Oct 28, 2026", author: "League Management", content: "The official schedule for the premier school championship has been finalized. 5 teams will compete in a full 10-week round robin home-and-away format at the School Pitch.", videoUrl: "" },
+                        { id: 2, title: "Samba Boys & DP 2 A Managers Speak Ahead of Opening Matchday", category: "Press Conference", date: "Oct 30, 2026", author: "Press Officer", content: "In the pre-match presser, Samba Boys manager expressed full confidence in their possession strategy, while DP 2 A promised tactical discipline.", videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" }
+                    ];
+
+                    this.highlightVideos = storedHighlights ? JSON.parse(storedHighlights) : [
+                        { id: 101, title: "Pre-Season Showcase Highlights", matchweek: "Pre-Season", date: "Oct 25, 2026", videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", description: "Top individual goal displays and long-range screeners captured during early practice matches." }
+                    ];
+
+                    this.injuryReports = storedInjuries ? JSON.parse(storedInjuries) : [
+                        { id: 1, playerName: "Brian Mwangi", teamId: 1, status: "DOUBTFUL", details: "Ankle sprain during practice session", returnDate: "Matchweek 2" },
+                        { id: 2, playerName: "George Wekesa", teamId: 2, status: "SUSPENDED", details: "Red Card sanction from previous tournament", returnDate: "Matchweek 2" }
+                    ];
+
+                    this.leagueRules = storedRules ? JSON.parse(storedRules) : [
+                        { id: 1, title: "7 Substitutions Rule", description: "Each team is allowed a maximum of 7 substitutions per match across 3 stoppage windows to maintain game pace.", icon: "users" },
+                        { id: 2, title: "Red Card & Yellow Card Bans", description: "Direct Red Card carries an automatic 1-match ban (up to 3 for unsportsmanlike behavior). 5 accumulated yellow cards lead to a 1-match suspension.", icon: "alert-octagon" },
+                        { id: 3, title: "Forfeit & No-Show Penalty", description: "If a team fails to field at least 7 players within 15 minutes of scheduled kickoff, a 3-0 default victory is awarded to the opponent.", icon: "x-circle" },
+                        { id: 4, title: "3-1-0 Points Framework", description: "3 Points for a Win, 1 Point for a Draw, 0 Points for a Loss. Tiebreakers: Points > Goal Difference > Goals For.", icon: "award" }
+                    ];
+                },
+
+                generateDefaultFixtures() {
+                    const round1 = [
+                        { week: 1, matches: [{ h: 1, a: 2, time: '2:00 PM' }, { h: 3, a: 4, time: '4:00 PM' }] },
+                        { week: 2, matches: [{ h: 5, a: 1, time: '2:00 PM' }, { h: 2, a: 3, time: '4:00 PM' }] },
+                        { week: 3, matches: [{ h: 4, a: 5, time: '2:00 PM' }, { h: 1, a: 3, time: '4:00 PM' }] },
+                        { week: 4, matches: [{ h: 2, a: 4, time: '2:00 PM' }, { h: 3, a: 5, time: '4:00 PM' }] },
+                        { week: 5, matches: [{ h: 5, a: 2, time: '2:00 PM' }, { h: 4, a: 1, time: '4:00 PM' }] }
+                    ];
+
+                    let allMatches = [];
+                    let idCounter = 1;
+
+                    round1.forEach(w => {
+                        w.matches.forEach(m => {
+                            allMatches.push({
+                                id: idCounter++,
+                                matchweek: w.week,
+                                time: m.time,
+                                date: '',
+                                venue: 'School Pitch',
+                                homeId: m.h,
+                                awayId: m.a,
+                                homeScore: 0,
+                                awayScore: 0,
+                                completed: false,
+                                scorers: ''
+                            });
+                        });
+                    });
+
+                    round1.forEach(w => {
+                        w.matches.forEach(m => {
+                            allMatches.push({
+                                id: idCounter++,
+                                matchweek: w.week + 5,
+                                time: m.time,
+                                date: '',
+                                venue: 'School Pitch',
+                                homeId: m.a,
+                                awayId: m.h,
+                                homeScore: 0,
+                                awayScore: 0,
+                                completed: false,
+                                scorers: ''
+                            });
+                        });
+                    });
+
+                    return allMatches;
+                },
+
+                saveStoredData() {
+                    localStorage.setItem('mpesa_league_teams', JSON.stringify(this.teams));
+                    localStorage.setItem('mpesa_league_matches', JSON.stringify(this.matches));
+                    localStorage.setItem('mpesa_league_news', JSON.stringify(this.newsArticles));
+                    localStorage.setItem('mpesa_league_highlights', JSON.stringify(this.highlightVideos));
+                    localStorage.setItem('mpesa_league_injuries', JSON.stringify(this.injuryReports));
+                    localStorage.setItem('mpesa_league_rules', JSON.stringify(this.leagueRules));
+                },
+
+                resetToDefaults() {
+                    if (confirm("Reset all custom edits back to defaults?")) {
+                        localStorage.clear();
+                        location.reload();
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>
+apps-fileview.texmex_20261001.00_p0
+mpesa_sunday_league_hub.html
+Displaying mpesa_sunday_league_hub.html.
