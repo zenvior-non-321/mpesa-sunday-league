@@ -26,6 +26,8 @@ declare global {
 
 export function reportLovableError(error: unknown, context: Record<string, unknown> = {}) {
   if (typeof window === "undefined") return;
+  const message = describeThrown(error);
+  if (message === "Script error." || message.includes("Script error")) return;
   window.__lovableEvents?.captureException?.(
     error,
     {

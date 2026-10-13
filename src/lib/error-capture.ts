@@ -63,10 +63,23 @@ console.error = (...args: unknown[]) => {
 };
 
 if (typeof globalThis.addEventListener === "function") {
-  globalThis.addEventListener("error", (event) => record((event as ErrorEvent).error ?? event));
-  globalThis.addEventListener("unhandledrejection", (event) =>
-    record((event as PromiseRejectionEvent).reason),
-  );
+  globalThis.addEventListener("error", (event) => {
+    const errorEvent = event as ErrorEvent;
+    const msg = errorEvent.message || "";
+    // Ignore cross-origin Script error and benign browser noise
+    if (msg === "Script error." || msg.includes("Script error") || msg.includes("ResizeObserver")) {
+      return;
+    }
+    record(errorEvent.error ?? event);
+  });
+  globalThis.addEventListener("unhandledrejection", (event) => {
+    const reason = (event as PromiseRejectionEvent).reason;
+    const msg = typeof reason === "string" ? reason : reason?.message || String(reason);
+    if (msg === "Script error." || msg.includes("Script error") || reason?.name === "AbortError") {
+      return;
+    }
+    record(reason);
+  });
 }
 
 export function consumeLastCapturedError(): unknown {

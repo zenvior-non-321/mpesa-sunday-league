@@ -10,6 +10,21 @@
     <!-- Official M-Pesa Foundation Academy School Logo Icon -->
     <link rel="icon" type="image/svg+xml" href="/mpesa-academy-logo.svg">
     <link rel="apple-touch-icon" href="/mpesa-academy-logo.svg">
+    <!-- Script Error Guard to intercept unhandled cross-origin errors -->
+    <script>
+        window.addEventListener('error', function(e) {
+            if (!e.filename || e.message === 'Script error.' || (e.message && e.message.indexOf('Script error') !== -1)) {
+                e.stopImmediatePropagation();
+                e.preventDefault();
+                return true;
+            }
+        }, true);
+        window.addEventListener('unhandledrejection', function(e) {
+            if (e.reason && (e.reason.message === 'Script error.' || String(e.reason).indexOf('Script error') !== -1)) {
+                e.preventDefault();
+            }
+        });
+    </script>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -47,9 +62,9 @@
         }
     </script>
     <!-- Alpine.js -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" crossorigin="anonymous"></script>
     <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/lucide@latest" crossorigin="anonymous"></script>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -134,10 +149,11 @@
 
     <!-- Hidden / Embedded YouTube Background Audio Mount -->
     <div class="fixed -bottom-96 -right-96 opacity-0 pointer-events-none w-1 h-1 overflow-hidden" aria-hidden="true">
-        <template x-if="websiteSong.youtubeId">
+        <template x-if="websiteSong.mode === 'youtube' && websiteSong.isPlaying && websiteSong.youtubeId">
             <iframe id="pes-youtube-audio-frame" 
-                    :src="`https://www.youtube.com/embed/${websiteSong.youtubeId}?enablejsapi=1&autoplay=1&loop=1&playlist=${websiteSong.youtubeId}&controls=0`"
+                    :src="`https://www.youtube-nocookie.com/embed/${websiteSong.youtubeId}?autoplay=1&mute=0&controls=0&loop=1&playlist=${websiteSong.youtubeId}`"
                     allow="autoplay"
+                    referrerpolicy="no-referrer"
                     class="w-10 h-10"></iframe>
         </template>
     </div>
@@ -3167,10 +3183,10 @@
                 countdown: { days: '00', hours: '00', minutes: '00', seconds: '00' },
                 countdownInterval: null,
 
-                // Website Song & Stadium Anthem System (YouTube + Synthesizer)
+                // Website Song & Stadium Anthem System (Synthesizer + YouTube)
                 websiteSong: {
-                    mode: 'youtube', // 'youtube' | 'synth'
-                    title: 'PES 2026 Matchday Anthem',
+                    mode: 'synth', // 'synth' (Web Audio API) | 'youtube'
+                    title: 'PES 2026 Matchday Anthem (Electronic Synthesizer)',
                     youtubeUrl: 'https://www.youtube.com/watch?v=kYtGl1DX5qI',
                     youtubeId: 'kYtGl1DX5qI',
                     volume: 0.45,
@@ -4159,7 +4175,7 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                             // YouTube audio playback via embedded iframe
                             const frame = document.getElementById('pes-youtube-audio-frame');
                             if (frame && this.websiteSong.youtubeId) {
-                                frame.src = `https://www.youtube.com/embed/${this.websiteSong.youtubeId}?enablejsapi=1&autoplay=1&loop=1&playlist=${this.websiteSong.youtubeId}&controls=0`;
+                                frame.src = `https://www.youtube-nocookie.com/embed/${this.websiteSong.youtubeId}?autoplay=1&mute=0&controls=0&loop=1&playlist=${this.websiteSong.youtubeId}`;
                             }
                         }
                     } catch (e) {
