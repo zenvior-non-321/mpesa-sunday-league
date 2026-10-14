@@ -1,38 +1,66 @@
 // Public appointments only; this directory never grants portal access.
 window.leagueOfficials = [
-  { name: 'Bramuel Osichiro', role: 'League President', responsibilities: [
-    'Oversees the overall running and management of the league.',
-    'Coordinates teams, fixtures, and league activities.',
-    'Leads meetings and ensures effective communication among teams.',
-    'Ensures fair play, discipline, and adherence to league rules.',
-    "Resolves disputes and makes decisions in the league’s best interests.",
-    'Works with the committee to ensure the league runs smoothly and successfully.'
-  ] },
-  { name: 'Victor Kiplagat', role: 'Videographer', responsibilities: [
-    'Records and edits raw footage into engaging highlight reels, including top goals and match recaps, to grow the league’s social media presence and support tactical reviews.',
-    'Film Matches: Set up equipment and record weekly league games with clear, stable framing.',
-    'Produce Highlights: Cut and edit short-form videos for Instagram, TikTok, and YouTube.',
-    'Manage Footage: Upload and archive full game film for teams, coaches, and league officials.'
-  ] },
-  { name: 'Robert Vance', role: 'Disciplinary Chair', responsibilities: [
-    'Enforces official regulations and card suspensions.'
-  ] },
-  { name: 'Elena Rostova', role: 'Head Referee', responsibilities: [
-    'Oversees refereeing during league matches.',
-    'Ensures matches follow the official rules.',
-    'Coordinates and guides other referees.',
-    'Makes sure matches are officiated fairly and consistently.'
-  ] },
-  { name: 'Michael Chang', role: 'Statistics and result officer', responsibilities: [
-    'Records match results and player statistics.',
-    'Updates league standings and team rankings.',
-    'Tracks goals, assists, and other performance statistics.',
-    'Ensures results are accurate and announced on time.'
-  ] },
-  { name: 'Carlos Mendez', role: "League's conference officer", responsibilities: [
-    'Organizes and coordinates league conferences and meetings.',
-    'Communicates meeting dates, venues, and agendas to team representatives.',
-    'Ensures teams are represented during league discussions.',
-    'Records key resolutions and follows up on agreed actions.'
-  ] }
+  {
+    name: 'Bramuel Amirah',
+    role: 'President',
+    responsibilities: [
+      'Provides overall leadership and direction for the league.',
+      'Oversees the work of the administrative crew and ensures that league rules and policies are followed.',
+      'Leads meetings and helps resolve major disputes.'
+    ]
+  },
+  {
+    name: 'Joseph Kamande',
+    role: 'Deputy President',
+    responsibilities: [
+      'Assists the President in managing league activities.',
+      'Acts on behalf of the President when necessary.',
+      'Monitors the progress of different departments and helps ensure responsibilities are fulfilled.'
+    ]
+  },
+  {
+    name: 'Cheryl Cosmas',
+    role: 'Register and Regulations Manager',
+    responsibilities: [
+      'Maintains accurate records of registered clubs, players, coaches, and managers.',
+      'Ensures that registration requirements and league regulations are followed.',
+      'Handles eligibility checks and reports violations of league rules.'
+    ]
+  },
+  {
+    name: 'Mitchelle Muthoni',
+    role: 'Match Officiating Programmes Manager',
+    responsibilities: [
+      'Organises match officiating schedules and assigns referees to fixtures.',
+      'Ensures matches are officiated fairly and impartially.',
+      'Coordinates refereeing standards and addresses officiating concerns in line with league regulations.'
+    ]
+  },
+  {
+    name: 'Tonnie Mark Odundo',
+    role: 'Records and File Manager',
+    responsibilities: [
+      'Maintains official league documents, reports, fixtures, results, standings, and disciplinary records.',
+      'Ensures important league information is properly organised and accessible when required.',
+      'Keeps an accurate record of administrative decisions and proceedings.'
+    ]
+  },
+  {
+    name: 'Trady Lewis',
+    role: 'Technological Manager',
+    responsibilities: [
+      'Oversees the league’s digital platforms, website, and online updates.',
+      'Publishes fixtures, results, standings, announcements, and other relevant information.',
+      'Ensures that league information is presented accurately and updated promptly.'
+    ]
+  },
+  {
+    name: 'Ahmed Kusow',
+    role: 'Assistant Technological Manager',
+    responsibilities: [
+      'Supports the Technological Manager in updating and maintaining digital platforms.',
+      'Assists in publishing match reports, results, and league announcements.',
+      'Helps ensure continuity of digital operations when the Technological Manager is unavailable.'
+    ]
+  }
 ];
