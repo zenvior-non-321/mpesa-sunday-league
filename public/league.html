@@ -150,8 +150,12 @@
         </div>
     </div>
 
-    <!-- Hidden / Embedded YouTube Background Audio Mount -->
+    <!-- Dedicated Background Audio Players (Custom Upload & YouTube) -->
     <div class="fixed -bottom-96 -right-96 opacity-0 pointer-events-none w-1 h-1 overflow-hidden" aria-hidden="true">
+        <!-- Native Audio Element for Uploaded MP3 / WAV Files -->
+        <audio id="pes-custom-audio-element" loop preload="auto" playsinline></audio>
+
+        <!-- Privacy-Enhanced YouTube Audio Frame -->
         <template x-if="websiteSong.mode === 'youtube' && websiteSong.isPlaying && websiteSong.youtubeId">
             <iframe id="pes-youtube-audio-frame" 
                     :src="`https://www.youtube-nocookie.com/embed/${websiteSong.youtubeId}?autoplay=1&mute=0&controls=0&loop=1&playlist=${websiteSong.youtubeId}`"
@@ -280,7 +284,7 @@
                     </div>
                     <div>
                         <h3 class="font-header text-2xl font-black text-white leading-none">MATCHDAY MEDIA HUB</h3>
-                        <p class="text-[10px] text-purple-300">Upload Photos, Videos & YouTube Reels</p>
+                        <p class="text-[10px] text-purple-300" x-text="(isSuperAdmin || isAdmin) ? 'Admin Upload Studio & Matchday Feed' : 'Official Matchday Gallery & Highlights Feed'"></p>
                     </div>
                 </div>
                 <button @click="openMediaSidebar = false" class="text-gray-400 hover:text-white p-1 rounded-xl hover:bg-white/10">
@@ -288,19 +292,47 @@
                 </button>
             </div>
 
+            <!-- Non-Admin Upload Access Banner -->
+            <template x-if="!isSuperAdmin && !isAdmin">
+                <div class="p-3 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex items-start gap-2.5 text-xs">
+                    <i data-lucide="lock" class="w-4 h-4 text-amber-400 shrink-0 mt-0.5"></i>
+                    <div>
+                        <span class="font-black text-amber-300 block uppercase tracking-wider text-[10px]">Admin Upload Restricted</span>
+                        <p class="text-gray-300 text-[11px] leading-relaxed">
+                            Only League Administrators can upload photos, videos, and YouTube reels. Viewers can browse the official Matchday Feed below.
+                        </p>
+                    </div>
+                </div>
+            </template>
+
             <!-- Media Category Switcher -->
             <div class="grid grid-cols-4 gap-1 p-1 bg-black/40 border border-efootball-border rounded-2xl text-xs font-bold">
-                <button @click="mediaTab = 'images'" :class="mediaTab === 'images' ? 'bg-efootball-cyan text-black shadow-md' : 'text-gray-300 hover:text-white'" class="py-2 rounded-xl transition text-center flex flex-col items-center gap-1">
+                <button @click="if (isSuperAdmin || isAdmin) { mediaTab = 'images'; } else { showToast('Only Administrators can upload media'); mediaTab = 'gallery'; }" 
+                        :class="mediaTab === 'images' ? 'bg-efootball-cyan text-black shadow-md' : 'text-gray-300 hover:text-white'" 
+                        class="py-2 rounded-xl transition text-center flex flex-col items-center gap-1">
                     <i data-lucide="image" class="w-3.5 h-3.5"></i>
-                    <span class="text-[10px]">Photo</span>
+                    <span class="text-[10px] flex items-center gap-0.5">
+                        Photo
+                        <i x-show="!isSuperAdmin && !isAdmin" data-lucide="lock" class="w-2.5 h-2.5 text-amber-400"></i>
+                    </span>
                 </button>
-                <button @click="mediaTab = 'videos'" :class="mediaTab === 'videos' ? 'bg-efootball-magenta text-white shadow-md' : 'text-gray-300 hover:text-white'" class="py-2 rounded-xl transition text-center flex flex-col items-center gap-1">
+                <button @click="if (isSuperAdmin || isAdmin) { mediaTab = 'videos'; } else { showToast('Only Administrators can upload media'); mediaTab = 'gallery'; }" 
+                        :class="mediaTab === 'videos' ? 'bg-efootball-magenta text-white shadow-md' : 'text-gray-300 hover:text-white'" 
+                        class="py-2 rounded-xl transition text-center flex flex-col items-center gap-1">
                     <i data-lucide="film" class="w-3.5 h-3.5"></i>
-                    <span class="text-[10px]">Video</span>
+                    <span class="text-[10px] flex items-center gap-0.5">
+                        Video
+                        <i x-show="!isSuperAdmin && !isAdmin" data-lucide="lock" class="w-2.5 h-2.5 text-amber-400"></i>
+                    </span>
                 </button>
-                <button @click="mediaTab = 'youtube'" :class="mediaTab === 'youtube' ? 'bg-red-600 text-white shadow-md' : 'text-gray-300 hover:text-white'" class="py-2 rounded-xl transition text-center flex flex-col items-center gap-1">
+                <button @click="if (isSuperAdmin || isAdmin) { mediaTab = 'youtube'; } else { showToast('Only Administrators can upload media'); mediaTab = 'gallery'; }" 
+                        :class="mediaTab === 'youtube' ? 'bg-red-600 text-white shadow-md' : 'text-gray-300 hover:text-white'" 
+                        class="py-2 rounded-xl transition text-center flex flex-col items-center gap-1">
                     <i data-lucide="youtube" class="w-3.5 h-3.5"></i>
-                    <span class="text-[10px]">YouTube</span>
+                    <span class="text-[10px] flex items-center gap-0.5">
+                        YouTube
+                        <i x-show="!isSuperAdmin && !isAdmin" data-lucide="lock" class="w-2.5 h-2.5 text-amber-400"></i>
+                    </span>
                 </button>
                 <button @click="mediaTab = 'gallery'" :class="mediaTab === 'gallery' ? 'bg-amber-400 text-black shadow-md' : 'text-gray-300 hover:text-white'" class="py-2 rounded-xl transition text-center flex flex-col items-center gap-1">
                     <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i>
@@ -308,8 +340,8 @@
                 </button>
             </div>
 
-            <!-- TAB 1: UPLOAD IMAGES -->
-            <div x-show="mediaTab === 'images'" class="space-y-4">
+            <!-- TAB 1: UPLOAD IMAGES (Admin Only) -->
+            <div x-show="mediaTab === 'images' && (isAdmin || isSuperAdmin)" class="space-y-4">
                 <div class="p-4 bg-black/50 border border-efootball-border rounded-2xl space-y-3">
                     <span class="text-xs font-black uppercase text-efootball-cyan tracking-wider flex items-center gap-1.5">
                         <i data-lucide="upload" class="w-3.5 h-3.5"></i> Upload Matchday Photo
@@ -369,8 +401,8 @@
                 </div>
             </div>
 
-            <!-- TAB 2: UPLOAD VIDEO CLIPS -->
-            <div x-show="mediaTab === 'videos'" class="space-y-4">
+            <!-- TAB 2: UPLOAD VIDEO CLIPS (Admin Only) -->
+            <div x-show="mediaTab === 'videos' && (isAdmin || isSuperAdmin)" class="space-y-4">
                 <div class="p-4 bg-black/50 border border-efootball-border rounded-2xl space-y-3">
                     <span class="text-xs font-black uppercase text-efootball-magenta tracking-wider flex items-center gap-1.5">
                         <i data-lucide="video" class="w-3.5 h-3.5"></i> Upload Video Clip or MP4 Link
@@ -417,8 +449,8 @@
                 </div>
             </div>
 
-            <!-- TAB 3: YOUTUBE REELS LINK -->
-            <div x-show="mediaTab === 'youtube'" class="space-y-4">
+            <!-- TAB 3: YOUTUBE REELS LINK (Admin Only) -->
+            <div x-show="mediaTab === 'youtube' && (isAdmin || isSuperAdmin)" class="space-y-4">
                 <div class="p-4 bg-black/50 border border-efootball-border rounded-2xl space-y-3">
                     <span class="text-xs font-black uppercase text-red-500 tracking-wider flex items-center gap-1.5">
                         <i data-lucide="youtube" class="w-4 h-4"></i> Embed YouTube Video / Highlight
@@ -462,9 +494,11 @@
             <div x-show="mediaTab === 'gallery'" class="space-y-3">
                 <div class="flex items-center justify-between">
                     <span class="text-xs font-black uppercase text-gray-300" x-text="'All Uploaded Media (' + mediaGallery.length + ')'"></span>
-                    <button @click="mediaTab = 'images'" class="text-[11px] text-efootball-cyan hover:underline flex items-center gap-1 font-bold">
-                        <i data-lucide="plus" class="w-3.5 h-3.5"></i> New Upload
-                    </button>
+                    <template x-if="isAdmin || isSuperAdmin">
+                        <button @click="mediaTab = 'images'" class="text-[11px] text-efootball-cyan hover:underline flex items-center gap-1 font-bold">
+                            <i data-lucide="plus" class="w-3.5 h-3.5"></i> Admin: New Upload
+                        </button>
+                    </template>
                 </div>
 
                 <div class="space-y-3 max-h-[60vh] overflow-y-auto custom-scrollbar pr-1">
@@ -500,9 +534,11 @@
                                     <h5 class="text-xs font-black text-white truncate max-w-[240px]" x-text="item.title"></h5>
                                     <p class="text-[10px] text-gray-400" x-text="item.matchweek || item.category"></p>
                                 </div>
-                                <button @click="deleteMediaItem(item.id)" class="text-rose-400 hover:text-rose-300 p-1 rounded-lg hover:bg-rose-500/20 text-[10px]" title="Delete Media">
-                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                                </button>
+                                <template x-if="isAdmin || isSuperAdmin">
+                                    <button @click="deleteMediaItem(item.id)" class="text-rose-400 hover:text-rose-300 p-1 rounded-lg hover:bg-rose-500/20 text-[10px]" title="Delete Media">
+                                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                </template>
                             </div>
                         </div>
                     </template>
@@ -554,8 +590,8 @@
                         <i data-lucide="skip-forward" class="w-3.5 h-3.5"></i>
                     </button>
 
-                    <!-- Super Admin Quick Song Change Button -->
-                    <template x-if="isSuperAdmin">
+                    <!-- Admin Quick Song Change Button -->
+                    <template x-if="isAdmin || isSuperAdmin">
                         <button @click="openSongModal = true" class="px-2.5 py-1 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-black rounded-xl font-black text-xs transition flex items-center gap-1 shadow-md" title="Change Website Anthem via YouTube or Audio">
                             <i data-lucide="music-2" class="w-3.5 h-3.5"></i>
                             <span class="hidden sm:inline">Change Song</span>
@@ -1917,6 +1953,13 @@
                     <h2 class="font-header text-4xl font-black text-white uppercase tracking-wide">Player Stats Leaderboard</h2>
                     <p class="text-sm text-gray-300">Golden Boot race, Playmaker assists, Clean sheets, and Discipline</p>
                 </div>
+                <!-- Admin Add New Player Stat Button -->
+                <template x-if="isAdmin || isSuperAdmin">
+                    <button @click="openNewPlayerStatModal()" class="flex items-center gap-2 bg-gradient-to-r from-efootball-cyan to-emerald-400 text-black font-black px-4 py-2 rounded-2xl text-xs hover:shadow-neon-cyan transition shadow-lg self-start md:self-auto">
+                        <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                        <span>Register Player Stat</span>
+                    </button>
+                </template>
             </div>
 
             <!-- Top 3 Golden Boot Highlight Cards -->
@@ -1962,9 +2005,12 @@
                                 <th class="py-4 px-3 text-center">Foot</th>
                                 <th class="py-4 px-3 text-center font-bold text-efootball-yellow">Goals</th>
                                 <th class="py-4 px-3 text-center text-efootball-cyan font-bold">Assists</th>
+                                <th class="py-4 px-3 text-center text-amber-300 font-bold">Starts</th>
+                                <th class="py-4 px-3 text-center text-gray-300 font-bold">Apps</th>
                                 <th class="py-4 px-3 text-center text-emerald-400">Clean Sheets</th>
                                 <th class="py-4 px-3 text-center text-amber-400">Yellows</th>
                                 <th class="py-4 px-3 text-center text-rose-500">Reds</th>
+                                <th x-show="isAdmin || isSuperAdmin" class="py-4 px-3 text-center text-efootball-cyan">Admin Edit</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-efootball-border/50 text-sm font-semibold">
@@ -1981,9 +2027,17 @@
                                     <td class="py-4 px-3 text-center text-xs text-efootball-cyan font-semibold" x-text="p.foot || 'Right'"></td>
                                     <td class="py-4 px-3 text-center font-black text-base text-efootball-yellow" x-text="p.goals"></td>
                                     <td class="py-4 px-3 text-center font-bold text-efootball-cyan" x-text="p.assists"></td>
+                                    <td class="py-4 px-3 text-center font-bold text-amber-300" x-text="p.starts ?? p.matches ?? 0"></td>
+                                    <td class="py-4 px-3 text-center text-xs text-gray-300" x-text="p.matches ?? p.starts ?? 0"></td>
                                     <td class="py-4 px-3 text-center text-emerald-400 font-bold" x-text="p.cleanSheets || 0"></td>
                                     <td class="py-4 px-3 text-center text-amber-400 font-black" x-text="p.yellowCards || 0"></td>
                                     <td class="py-4 px-3 text-center text-rose-500 font-black" x-text="p.redCards || 0"></td>
+                                    <td x-show="isAdmin || isSuperAdmin" class="py-4 px-3 text-center">
+                                        <button @click="openEditPlayerStatsModal(p)" class="px-2.5 py-1 bg-efootball-cyan/20 hover:bg-efootball-cyan text-efootball-cyan hover:text-black rounded-xl text-xs font-bold transition flex items-center gap-1 mx-auto">
+                                            <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                                            <span>Edit</span>
+                                        </button>
+                                    </td>
                                 </tr>
                             </template>
                         </tbody>
@@ -2078,8 +2132,8 @@
                                         </div>
                                     </template>
 
-                                    <!-- Super Admin Match Score Editor Button -->
-                                    <template x-if="isSuperAdmin">
+                                    <!-- Admin Match Score Editor Button -->
+                                    <template x-if="isAdmin || isSuperAdmin">
                                         <div class="pt-2 border-t border-efootball-border/40 flex items-center justify-end gap-2">
                                             <button @click="openFixtureEditModal(match)" class="flex items-center gap-1.5 text-xs bg-efootball-cyan/20 hover:bg-efootball-cyan text-efootball-cyan hover:text-black font-extrabold px-3 py-1.5 rounded-xl transition">
                                                 <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
@@ -2220,7 +2274,15 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <span class="text-[10px] bg-efootball-bg font-mono font-bold px-2 py-0.5 rounded text-gray-300" x-text="player.position || 'FWD'"></span>
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-[10px] bg-efootball-bg font-mono font-bold px-2 py-0.5 rounded text-gray-300" x-text="player.position || 'FWD'"></span>
+                                                <template x-if="isAdmin || isSuperAdmin">
+                                                    <button type="button" @click="editSquadPlayerStat(player, team)" class="text-[10px] bg-efootball-cyan/20 hover:bg-efootball-cyan text-efootball-cyan hover:text-black font-bold px-2 py-0.5 rounded-lg transition flex items-center gap-1 shadow" title="Edit player stats and starts">
+                                                        <i data-lucide="edit-3" class="w-3 h-3"></i>
+                                                        <span>Edit Stats</span>
+                                                    </button>
+                                                </template>
+                                            </div>
                                         </div>
                                     </template>
                                 </div>
@@ -2285,10 +2347,18 @@
                     <p class="text-sm text-gray-300">Live school matchday gallery with high-resolution action photos, direct video clips, and YouTube reels</p>
                 </div>
                 <div class="flex items-center gap-3">
-                    <button @click="openMediaSidebar = true" class="flex items-center gap-2 bg-gradient-to-r from-purple-600 via-efootball-magenta to-pink-600 text-white font-black px-5 py-2.5 rounded-2xl text-xs hover:brightness-110 transition shadow-xl">
-                        <i data-lucide="upload" class="w-4 h-4"></i>
-                        <span>Upload Media (Photo / Video / YouTube)</span>
-                    </button>
+                    <template x-if="isAdmin || isSuperAdmin">
+                        <button @click="openMediaSidebar = true; mediaTab = 'images'" class="flex items-center gap-2 bg-gradient-to-r from-purple-600 via-efootball-magenta to-pink-600 text-white font-black px-5 py-2.5 rounded-2xl text-xs hover:brightness-110 transition shadow-xl">
+                            <i data-lucide="upload" class="w-4 h-4"></i>
+                            <span>Admin: Upload Media (Photo / Video / YouTube)</span>
+                        </button>
+                    </template>
+                    <template x-if="!isAdmin && !isSuperAdmin">
+                        <button @click="openMediaSidebar = true; mediaTab = 'gallery'" class="flex items-center gap-2 bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 border border-purple-500/50 font-bold px-4 py-2.5 rounded-2xl text-xs transition shadow-lg">
+                            <i data-lucide="clapperboard" class="w-4 h-4 text-purple-300"></i>
+                            <span>Browse Matchday Gallery</span>
+                        </button>
+                    </template>
                 </div>
             </div>
 
@@ -2343,7 +2413,7 @@
                                 <h4 class="font-extrabold text-base text-white truncate" x-text="item.title"></h4>
                                 <div class="flex items-center justify-between text-xs text-gray-400 mt-1">
                                     <span x-text="item.matchweek || item.category"></span>
-                                    <template x-if="isSuperAdmin">
+                                    <template x-if="isAdmin || isSuperAdmin">
                                         <button @click.stop="deleteMediaItem(item.id)" class="text-rose-400 hover:text-rose-300 p-1 rounded-lg hover:bg-rose-500/20 text-[10px]">
                                             <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Delete
                                         </button>
@@ -2885,52 +2955,276 @@
         </div>
     </div>
 
-    <!-- MODAL 8: Edit Fixture Modal -->
+    <!-- MODAL 8: Edit Fixture & Goalscorers Modal -->
     <div x-show="openFixtureModal" x-transition.opacity class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
-        <div @click.outside="openFixtureModal = false" class="efootball-card rounded-3xl max-w-lg w-full p-7 border border-efootball-border space-y-6 shadow-2xl">
+        <div @click.outside="openFixtureModal = false" class="efootball-card rounded-3xl max-w-2xl w-full p-7 border-2 border-efootball-cyan/40 space-y-6 shadow-2xl max-h-[92vh] overflow-y-auto custom-scrollbar">
             <template x-if="editingFixture">
                 <div>
                     <div class="flex items-center justify-between border-b border-efootball-border pb-4">
-                        <h3 class="font-header text-3xl font-black text-white uppercase">Edit Match & Result</h3>
+                        <div>
+                            <h3 class="font-header text-3xl font-black text-white uppercase leading-none">Record Match Scores & Goal Events</h3>
+                            <p class="text-xs text-efootball-cyan mt-1">Assign goalscorers, assists, and own goals to squad players</p>
+                        </div>
                         <button @click="openFixtureModal = false" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
                     </div>
 
-                    <form @submit.prevent="saveFixtureDetails()" class="space-y-4 mt-4">
-                        <div class="flex items-center justify-between gap-4 py-2">
-                            <div class="text-center w-1/2">
-                                <label class="block text-xs font-bold text-white mb-1 truncate" x-text="getTeam(editingFixture.homeId).name"></label>
-                                <input type="number" min="0" x-model.number="editingFixture.homeScore" class="w-20 text-center bg-efootball-bg border border-efootball-border rounded-2xl py-2 text-xl font-black text-white">
+                    <form @submit.prevent="saveFixtureDetails()" class="space-y-5 mt-4">
+                        <!-- Scoreboard HUD -->
+                        <div class="p-4 bg-gradient-to-r from-efootball-card to-efootball-cardLight rounded-2xl border border-efootball-border flex items-center justify-between gap-4">
+                            <div class="text-center w-5/12 space-y-1">
+                                <label class="block text-xs font-black uppercase text-white truncate" x-text="getTeam(editingFixture.homeId).name"></label>
+                                <div class="flex items-center justify-center gap-2">
+                                    <button type="button" @click="if (editingFixture.homeScore > 0) editingFixture.homeScore--" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold text-sm">-</button>
+                                    <input type="number" min="0" x-model.number="editingFixture.homeScore" class="w-16 text-center bg-efootball-bg border border-efootball-border rounded-xl py-1.5 text-2xl font-black text-white font-mono">
+                                    <button type="button" @click="editingFixture.homeScore++" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold text-sm">+</button>
+                                </div>
+                                <span class="text-[10px] text-gray-400 font-bold uppercase" x-text="'Venue: ' + (editingFixture.venue || getTeam(editingFixture.homeId).homePitch)"></span>
                             </div>
-                            <span class="font-header text-2xl font-black text-efootball-cyan">VS</span>
-                            <div class="text-center w-1/2">
-                                <label class="block text-xs font-bold text-white mb-1 truncate" x-text="getTeam(editingFixture.awayId).name"></label>
-                                <input type="number" min="0" x-model.number="editingFixture.awayScore" class="w-20 text-center bg-efootball-bg border border-efootball-border rounded-2xl py-2 text-xl font-black text-white">
+                            <div class="text-center">
+                                <span class="font-header text-3xl font-black text-efootball-cyan block leading-none">VS</span>
+                                <span class="text-[10px] font-mono text-gray-400 uppercase">Matchweek <span x-text="editingFixture.matchweek"></span></span>
+                            </div>
+                            <div class="text-center w-5/12 space-y-1">
+                                <label class="block text-xs font-black uppercase text-white truncate" x-text="getTeam(editingFixture.awayId).name"></label>
+                                <div class="flex items-center justify-center gap-2">
+                                    <button type="button" @click="if (editingFixture.awayScore > 0) editingFixture.awayScore--" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold text-sm">-</button>
+                                    <input type="number" min="0" x-model.number="editingFixture.awayScore" class="w-16 text-center bg-efootball-bg border border-efootball-border rounded-xl py-1.5 text-2xl font-black text-white font-mono">
+                                    <button type="button" @click="editingFixture.awayScore++" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold text-sm">+</button>
+                                </div>
+                                <span class="text-[10px] text-gray-400 font-bold uppercase">Away Contender</span>
+                            </div>
+                        </div>
+
+                        <!-- Match Status & Kickoff Time -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[11px] font-black uppercase text-gray-400 mb-1">Match Status</label>
+                                <select x-model="editingFixture.status" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
+                                    <option value="UPCOMING">Upcoming Fixture</option>
+                                    <option value="LIVE">Live Match in Progress</option>
+                                    <option value="FINISHED">Finished (Official Result)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-black uppercase text-gray-400 mb-1">Scheduled Time / Date</label>
+                                <input type="text" x-model="editingFixture.time" placeholder="2:00 PM" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
+                            </div>
+                        </div>
+
+                        <!-- Interactive Goal Event Logger -->
+                        <div class="p-4 bg-black/60 rounded-2xl border border-efootball-border/80 space-y-3">
+                            <div class="flex items-center justify-between border-b border-efootball-border/50 pb-2">
+                                <span class="text-xs font-black uppercase text-efootball-cyan flex items-center gap-1.5">
+                                    <i data-lucide="zap" class="w-3.5 h-3.5"></i> Log Goal with Player & Assist Dropdowns
+                                </span>
+                                <span class="text-[10px] text-gray-400">Select player or opponent own goal</span>
+                            </div>
+
+                            <!-- Team Goal Selection & Own Goal Toggle -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-gray-300 mb-1">Goal Credited To</label>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <button type="button" @click="newGoalEvent.team = 'HOME'; syncGoalDropdowns()"
+                                                :class="newGoalEvent.team === 'HOME' ? 'bg-efootball-cyan text-black font-black' : 'bg-efootball-bg text-gray-300 border border-efootball-border'"
+                                                class="py-2 px-2 rounded-xl text-xs transition truncate" x-text="getTeam(editingFixture.homeId).name"></button>
+                                        <button type="button" @click="newGoalEvent.team = 'AWAY'; syncGoalDropdowns()"
+                                                :class="newGoalEvent.team === 'AWAY' ? 'bg-efootball-magenta text-white font-black' : 'bg-efootball-bg text-gray-300 border border-efootball-border'"
+                                                class="py-2 px-2 rounded-xl text-xs transition truncate" x-text="getTeam(editingFixture.awayId).name"></button>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col justify-end">
+                                    <label class="flex items-center gap-2 p-2 bg-efootball-bg border border-efootball-border rounded-xl cursor-pointer hover:border-amber-400/50 transition">
+                                        <input type="checkbox" x-model="newGoalEvent.isOwnGoal" @change="syncGoalDropdowns()" class="rounded text-amber-400 focus:ring-amber-400">
+                                        <span class="text-xs font-bold text-amber-300 flex items-center gap-1">
+                                            <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-amber-400"></i> Own Goal (Opponent error)
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Dropdowns for Scorer, Assister, and Minute -->
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <!-- Scorer Dropdown (All players in team, or opponent players if Own Goal) -->
+                                <div>
+                                    <label class="block text-[11px] font-bold text-gray-300 mb-1">
+                                        <span x-text="newGoalEvent.isOwnGoal ? 'Opponent Player (Own Goal Scorer)' : 'Goal Scorer (All Players in Team)'"></span>
+                                    </label>
+                                    <select x-model="newGoalEvent.scorerName" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
+                                        <option value="">-- Select Team Player --</option>
+                                        <template x-for="player in getGoalScorerOptions()" :key="player.name">
+                                            <option :value="player.name" x-text="`${player.name} (${player.position || 'FWD'} #${player.number || '?'})`"></option>
+                                        </template>
+                                    </select>
+                                </div>
+
+                                <!-- Assister Dropdown -->
+                                <div>
+                                    <label class="block text-[11px] font-bold text-gray-300 mb-1">Assisted By</label>
+                                    <select x-model="newGoalEvent.assisterName" :disabled="newGoalEvent.isOwnGoal" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white disabled:opacity-40">
+                                        <option value="NONE">None (Solo Goal / Unassisted)</option>
+                                        <template x-for="player in getGoalAssisterOptions()" :key="player.name">
+                                            <option :value="player.name" x-text="`${player.name} (${player.position || 'MID'} #${player.number || '?'})`"></option>
+                                        </template>
+                                    </select>
+                                </div>
+
+                                <!-- Minute Input & Add Button -->
+                                <div>
+                                    <label class="block text-[11px] font-bold text-gray-300 mb-1">Minute</label>
+                                    <div class="flex gap-2">
+                                        <input type="text" x-model="newGoalEvent.minute" placeholder="24'" class="w-16 bg-efootball-bg border border-efootball-border rounded-xl px-2 py-2 text-xs text-white font-mono text-center">
+                                        <button type="button" @click="addGoalEventToMatch()" class="flex-1 bg-gradient-to-r from-efootball-cyan to-emerald-400 text-black font-black px-3 py-2 rounded-xl text-xs hover:brightness-110 transition shadow flex items-center justify-center gap-1">
+                                            <i data-lucide="plus" class="w-3.5 h-3.5"></i> Log Goal
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Recorded Goal Events List -->
+                            <template x-if="editingFixture.goalEvents && editingFixture.goalEvents.length > 0">
+                                <div class="space-y-1.5 pt-2 border-t border-efootball-border/40">
+                                    <span class="text-[10px] uppercase font-bold text-gray-400">Match Events Logged:</span>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                        <template x-for="(g, gIdx) in editingFixture.goalEvents" :key="g.id || gIdx">
+                                            <div class="p-2 bg-efootball-bg/90 rounded-xl border border-efootball-border flex items-center justify-between text-xs">
+                                                <div class="flex items-center gap-1.5 truncate">
+                                                    <span class="px-1.5 py-0.5 rounded text-[10px] font-black uppercase shrink-0"
+                                                          :class="g.team === 'HOME' ? 'bg-cyan-500/20 text-cyan-300' : 'bg-pink-500/20 text-pink-300'"
+                                                          x-text="g.team === 'HOME' ? getTeam(editingFixture.homeId).shortCode : getTeam(editingFixture.awayId).shortCode"></span>
+                                                    <span class="font-bold text-white truncate" x-text="g.scorerName"></span>
+                                                    <span x-show="g.isOwnGoal" class="text-[10px] text-amber-400 font-mono font-bold shrink-0">(OG)</span>
+                                                    <span x-show="g.minute" class="text-[10px] text-gray-400 font-mono shrink-0" x-text="g.minute.includes(`'`) ? g.minute : g.minute + `'`"></span>
+                                                    <span x-show="g.assisterName && g.assisterName !== 'NONE'" class="text-[10px] text-gray-400 truncate" x-text="'(Ast: ' + g.assisterName + ')'"></span>
+                                                </div>
+                                                <button type="button" @click="removeGoalEvent(gIdx)" class="text-rose-400 hover:text-white p-1 rounded hover:bg-rose-500/20 shrink-0">
+                                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                                </button>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- Goalscorers Summary -->
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Goalscorers Summary Banner</label>
+                            <input type="text" x-model="editingFixture.scorers" placeholder="e.g. Kevin 24', Emmanuel 68' (Ast: Alex)" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
+                        </div>
+
+                        <div class="flex justify-end gap-3 pt-2 border-t border-efootball-border">
+                            <button type="button" @click="openFixtureModal = false" class="px-5 py-2.5 rounded-xl text-xs font-bold text-gray-400 hover:text-white">Cancel</button>
+                            <button type="submit" class="bg-gradient-to-r from-efootball-cyan to-emerald-400 text-black font-black px-7 py-2.5 rounded-xl text-xs hover:shadow-neon-cyan transition shadow-xl">
+                                Save Official Result & Update Stats
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    <!-- MODAL 10: Edit / Register Player Stats Modal -->
+    <div x-show="openPlayerStatsModal" x-transition.opacity class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+        <div @click.outside="openPlayerStatsModal = false" class="efootball-card rounded-3xl max-w-xl w-full p-7 border-2 border-efootball-cyan/50 space-y-6 shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <template x-if="editingPlayerStat">
+                <div>
+                    <div class="flex items-center justify-between border-b border-efootball-border pb-4">
+                        <div>
+                            <h3 class="font-header text-3xl font-black text-white uppercase leading-none" x-text="isCreatingNewStat ? 'Register New Player Stat' : 'Admin: Edit Player Statistics'"></h3>
+                            <p class="text-xs text-efootball-cyan mt-1" x-text="isCreatingNewStat ? 'Add a new player to the official league leaderboard' : 'Modify goals, assists, discipline & attributes for ' + editingPlayerStat.name"></p>
+                        </div>
+                        <button @click="openPlayerStatsModal = false" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+                    </div>
+
+                    <form @submit.prevent="savePlayerStatDetails()" class="space-y-4 mt-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-black uppercase text-gray-300 mb-1">Player Full Name</label>
+                                <input type="text" x-model="editingPlayerStat.name" required placeholder="e.g. Kevin Omondi" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-black uppercase text-gray-300 mb-1">Club Affiliation</label>
+                                <select x-model.number="editingPlayerStat.teamId" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
+                                    <template x-for="t in teams" :key="t.id">
+                                        <option :value="t.id" x-text="t.name"></option>
+                                    </template>
+                                </select>
                             </div>
                         </div>
 
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Status</label>
-                                <select x-model="editingFixture.status" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
-                                    <option value="UPCOMING">Upcoming</option>
-                                    <option value="LIVE">Live</option>
-                                    <option value="FINISHED">Finished</option>
+                                <label class="block text-xs font-black uppercase text-gray-300 mb-1">Position</label>
+                                <select x-model="editingPlayerStat.position" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
+                                    <option value="FWD">Forward (FWD)</option>
+                                    <option value="MID">Midfielder (MID)</option>
+                                    <option value="DEF">Defender (DEF)</option>
+                                    <option value="GK">Goalkeeper (GK)</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Time</label>
-                                <input type="text" x-model="editingFixture.time" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
+                                <label class="block text-xs font-black uppercase text-gray-300 mb-1">Preferred Foot</label>
+                                <select x-model="editingPlayerStat.foot" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
+                                    <option value="Right">Right Footed</option>
+                                    <option value="Left">Left Footed</option>
+                                    <option value="Both">Both / Ambidextrous</option>
+                                </select>
                             </div>
                         </div>
 
-                        <div>
-                            <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Goalscorers Summary</label>
-                            <input type="text" x-model="editingFixture.scorers" placeholder="e.g. Kevin 24', Emmanuel 68'" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
+                        <!-- Statistical Performance Numbers -->
+                        <div class="p-4 bg-black/50 rounded-2xl border border-efootball-border space-y-3">
+                            <span class="text-xs font-black uppercase text-efootball-yellow flex items-center gap-1.5">
+                                <i data-lucide="bar-chart-2" class="w-4 h-4"></i> Match Statistics, Starts & Discipline
+                            </span>
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-efootball-yellow mb-1">Goals Scored</label>
+                                    <input type="number" min="0" x-model.number="editingPlayerStat.goals" required class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white font-mono font-bold text-center">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-efootball-cyan mb-1">Assists</label>
+                                    <input type="number" min="0" x-model.number="editingPlayerStat.assists" required class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white font-mono font-bold text-center">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-amber-300 mb-1">Starts (XI)</label>
+                                    <input type="number" min="0" x-model.number="editingPlayerStat.starts" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white font-mono font-bold text-center">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-gray-300 mb-1">Appearances</label>
+                                    <input type="number" min="0" x-model.number="editingPlayerStat.matches" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white font-mono text-center">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-3 gap-3 pt-2">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-emerald-400 mb-1">Clean Sheets</label>
+                                    <input type="number" min="0" x-model.number="editingPlayerStat.cleanSheets" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white font-mono text-center">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-amber-400 mb-1">Yellow Cards</label>
+                                    <input type="number" min="0" x-model.number="editingPlayerStat.yellowCards" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white font-mono text-center">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-rose-500 mb-1">Red Cards</label>
+                                    <input type="number" min="0" x-model.number="editingPlayerStat.redCards" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white font-mono text-center">
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="flex justify-end gap-3 pt-3">
-                            <button type="button" @click="openFixtureModal = false" class="px-4 py-2 rounded-xl text-xs font-bold text-gray-400 hover:text-white">Cancel</button>
-                            <button type="submit" class="bg-efootball-cyan text-black font-black px-6 py-2 rounded-xl text-xs hover:bg-cyan-300 transition">Save Result</button>
+                        <div class="flex items-center justify-between pt-3">
+                            <div>
+                                <button type="button" x-show="!isCreatingNewStat" @click="deletePlayerStat(editingPlayerStat.id)" class="text-xs bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white font-bold px-4 py-2 rounded-xl transition">
+                                    Delete Stat
+                                </button>
+                            </div>
+                            <div class="flex gap-3">
+                                <button type="button" @click="openPlayerStatsModal = false" class="px-5 py-2 rounded-xl text-xs font-bold text-gray-400 hover:text-white">Cancel</button>
+                                <button type="submit" class="bg-gradient-to-r from-efootball-cyan to-emerald-400 text-black font-black px-7 py-2 rounded-xl text-xs hover:shadow-neon-cyan transition shadow-xl">
+                                    Save Statistics
+                                </button>
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -3045,6 +3339,25 @@
                     <input type="text" x-model="customSongForm.title" placeholder="e.g. PES 2026 Opening Stadium Theme" class="w-full bg-efootball-bg border border-efootball-border rounded-2xl px-4 py-2.5 text-xs text-white">
                 </div>
 
+                <!-- Direct Audio File Upload (MP3 / WAV) -->
+                <div class="p-3.5 bg-black/60 border border-efootball-border rounded-2xl space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-black uppercase text-efootball-cyan flex items-center gap-1.5">
+                            <i data-lucide="upload-cloud" class="w-4 h-4"></i> Or Upload MP3 / WAV Song File
+                        </label>
+                        <span class="text-[10px] text-gray-400">Direct Playback</span>
+                    </div>
+                    <input type="file" accept="audio/*" @change="handleAudioFileUpload($event)" class="w-full text-xs text-gray-300 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-efootball-cyan file:text-black hover:file:brightness-110 file:cursor-pointer cursor-pointer">
+                    <template x-if="websiteSong.mode === 'custom' && websiteSong.customAudioUrl">
+                        <div class="p-2 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center justify-between text-xs">
+                            <span class="text-[11px] text-emerald-400 font-bold flex items-center gap-1.5 truncate">
+                                <i data-lucide="check-circle" class="w-3.5 h-3.5 shrink-0"></i> Active: <span class="text-white truncate" x-text="websiteSong.title"></span>
+                            </span>
+                            <button type="button" @click="startWebsiteSong()" class="px-2 py-0.5 rounded-lg bg-emerald-400 text-black font-black text-[10px] hover:brightness-110 shrink-0">Play</button>
+                        </div>
+                    </template>
+                </div>
+
                 <!-- Presets -->
                 <div class="space-y-1.5">
                     <span class="text-[10px] font-black uppercase text-gray-400 tracking-wider">Fast Stadium Presets</span>
@@ -3148,6 +3461,53 @@
 
     <!-- Alpine.js Application Engine -->
     <script>
+        // IndexedDB Manager for High-Capacity Audio & Media Storage
+        const SongAudioDB = {
+            dbName: 'MpesaLeagueAudioDB_v4',
+            dbVersion: 1,
+            getDB() {
+                return new Promise((resolve, reject) => {
+                    const req = indexedDB.open(this.dbName, this.dbVersion);
+                    req.onupgradeneeded = (e) => {
+                        const db = e.target.result;
+                        if (!db.objectStoreNames.contains('audioStore')) {
+                            db.createObjectStore('audioStore');
+                        }
+                    };
+                    req.onsuccess = () => resolve(req.result);
+                    req.onerror = () => reject(req.error);
+                });
+            },
+            async saveAudio(file, metadata) {
+                try {
+                    const db = await this.getDB();
+                    return new Promise((resolve, reject) => {
+                        const tx = db.transaction('audioStore', 'readwrite');
+                        const store = tx.objectStore('audioStore');
+                        store.put({ blob: file, metadata, updatedAt: Date.now() }, 'uploaded_anthem');
+                        tx.oncomplete = () => resolve(true);
+                        tx.onerror = () => reject(tx.error);
+                    });
+                } catch (e) {
+                    console.warn('SongAudioDB save error:', e);
+                }
+            },
+            async getAudio() {
+                try {
+                    const db = await this.getDB();
+                    return new Promise((resolve) => {
+                        const tx = db.transaction('audioStore', 'readonly');
+                        const req = tx.objectStore('audioStore').get('uploaded_anthem');
+                        req.onsuccess = () => resolve(req.result || null);
+                        req.onerror = () => resolve(null);
+                    });
+                } catch (e) {
+                    console.warn('SongAudioDB load error:', e);
+                    return null;
+                }
+            }
+        };
+
         function leagueApp() {
             return {
                 activeTab: 'table',
@@ -3203,6 +3563,20 @@
                 roleSubmissionForm: { title: '', content: '' },
 
                 toast: { show: false, message: '' },
+
+                // Player Stats Management State
+                openPlayerStatsModal: false,
+                editingPlayerStat: null,
+                isCreatingNewStat: false,
+
+                // Match Goal Recorder State
+                newGoalEvent: {
+                    team: 'HOME', // 'HOME' | 'AWAY'
+                    isOwnGoal: false,
+                    scorerName: '',
+                    assisterName: 'NONE',
+                    minute: ''
+                },
 
                 // Countdown State
                 countdown: { days: '00', hours: '00', minutes: '00', seconds: '00' },
@@ -3428,10 +3802,31 @@
                         if (window.lucide) lucide.createIcons();
                     });
 
+                    // Restore persistent custom uploaded song from IndexedDB if present
+                    if (window.SongAudioDB) {
+                        SongAudioDB.getAudio().then(record => {
+                            if (record && record.blob) {
+                                const restoredUrl = URL.createObjectURL(record.blob);
+                                this.websiteSong.customAudioUrl = restoredUrl;
+                                if (record.metadata && record.metadata.title) {
+                                    this.websiteSong.title = record.metadata.title;
+                                }
+                                const customAudio = document.getElementById('pes-custom-audio-element');
+                                if (customAudio) {
+                                    customAudio.src = restoredUrl;
+                                    customAudio.volume = this.websiteSong.volume ?? 0.6;
+                                }
+                                if (this.websiteSong.mode === 'custom') {
+                                    this.startWebsiteSong();
+                                }
+                            }
+                        }).catch(e => console.warn('Could not restore persistent song audio:', e));
+                    }
+
                     // Automatic Website Song Playback Setup
                     setTimeout(() => {
                         this.startWebsiteSong();
-                    }, 500);
+                    }, 600);
 
                     // Global first-interaction listener to unblock sound if browser blocked initial autoplay
                     const unlockAudio = () => {
@@ -4136,19 +4531,285 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                     return restingMap[weekNum] || 'None';
                 },
 
+                // ==================== PLAYER STATS MANAGEMENT ====================
+                openEditPlayerStatsModal(stat) {
+                    this.editingPlayerStat = JSON.parse(JSON.stringify(stat));
+                    if (this.editingPlayerStat.starts === undefined) {
+                        this.editingPlayerStat.starts = this.editingPlayerStat.matches || 0;
+                    }
+                    if (this.editingPlayerStat.matches === undefined) {
+                        this.editingPlayerStat.matches = this.editingPlayerStat.starts || 0;
+                    }
+                    this.isCreatingNewStat = false;
+                    this.openPlayerStatsModal = true;
+                    this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
+                },
+
+                openNewPlayerStatModal() {
+                    this.editingPlayerStat = {
+                        id: Date.now(),
+                        name: '',
+                        teamId: this.teams[0]?.id || 1,
+                        position: 'FWD',
+                        foot: 'Right',
+                        goals: 0,
+                        assists: 0,
+                        cleanSheets: 0,
+                        starts: 1,
+                        matches: 1,
+                        yellowCards: 0,
+                        redCards: 0
+                    };
+                    this.isCreatingNewStat = true;
+                    this.openPlayerStatsModal = true;
+                    this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
+                },
+
+                editSquadPlayerStat(player, team) {
+                    let stat = this.playerStatsList.find(s => s.name.toLowerCase() === player.name.toLowerCase());
+                    if (!stat) {
+                        stat = {
+                            id: Date.now() + Math.random(),
+                            name: player.name,
+                            teamId: team.id,
+                            position: player.position || 'FWD',
+                            foot: player.foot || 'Right',
+                            goals: 0,
+                            assists: 0,
+                            cleanSheets: 0,
+                            starts: 1,
+                            matches: 1,
+                            yellowCards: 0,
+                            redCards: 0
+                        };
+                        this.playerStatsList.push(stat);
+                    }
+                    this.openEditPlayerStatsModal(stat);
+                },
+
+                savePlayerStatDetails() {
+                    if (!this.editingPlayerStat || !this.editingPlayerStat.name.trim()) {
+                        this.showToast('Please enter a valid player name.');
+                        return;
+                    }
+                    if (this.isCreatingNewStat) {
+                        this.playerStatsList.push({ ...this.editingPlayerStat });
+                        this.showToast('Player stat registered: ' + this.editingPlayerStat.name);
+                    } else {
+                        const idx = this.playerStatsList.findIndex(p => p.id === this.editingPlayerStat.id);
+                        if (idx !== -1) {
+                            this.playerStatsList[idx] = { ...this.editingPlayerStat };
+                            this.showToast('Updated stats & starts for ' + this.editingPlayerStat.name);
+                        }
+                    }
+                    this.saveStoredData();
+                    this.openPlayerStatsModal = false;
+                    this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
+                },
+
+                deletePlayerStat(id) {
+                    this.playerStatsList = this.playerStatsList.filter(p => p.id !== id);
+                    this.saveStoredData();
+                    this.openPlayerStatsModal = false;
+                    this.showToast('Player stat removed from leaderboard.');
+                    this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
+                },
+
+                // ==================== MATCH FIXTURE & GOAL RECORDING STATION ====================
+                getTeamPlayers(teamId) {
+                    const team = this.getTeam(teamId);
+                    if (!team) return [];
+                    const squadPlayers = (team.squad || []).map(p => ({
+                        name: p.name,
+                        number: p.number || 0,
+                        position: p.position || 'FWD',
+                        teamId: teamId
+                    }));
+                    const statsPlayers = this.playerStatsList
+                        .filter(s => s.teamId === teamId && !squadPlayers.some(sp => sp.name.toLowerCase() === s.name.toLowerCase()))
+                        .map(s => ({
+                            name: s.name,
+                            number: s.number || 0,
+                            position: s.position || 'FWD',
+                            teamId: teamId
+                        }));
+                    const combined = [...squadPlayers, ...statsPlayers];
+                    return combined.sort((a, b) => a.name.localeCompare(b.name));
+                },
+
+                getGoalScorerOptions() {
+                    if (!this.editingFixture) return [];
+                    // If Own Goal, the scorer was an OPPONENT player!
+                    if (this.newGoalEvent.isOwnGoal) {
+                        const opponentTeamId = this.newGoalEvent.team === 'HOME' ? this.editingFixture.awayId : this.editingFixture.homeId;
+                        return this.getTeamPlayers(opponentTeamId);
+                    } else {
+                        // Regular goal: squad players of credited team
+                        const creditedTeamId = this.newGoalEvent.team === 'HOME' ? this.editingFixture.homeId : this.editingFixture.awayId;
+                        return this.getTeamPlayers(creditedTeamId);
+                    }
+                },
+
+                getGoalAssisterOptions() {
+                    if (!this.editingFixture || this.newGoalEvent.isOwnGoal) return [];
+                    const creditedTeamId = this.newGoalEvent.team === 'HOME' ? this.editingFixture.homeId : this.editingFixture.awayId;
+                    return this.getTeamPlayers(creditedTeamId).filter(p => p.name !== this.newGoalEvent.scorerName);
+                },
+
+                syncGoalDropdowns() {
+                    const scorers = this.getGoalScorerOptions();
+                    if (scorers.length > 0 && !scorers.some(s => s.name === this.newGoalEvent.scorerName)) {
+                        this.newGoalEvent.scorerName = scorers[0].name;
+                    }
+                    if (this.newGoalEvent.isOwnGoal) {
+                        this.newGoalEvent.assisterName = 'NONE';
+                    }
+                },
+
+                addGoalEventToMatch() {
+                    if (!this.newGoalEvent.scorerName) {
+                        this.showToast('Please select a goal scorer from the dropdown.');
+                        return;
+                    }
+                    if (!this.editingFixture.goalEvents) {
+                        this.editingFixture.goalEvents = [];
+                    }
+
+                    const goalItem = {
+                        id: Date.now() + Math.random(),
+                        team: this.newGoalEvent.team,
+                        scorerName: this.newGoalEvent.scorerName,
+                        assisterName: this.newGoalEvent.isOwnGoal ? 'NONE' : this.newGoalEvent.assisterName,
+                        isOwnGoal: Boolean(this.newGoalEvent.isOwnGoal),
+                        minute: this.newGoalEvent.minute ? this.newGoalEvent.minute.replace(/'/g, '').trim() : ''
+                    };
+
+                    this.editingFixture.goalEvents.push(goalItem);
+
+                    // Recalculate scores from logged goals
+                    this.editingFixture.homeScore = this.editingFixture.goalEvents.filter(g => g.team === 'HOME').length;
+                    this.editingFixture.awayScore = this.editingFixture.goalEvents.filter(g => g.team === 'AWAY').length;
+
+                    // Automatically format scorers summary banner
+                    this.generateScorersSummaryString();
+
+                    this.newGoalEvent.minute = '';
+                    this.showToast('⚽ Goal recorded for ' + goalItem.scorerName);
+                    this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
+                },
+
+                removeGoalEvent(idx) {
+                    if (!this.editingFixture.goalEvents) return;
+                    this.editingFixture.goalEvents.splice(idx, 1);
+                    this.editingFixture.homeScore = this.editingFixture.goalEvents.filter(g => g.team === 'HOME').length;
+                    this.editingFixture.awayScore = this.editingFixture.goalEvents.filter(g => g.team === 'AWAY').length;
+                    this.generateScorersSummaryString();
+                    this.showToast('Goal event removed.');
+                    this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
+                },
+
+                generateScorersSummaryString() {
+                    if (!this.editingFixture || !this.editingFixture.goalEvents || this.editingFixture.goalEvents.length === 0) {
+                        return;
+                    }
+                    const homeEvents = this.editingFixture.goalEvents.filter(g => g.team === 'HOME').map(g => {
+                        let text = g.scorerName;
+                        if (g.isOwnGoal) text += ' (OG)';
+                        if (g.minute) text += ` ${g.minute}'`;
+                        if (g.assisterName && g.assisterName !== 'NONE') text += ` (Ast: ${g.assisterName})`;
+                        return text;
+                    });
+                    const awayEvents = this.editingFixture.goalEvents.filter(g => g.team === 'AWAY').map(g => {
+                        let text = g.scorerName;
+                        if (g.isOwnGoal) text += ' (OG)';
+                        if (g.minute) text += ` ${g.minute}'`;
+                        if (g.assisterName && g.assisterName !== 'NONE') text += ` (Ast: ${g.assisterName})`;
+                        return text;
+                    });
+
+                    let parts = [];
+                    if (homeEvents.length > 0) parts.push(homeEvents.join(', '));
+                    if (awayEvents.length > 0) parts.push(awayEvents.join(', '));
+                    this.editingFixture.scorers = parts.join(' | ');
+                },
+
                 openFixtureEditModal(match) {
                     this.editingFixture = JSON.parse(JSON.stringify(match));
+                    if (!this.editingFixture.goalEvents) {
+                        this.editingFixture.goalEvents = [];
+                    }
+                    this.newGoalEvent = {
+                        team: 'HOME',
+                        isOwnGoal: false,
+                        scorerName: '',
+                        assisterName: 'NONE',
+                        minute: ''
+                    };
+                    this.syncGoalDropdowns();
                     this.openFixtureModal = true;
+                    this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
                 },
 
                 saveFixtureDetails() {
                     const idx = this.matches.findIndex(m => m.id === this.editingFixture.id);
                     if (idx !== -1) {
                         this.matches[idx] = { ...this.editingFixture };
+
+                        // Sync goalscorers and assists to playerStatsList
+                        if (this.editingFixture.goalEvents && this.editingFixture.goalEvents.length > 0) {
+                            this.editingFixture.goalEvents.forEach(evt => {
+                                if (!evt.isOwnGoal && evt.scorerName) {
+                                    let stat = this.playerStatsList.find(s => s.name.toLowerCase() === evt.scorerName.toLowerCase());
+                                    const teamId = evt.team === 'HOME' ? this.editingFixture.homeId : this.editingFixture.awayId;
+                                    if (stat) {
+                                        stat.goals = (Number(stat.goals) || 0) + 1;
+                                    } else {
+                                        this.playerStatsList.push({
+                                            id: Date.now() + Math.random(),
+                                            name: evt.scorerName,
+                                            teamId: teamId,
+                                            position: 'FWD',
+                                            foot: 'Right',
+                                            goals: 1,
+                                            assists: 0,
+                                            starts: 1,
+                                            matches: 1,
+                                            cleanSheets: 0,
+                                            yellowCards: 0,
+                                            redCards: 0
+                                        });
+                                    }
+                                }
+                                if (evt.assisterName && evt.assisterName !== 'NONE') {
+                                    let astStat = this.playerStatsList.find(s => s.name.toLowerCase() === evt.assisterName.toLowerCase());
+                                    const teamId = evt.team === 'HOME' ? this.editingFixture.homeId : this.editingFixture.awayId;
+                                    if (astStat) {
+                                        astStat.assists = (Number(astStat.assists) || 0) + 1;
+                                    } else {
+                                        this.playerStatsList.push({
+                                            id: Date.now() + Math.random(),
+                                            name: evt.assisterName,
+                                            teamId: teamId,
+                                            position: 'MID',
+                                            foot: 'Right',
+                                            goals: 0,
+                                            assists: 1,
+                                            starts: 1,
+                                            matches: 1,
+                                            cleanSheets: 0,
+                                            yellowCards: 0,
+                                            redCards: 0
+                                        });
+                                    }
+                                }
+                            });
+                        }
+
                         this.recalculateStandings();
                         this.saveStoredData();
                         this.openFixtureModal = false;
-                        this.showToast('Score updated and table automatically recalculated!');
+                        this.showToast('Score & Goal events saved! Leaderboard and standings updated.');
+                        this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
                     }
                 },
 
@@ -4197,14 +4858,39 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                 startWebsiteSong() {
                     try {
                         this.websiteSong.isPlaying = true;
-                        if (this.websiteSong.mode === 'synth' || !this.websiteSong.youtubeId) {
-                            this.playSynthesizedPESBeat();
-                        } else {
-                            // YouTube audio playback via embedded iframe
-                            const frame = document.getElementById('pes-youtube-audio-frame');
-                            if (frame && this.websiteSong.youtubeId) {
-                                frame.src = `https://www.youtube-nocookie.com/embed/${this.websiteSong.youtubeId}?autoplay=1&mute=0&controls=0&loop=1&playlist=${this.websiteSong.youtubeId}`;
+                        const customAudio = document.getElementById('pes-custom-audio-element');
+                        const ytFrame = document.getElementById('pes-youtube-audio-frame');
+
+                        if (this.websiteSong.mode === 'custom' && this.websiteSong.customAudioUrl) {
+                            // Mode 1: Uploaded Audio Track (MP3 / WAV / OGG)
+                            this.stopSynthesizedBeat();
+                            if (ytFrame) ytFrame.src = '';
+                            if (customAudio) {
+                                if (customAudio.src !== this.websiteSong.customAudioUrl) {
+                                    customAudio.src = this.websiteSong.customAudioUrl;
+                                }
+                                customAudio.volume = this.websiteSong.volume ?? 0.6;
+                                const playPromise = customAudio.play();
+                                if (playPromise !== undefined) {
+                                    playPromise.then(() => {
+                                        this.websiteSong.isPlaying = true;
+                                    }).catch(e => {
+                                        console.warn('Audio play gesture needed:', e);
+                                    });
+                                }
                             }
+                        } else if (this.websiteSong.mode === 'youtube' && this.websiteSong.youtubeId) {
+                            // Mode 2: YouTube Audio Frame
+                            this.stopSynthesizedBeat();
+                            if (customAudio) customAudio.pause();
+                            if (ytFrame) {
+                                ytFrame.src = `https://www.youtube-nocookie.com/embed/${this.websiteSong.youtubeId}?autoplay=1&mute=0&controls=0&loop=1&playlist=${this.websiteSong.youtubeId}`;
+                            }
+                        } else {
+                            // Mode 3: Native Web Audio PES Synthesizer Beat
+                            if (customAudio) customAudio.pause();
+                            if (ytFrame) ytFrame.src = '';
+                            this.playSynthesizedPESBeat();
                         }
                     } catch (e) {
                         console.log('Autoplay audio unblock:', e);
@@ -4214,6 +4900,8 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                 pauseWebsiteSong() {
                     this.websiteSong.isPlaying = false;
                     this.stopSynthesizedBeat();
+                    const customAudio = document.getElementById('pes-custom-audio-element');
+                    if (customAudio) customAudio.pause();
                     const frame = document.getElementById('pes-youtube-audio-frame');
                     if (frame) frame.src = '';
                 },
@@ -4237,6 +4925,8 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                 setCustomSongVolume(vol) {
                     this.websiteSong.volume = vol;
                     this.musicVolume = vol;
+                    const customAudio = document.getElementById('pes-custom-audio-element');
+                    if (customAudio) customAudio.volume = vol;
                     this.saveStoredData();
                 },
 
@@ -4247,6 +4937,8 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                         return;
                     }
                     this.stopSynthesizedBeat();
+                    const customAudio = document.getElementById('pes-custom-audio-element');
+                    if (customAudio) customAudio.pause();
                     this.websiteSong.mode = 'youtube';
                     this.websiteSong.youtubeUrl = url.trim();
                     this.websiteSong.youtubeId = ytId;
@@ -4258,6 +4950,8 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
 
                 playPresetSong(presetKey) {
                     this.stopSynthesizedBeat();
+                    const customAudio = document.getElementById('pes-custom-audio-element');
+                    if (customAudio) customAudio.pause();
                     if (presetKey === 'PES_OFFICIAL') {
                         this.websiteSong.mode = 'youtube';
                         this.websiteSong.youtubeUrl = 'https://www.youtube.com/watch?v=kYtGl1DX5qI';
@@ -4284,18 +4978,46 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                 },
 
                 handleAudioFileUpload(e) {
-                    const file = e.target.files[0];
+                    const file = e.target.files && e.target.files[0];
                     if (!file) return;
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        this.stopSynthesizedBeat();
-                        this.websiteSong.mode = 'custom';
-                        this.websiteSong.customAudioUrl = event.target.result;
-                        this.websiteSong.title = file.name.replace(/\.[^/.]+$/, "");
-                        this.showToast('Audio uploaded: ' + this.websiteSong.title);
-                        this.saveStoredData();
-                    };
-                    reader.readAsDataURL(file);
+                    this.stopSynthesizedBeat();
+                    const ytFrame = document.getElementById('pes-youtube-audio-frame');
+                    if (ytFrame) ytFrame.src = '';
+
+                    const objectUrl = URL.createObjectURL(file);
+                    const cleanName = file.name.replace(/\.[^/.]+$/, "");
+                    this.websiteSong.mode = 'custom';
+                    this.websiteSong.customAudioUrl = objectUrl;
+                    this.websiteSong.title = cleanName + ' (Uploaded Audio)';
+                    this.websiteSong.isPlaying = true;
+
+                    const customAudio = document.getElementById('pes-custom-audio-element');
+                    if (customAudio) {
+                        try {
+                            customAudio.pause();
+                            customAudio.src = objectUrl;
+                            customAudio.currentTime = 0;
+                            customAudio.volume = this.websiteSong.volume ?? 0.6;
+                            const playPromise = customAudio.play();
+                            if (playPromise !== undefined) {
+                                playPromise.then(() => {
+                                    this.websiteSong.isPlaying = true;
+                                    this.showToast('🎵 Now playing uploaded anthem: ' + cleanName);
+                                }).catch(err => {
+                                    console.warn('Audio gesture required:', err);
+                                    this.showToast('🎵 Anthem uploaded! Click "Play Anthem" above to listen');
+                                });
+                            }
+                        } catch (err) {
+                            console.error('Audio playback error:', err);
+                            this.showToast('🎵 Anthem uploaded! Tap "Play Anthem" to start sound.');
+                        }
+                    }
+
+                    // Save file to IndexedDB for persistent audio across refreshes
+                    SongAudioDB.saveAudio(file, { title: this.websiteSong.title, name: file.name, type: file.type });
+                    this.saveStoredData();
+                    this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
                 },
 
                 playSynthesizedPESBeat() {
@@ -4373,6 +5095,10 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                 },
 
                 submitMediaItem(type) {
+                    if (!this.isAdmin && !this.isSuperAdmin) {
+                        this.showToast('Security Alert: Only League Administrators can upload matchday media.');
+                        return;
+                    }
                     let url = '';
                     if (type === 'IMAGE') {
                         if (!this.mediaUploadForm.fileData) {
@@ -4423,6 +5149,10 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                 },
 
                 deleteMediaItem(id) {
+                    if (!this.isAdmin && !this.isSuperAdmin) {
+                        this.showToast('Security Alert: Only League Administrators can delete media.');
+                        return;
+                    }
                     this.mediaGallery = this.mediaGallery.filter(m => m.id !== id);
                     this.saveStoredData();
                     this.showToast('Media item deleted.');
@@ -4527,7 +5257,55 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                         try { this.officialsList = JSON.parse(storedOfficials); } catch (e) {}
                     }
 
-                    this.teams = storedTeams ? JSON.parse(storedTeams) : [
+                    const defaultSquads = {
+                        1: [
+                            { name: 'Kevin Omondi', number: 10, position: 'FWD', foot: 'Right', admissionNumber: 'ADM-2024-0101', email: 'k.omondi@mpesa.ac.ke', photoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80' },
+                            { name: 'Brian Mwangi', number: 7, position: 'MID', foot: 'Right', admissionNumber: 'ADM-2024-0102', email: 'b.mwangi@mpesa.ac.ke', photoUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80' },
+                            { name: 'Dan Kiprop', number: 1, position: 'GK', foot: 'Both', admissionNumber: 'ADM-2024-0103', email: 'd.kiprop@mpesa.ac.ke', photoUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80' },
+                            { name: 'Samuel Otieno', number: 4, position: 'DEF', foot: 'Right', admissionNumber: 'ADM-2024-0104', email: 's.otieno@mpesa.ac.ke', photoUrl: '' },
+                            { name: 'Faith Chemutai', number: 8, position: 'MID', foot: 'Left', admissionNumber: 'ADM-2024-0105', email: 'f.chemutai@mpesa.ac.ke', photoUrl: '' },
+                            { name: 'Victor Maina', number: 11, position: 'FWD', foot: 'Right', admissionNumber: 'ADM-2024-0106', email: 'v.maina@mpesa.ac.ke', photoUrl: '' },
+                            { name: 'Denis Kipruto', number: 3, position: 'DEF', foot: 'Right', admissionNumber: 'ADM-2024-0107', email: 'd.kipruto@mpesa.ac.ke', photoUrl: '' }
+                        ],
+                        2: [
+                            { name: 'Emmanuel Kip', number: 9, position: 'FWD', foot: 'Left', admissionNumber: 'ADM-2024-0201', email: 'e.kip@mpesa.ac.ke', photoUrl: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=150&auto=format&fit=crop&q=80' },
+                            { name: 'John Doe', number: 1, position: 'GK', foot: 'Right', admissionNumber: 'ADM-2024-0202', email: 'j.doe@mpesa.ac.ke', photoUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80' },
+                            { name: 'Bradley Barasa', number: 6, position: 'DEF', foot: 'Right', admissionNumber: 'ADM-2024-0203', email: 'b.barasa@mpesa.ac.ke', photoUrl: '' },
+                            { name: 'George Ochieng', number: 8, position: 'MID', foot: 'Both', admissionNumber: 'ADM-2024-0204', email: 'g.ochieng@mpesa.ac.ke', photoUrl: '' },
+                            { name: 'Ryan Gitonga', number: 11, position: 'FWD', foot: 'Left', admissionNumber: 'ADM-2024-0205', email: 'r.gitonga@mpesa.ac.ke', photoUrl: '' },
+                            { name: 'Felix Wanjala', number: 4, position: 'DEF', foot: 'Right', admissionNumber: 'ADM-2024-0206', email: 'f.wanjala@mpesa.ac.ke', photoUrl: '' },
+                            { name: 'Ian Simiyu', number: 10, position: 'MID', foot: 'Right', admissionNumber: 'ADM-2024-0207', email: 'i.simiyu@mpesa.ac.ke', photoUrl: '' }
+                        ],
+                        3: [
+                            { name: 'Joshua Mutua', number: 5, position: 'DEF', foot: 'Right', admissionNumber: 'ADM-2024-0301', email: 'j.mutua@mpesa.ac.ke', photoUrl: '' },
+                            { name: 'Ian Mercer', number: 10, position: 'MID', foot: 'Both', admissionNumber: 'ADM-2024-0303', email: 'i.mercer@mpesa.ac.ke', photoUrl: '' },
+                            { name: 'Peter Kariuki', number: 1, position: 'GK', foot: 'Right', admissionNumber: 'ADM-2024-0304', email: 'p.kariuki@mpesa.ac.ke', photoUrl: '' },
+                            { name: 'Kelvin Njoroge', number: 7, position: 'FWD', foot: 'Right', admissionNumber: 'ADM-2024-0305', email: 'k.njoroge@mpesa.ac.ke', photoUrl: '' },
+                            { name: 'David Kamau', number: 3, position: 'DEF', foot: 'Left', admissionNumber: 'ADM-2024-0306', email: 'd.kamau@mpesa.ac.ke', photoUrl: '' },
+                            { name: 'Chrispinus Wafula', number: 9, position: 'FWD', foot: 'Right', admissionNumber: 'ADM-2024-0307', email: 'c.wafula@mpesa.ac.ke', photoUrl: '' },
+                            { name: 'Moses Kiprotich', number: 8, position: 'MID', foot: 'Both', admissionNumber: 'ADM-2024-0308', email: 'm.kiprotich@mpesa.ac.ke', photoUrl: '' }
+                        ],
+                        4: [
+                            { name: 'Collins Wekesa', number: 8, position: 'MID', foot: 'Right', admissionNumber: 'ADM-2023-0401', email: 'c.wekesa@mpesa.ac.ke', photoUrl: '' },
+                            { name: 'Alex Rono', number: 11, position: 'FWD', foot: 'Left', admissionNumber: 'ADM-2023-0403', email: 'a.rono@mpesa.ac.ke', photoUrl: '' },
+                            { name: 'Timothy Cheruiyot', number: 1, position: 'GK', foot: 'Both', admissionNumber: 'ADM-2023-0404', email: 't.cheruiyot@mpesa.ac.ke', photoUrl: '' },
+                            { name: 'Benson Odhiambo', number: 4, position: 'DEF', foot: 'Right', admissionNumber: 'ADM-2023-0405', email: 'b.odhiambo@mpesa.ac.ke', photoUrl: '' },
+                            { name: 'Kelvin Korir', number: 9, position: 'FWD', foot: 'Right', admissionNumber: 'ADM-2023-0406', email: 'k.korir@mpesa.ac.ke', photoUrl: '' },
+                            { name: 'Martin Ndegwa', number: 6, position: 'DEF', foot: 'Right', admissionNumber: 'ADM-2023-0407', email: 'm.ndegwa@mpesa.ac.ke', photoUrl: '' },
+                            { name: 'Patrick Musyoka', number: 7, position: 'MID', foot: 'Left', admissionNumber: 'ADM-2023-0408', email: 'p.musyoka@mpesa.ac.ke', photoUrl: '' }
+                        ],
+                        5: [
+                            { name: 'Hassan Ali', number: 10, position: 'MID', foot: 'Both', admissionNumber: 'ADM-2023-0501', email: 'h.ali@mpesa.ac.ke', photoUrl: '' },
+                            { name: 'Rashid Mohamed', number: 6, position: 'DEF', foot: 'Right', admissionNumber: 'ADM-2023-0503', email: 'r.mohamed@mpesa.ac.ke', photoUrl: '' },
+                            { name: 'Brian Koech', number: 1, position: 'GK', foot: 'Right', admissionNumber: 'ADM-2023-0504', email: 'b.koech@mpesa.ac.ke', photoUrl: '' },
+                            { name: 'Caleb Kibet', number: 9, position: 'FWD', foot: 'Right', admissionNumber: 'ADM-2023-0505', email: 'c.kibet@mpesa.ac.ke', photoUrl: '' },
+                            { name: 'Salim Ahmed', number: 7, position: 'FWD', foot: 'Left', admissionNumber: 'ADM-2023-0506', email: 's.ahmed@mpesa.ac.ke', photoUrl: '' },
+                            { name: 'James Mutiso', number: 3, position: 'DEF', foot: 'Right', admissionNumber: 'ADM-2023-0507', email: 'j.mutiso@mpesa.ac.ke', photoUrl: '' },
+                            { name: 'Eric Bett', number: 8, position: 'MID', foot: 'Both', admissionNumber: 'ADM-2023-0508', email: 'e.bett@mpesa.ac.ke', photoUrl: '' }
+                        ]
+                    };
+
+                    const baseDefaultTeams = [
                         {
                             id: 1,
                             name: 'Samba Boys',
@@ -4543,11 +5321,7 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                             },
                             assistantCoach: { name: 'Coach Peter K.' },
                             manager: { name: 'Mr. Omondi Senior' },
-                            squad: [
-                                { name: 'Kevin Omondi', number: 10, position: 'FWD', foot: 'Right', admissionNumber: 'ADM-2024-0101', email: 'k.omondi@mpesa.ac.ke', photoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80' },
-                                { name: 'Brian Mwangi', number: 7, position: 'MID', foot: 'Right', admissionNumber: 'ADM-2024-0102', email: 'b.mwangi@mpesa.ac.ke', photoUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80' },
-                                { name: 'Dan Kiprop', number: 1, position: 'GK', foot: 'Both', admissionNumber: 'ADM-2024-0103', email: 'd.kiprop@mpesa.ac.ke', photoUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80' }
-                            ]
+                            squad: defaultSquads[1]
                         },
                         {
                             id: 2,
@@ -4564,10 +5338,7 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                             },
                             assistantCoach: { name: 'Coach Daniel N.' },
                             manager: { name: 'Class Rep G10A' },
-                            squad: [
-                                { name: 'Emmanuel Kip', number: 9, position: 'FWD', foot: 'Left', admissionNumber: 'ADM-2024-0201', email: 'e.kip@mpesa.ac.ke', photoUrl: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=150&auto=format&fit=crop&q=80' },
-                                { name: 'John Doe', number: 1, position: 'GK', foot: 'Right', admissionNumber: 'ADM-2024-0202', email: 'j.doe@mpesa.ac.ke', photoUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80' }
-                            ]
+                            squad: defaultSquads[2]
                         },
                         {
                             id: 3,
@@ -4584,10 +5355,7 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                             },
                             assistantCoach: { name: 'Coach Alex M.' },
                             manager: { name: 'Class Rep G10B' },
-                            squad: [
-                                { name: 'Joshua Mutua', number: 5, position: 'DEF', foot: 'Right', admissionNumber: 'ADM-2024-0301', email: 'j.mutua@mpesa.ac.ke', photoUrl: '' },
-                                { name: 'Ian Mercer', number: 10, position: 'MID', foot: 'Both', admissionNumber: 'ADM-2024-0303', email: 'i.mercer@mpesa.ac.ke', photoUrl: '' }
-                            ]
+                            squad: defaultSquads[3]
                         },
                         {
                             id: 4,
@@ -4604,10 +5372,7 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                             },
                             assistantCoach: { name: 'Coach Brian T.' },
                             manager: { name: 'Senior Council DP2' },
-                            squad: [
-                                { name: 'Collins Wekesa', number: 8, position: 'MID', foot: 'Right', admissionNumber: 'ADM-2023-0401', email: 'c.wekesa@mpesa.ac.ke', photoUrl: '' },
-                                { name: 'Alex Rono', number: 11, position: 'FWD', foot: 'Left', admissionNumber: 'ADM-2023-0403', email: 'a.rono@mpesa.ac.ke', photoUrl: '' }
-                            ]
+                            squad: defaultSquads[4]
                         },
                         {
                             id: 5,
@@ -4624,20 +5389,27 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                             },
                             assistantCoach: { name: 'Coach Joseph M.' },
                             manager: { name: 'Senior Council DP2B' },
-                            squad: [
-                                { name: 'Hassan Ali', number: 10, position: 'MID', foot: 'Both', admissionNumber: 'ADM-2023-0501', email: 'h.ali@mpesa.ac.ke', photoUrl: '' },
-                                { name: 'Rashid Mohamed', number: 6, position: 'DEF', foot: 'Right', admissionNumber: 'ADM-2023-0503', email: 'r.mohamed@mpesa.ac.ke', photoUrl: '' }
-                            ]
+                            squad: defaultSquads[5]
                         }
                     ];
+
+                    this.teams = storedTeams ? JSON.parse(storedTeams) : baseDefaultTeams;
+                    // Enrich any loaded teams if squad list is minimal so all team players show up in goal recording
+                    this.teams.forEach(t => {
+                        if (defaultSquads[t.id]) {
+                            if (!t.squad || t.squad.length < 5) {
+                                t.squad = defaultSquads[t.id];
+                            }
+                        }
+                    });
 
                     this.matches = storedMatches ? JSON.parse(storedMatches) : this.generateDefaultFixtures();
 
                     this.playerStatsList = storedStats ? JSON.parse(storedStats) : [
-                        { id: 1, name: 'Kevin Omondi', teamId: 1, position: 'FWD', foot: 'Right', goals: 5, assists: 3, cleanSheets: 0, yellowCards: 1, redCards: 0 },
-                        { id: 2, name: 'Emmanuel Kip', teamId: 2, position: 'FWD', foot: 'Left', goals: 4, assists: 1, cleanSheets: 0, yellowCards: 2, redCards: 0 },
-                        { id: 3, name: 'Alex Rono', teamId: 4, position: 'FWD', foot: 'Left', goals: 3, assists: 2, cleanSheets: 0, yellowCards: 0, redCards: 0 },
-                        { id: 4, name: 'Hassan Ali', teamId: 5, position: 'MID', foot: 'Both', goals: 2, assists: 4, cleanSheets: 0, yellowCards: 1, redCards: 0 }
+                        { id: 1, name: 'Kevin Omondi', teamId: 1, position: 'FWD', foot: 'Right', goals: 5, assists: 3, starts: 5, matches: 5, cleanSheets: 0, yellowCards: 1, redCards: 0 },
+                        { id: 2, name: 'Emmanuel Kip', teamId: 2, position: 'FWD', foot: 'Left', goals: 4, assists: 1, starts: 5, matches: 5, cleanSheets: 0, yellowCards: 2, redCards: 0 },
+                        { id: 3, name: 'Alex Rono', teamId: 4, position: 'FWD', foot: 'Left', goals: 3, assists: 2, starts: 4, matches: 5, cleanSheets: 0, yellowCards: 0, redCards: 0 },
+                        { id: 4, name: 'Hassan Ali', teamId: 5, position: 'MID', foot: 'Both', goals: 2, assists: 4, starts: 5, matches: 5, cleanSheets: 0, yellowCards: 1, redCards: 0 }
                     ];
 
                     this.newsArticles = storedNews ? JSON.parse(storedNews) : [
@@ -4683,17 +5455,30 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                 },
 
                 saveStoredData() {
-                    localStorage.setItem('mpesa_pes_teams_v6', JSON.stringify(this.teams));
-                    localStorage.setItem('mpesa_pes_matches_v6', JSON.stringify(this.matches));
-                    localStorage.setItem('mpesa_pes_stats_v6', JSON.stringify(this.playerStatsList));
-                    localStorage.setItem('mpesa_pes_news_v6', JSON.stringify(this.newsArticles));
-                    localStorage.setItem('mpesa_pes_highlights_v6', JSON.stringify(this.highlightVideos));
-                    localStorage.setItem('mpesa_pes_injuries_v6', JSON.stringify(this.injuryReports));
-                    localStorage.setItem('mpesa_pes_rules_v6', JSON.stringify(this.leagueRules));
-                    localStorage.setItem('mpesa_pes_officials_v6', JSON.stringify(this.officialsList));
-                    localStorage.setItem('mpesa_pes_pending_v6', JSON.stringify(this.pendingApprovals));
-                    localStorage.setItem('mpesa_pes_song_v7', JSON.stringify(this.websiteSong));
-                    localStorage.setItem('mpesa_pes_media_gallery_v7', JSON.stringify(this.mediaGallery));
+                    try {
+                        localStorage.setItem('mpesa_pes_teams_v6', JSON.stringify(this.teams));
+                        localStorage.setItem('mpesa_pes_matches_v6', JSON.stringify(this.matches));
+                        localStorage.setItem('mpesa_pes_stats_v6', JSON.stringify(this.playerStatsList));
+                        localStorage.setItem('mpesa_pes_news_v6', JSON.stringify(this.newsArticles));
+                        localStorage.setItem('mpesa_pes_highlights_v6', JSON.stringify(this.highlightVideos));
+                        localStorage.setItem('mpesa_pes_injuries_v6', JSON.stringify(this.injuryReports));
+                        localStorage.setItem('mpesa_pes_rules_v6', JSON.stringify(this.leagueRules));
+                        localStorage.setItem('mpesa_pes_officials_v6', JSON.stringify(this.officialsList));
+                        localStorage.setItem('mpesa_pes_pending_v6', JSON.stringify(this.pendingApprovals));
+                        try {
+                            localStorage.setItem('mpesa_pes_song_v7', JSON.stringify(this.websiteSong));
+                        } catch (e) {
+                            const songSafe = { ...this.websiteSong, customAudioUrl: null };
+                            localStorage.setItem('mpesa_pes_song_v7', JSON.stringify(songSafe));
+                        }
+                        try {
+                            localStorage.setItem('mpesa_pes_media_gallery_v7', JSON.stringify(this.mediaGallery));
+                        } catch (e) {
+                            console.warn('Media gallery quota exceeded:', e);
+                        }
+                    } catch (err) {
+                        console.warn('Storage save warning:', err);
+                    }
                 }
             }
         }
