@@ -1182,8 +1182,8 @@
                             </div>
                         </div>
 
-                        <!-- Tool 2: Preset Anthems & Audio Uploader -->
-                        <div class="p-5 bg-black/50 rounded-3xl border border-efootball-border space-y-4">
+                        <!-- Tool 2: Preset Anthems & Audio Uploader (disabled: only admin YouTube songs play) -->
+                        <div style="display:none"  class="p-5 bg-black/50 rounded-3xl border border-efootball-border space-y-4">
                             <div class="flex items-center gap-2">
                                 <i data-lucide="sparkles" class="w-5 h-5 text-amber-300"></i>
                                 <h5 class="text-sm font-black text-white uppercase">Preset Soundtracks & File Upload</h5>
@@ -3584,10 +3584,10 @@
 
                 // Website Song & Stadium Anthem System (Synthesizer + YouTube)
                 websiteSong: {
-                    mode: 'synth', // 'synth' (Web Audio API) | 'youtube'
-                    title: 'PES 2026 Matchday Anthem (Electronic Synthesizer)',
-                    youtubeUrl: 'https://www.youtube.com/watch?v=kYtGl1DX5qI',
-                    youtubeId: 'kYtGl1DX5qI',
+                    mode: 'youtube', // only admin-set YouTube songs play
+                    title: 'No anthem set yet',
+                    youtubeUrl: '',
+                    youtubeId: null,
                     volume: 0.45,
                     isPlaying: false,
                     userInteracted: false,
@@ -3595,8 +3595,8 @@
                 },
                 openSongModal: false,
                 customSongForm: {
-                    url: 'https://www.youtube.com/watch?v=kYtGl1DX5qI',
-                    title: 'PES 2026 Matchday Anthem'
+                    url: '',
+                    title: ''
                 },
 
                 // Media Hub System (Images, Videos, YouTube reels)
@@ -3838,7 +3838,7 @@
                                     customAudio.src = restoredUrl;
                                     customAudio.volume = this.websiteSong.volume ?? 0.6;
                                 }
-                                if (this.websiteSong.mode === 'custom') {
+                                if (false) {
                                     this.startWebsiteSong();
                                 }
                             }
@@ -4878,44 +4878,18 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                 },
 
                 startWebsiteSong() {
-                    try {
-                        this.websiteSong.isPlaying = true;
-                        const customAudio = document.getElementById('pes-custom-audio-element');
-                        const ytFrame = document.getElementById('pes-youtube-audio-frame');
-
-                        if (this.websiteSong.mode === 'custom' && this.websiteSong.customAudioUrl) {
-                            // Mode 1: Uploaded Audio Track (MP3 / WAV / OGG)
-                            this.stopSynthesizedBeat();
-                            if (ytFrame) ytFrame.src = '';
-                            if (customAudio) {
-                                if (customAudio.src !== this.websiteSong.customAudioUrl) {
-                                    customAudio.src = this.websiteSong.customAudioUrl;
-                                }
-                                customAudio.volume = this.websiteSong.volume ?? 0.6;
-                                const playPromise = customAudio.play();
-                                if (playPromise !== undefined) {
-                                    playPromise.then(() => {
-                                        this.websiteSong.isPlaying = true;
-                                    }).catch(e => {
-                                        console.warn('Audio play gesture needed:', e);
-                                    });
-                                }
-                            }
-                        } else if (this.websiteSong.mode === 'youtube' && this.websiteSong.youtubeId) {
-                            // Mode 2: YouTube Audio Frame
-                            this.stopSynthesizedBeat();
-                            if (customAudio) customAudio.pause();
-                            if (ytFrame) {
-                                ytFrame.src = `https://www.youtube-nocookie.com/embed/${this.websiteSong.youtubeId}?autoplay=1&mute=0&controls=0&loop=1&playlist=${this.websiteSong.youtubeId}`;
-                            }
-                        } else {
-                            // Mode 3: Native Web Audio PES Synthesizer Beat
-                            if (customAudio) customAudio.pause();
-                            if (ytFrame) ytFrame.src = '';
-                            this.playSynthesizedPESBeat();
-                        }
-                    } catch (e) {
-                        console.log('Autoplay audio unblock:', e);
+                    // Only the YouTube song set by an administrator is allowed to play.
+                    this.stopSynthesizedBeat();
+                    const customAudio = document.getElementById('pes-custom-audio-element');
+                    if (customAudio) customAudio.pause();
+                    if (this.websiteSong.mode !== 'youtube' || !this.websiteSong.youtubeId) {
+                        this.websiteSong.isPlaying = false;
+                        return;
+                    }
+                    this.websiteSong.isPlaying = true;
+                    const ytFrame = document.getElementById('pes-youtube-audio-frame');
+                    if (ytFrame) {
+                        ytFrame.src = `https://www.youtube-nocookie.com/embed/${this.websiteSong.youtubeId}?autoplay=1&mute=0&controls=0&loop=1&playlist=${this.websiteSong.youtubeId}`;
                     }
                 },
 
@@ -4933,12 +4907,13 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                         this.pauseWebsiteSong();
                         this.showToast('Soundtrack paused.');
                     } else {
+                        if (!this.websiteSong.youtubeId) { this.showToast('No song has been set by the admin yet.'); return; }
                         this.startWebsiteSong();
                         this.showToast('Playing: ' + this.websiteSong.title);
                     }
                 },
 
-                nextAnthemTrack() {
+                nextAnthemTrack() { return;
                     this.currentTrackIndex = (this.currentTrackIndex + 1) % this.audioTracks.length;
                     const presetList = ['PES_OFFICIAL', 'CHAMPIONS_LEAGUE', 'SAMBA_FESTIVAL', 'ACADEMY_SYMPHONY'];
                     this.playPresetSong(presetList[this.currentTrackIndex % presetList.length]);
@@ -4953,6 +4928,7 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                 },
 
                 changeSongFromYouTube(url, title) {
+                    if (!(this.isAdmin || this.isSuperAdmin)) { this.showToast('Only Administrators can change the song'); return; }
                     const ytId = this.extractYouTubeId(url);
                     if (!ytId) {
                         this.showToast('Please enter a valid YouTube URL (e.g. https://www.youtube.com/watch?v=...)');
@@ -4970,7 +4946,7 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                     this.showToast('League Anthem updated & broadcasting: ' + this.websiteSong.title);
                 },
 
-                playPresetSong(presetKey) {
+                playPresetSong(presetKey) { this.showToast('Only the admin YouTube song can play.'); return;
                     this.stopSynthesizedBeat();
                     const customAudio = document.getElementById('pes-custom-audio-element');
                     if (customAudio) customAudio.pause();
@@ -5256,6 +5232,9 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                         try {
                             const parsed = JSON.parse(storedSong);
                             this.websiteSong = Object.assign(this.websiteSong, parsed);
+                            if (this.websiteSong.mode !== 'youtube' || ['kYtGl1DX5qI','0Qqd6T_A9LY','gCYcHz2k5x0'].includes(this.websiteSong.youtubeId)) {
+                                this.websiteSong.mode = 'youtube'; this.websiteSong.youtubeId = null; this.websiteSong.youtubeUrl = ''; this.websiteSong.title = 'No anthem set yet'; this.websiteSong.customAudioUrl = null;
+                            }
                             this.customSongForm = {
                                 url: parsed.youtubeUrl || '',
                                 title: parsed.title || ''
