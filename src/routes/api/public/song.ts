@@ -7,7 +7,7 @@ const json = (body: unknown, status = 200) =>
   });
 
 // Admin passcodes are checked on the server; only admins may change the site song.
-const ADMIN_PASSCODES = ["msl2026", "admin123"];
+const ADMIN_PASSCODES = ["msl-27", "admin123", "superadmin", "msl-super-admin"];
 
 export const Route = createFileRoute("/api/public/song")({
   server: {
