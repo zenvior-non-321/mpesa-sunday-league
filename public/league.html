@@ -146,24 +146,21 @@
         <div class="absolute inset-0 bg-gradient-to-b from-[#070512]/80 via-[#070512]/92 to-[#070512]"></div>
         <!-- Soft Watermark of Official Academy Crest in Top Right -->
         <div class="absolute -right-20 -top-16 w-[520px] h-[520px] opacity-[0.035] pointer-events-none">
-            <img src="/__l5e/assets-v1/b4f2027f-d094-445a-94a1-89895441ba76/mpesa-crest-transparent.png" alt="Academy Crest Watermark" class="w-full h-full">
+            <img src="/mpesa-academy-icon.png" alt="Academy Crest Watermark" class="w-full h-full object-contain">
         </div>
     </div>
 
     <!-- Dedicated Background Audio Players (Custom Upload & YouTube) -->
-    <div class="hidden" aria-hidden="true">
-        <audio id="pes-custom-audio-element" loop preload="auto" playsinline></audio>
+    <div class="fixed -bottom-96 -right-96 opacity-0 pointer-events-none w-1 h-1 overflow-hidden" aria-hidden="true">
+        <!-- Native Audio Element for Uploaded MP3 / WAV Files -->
+        <audio id="pes-custom-audio-element" loop preload="auto" playsinline crossOrigin="anonymous"></audio>
+
+        <!-- Privacy-Enhanced YouTube Audio Frame -->
+        <iframe id="pes-youtube-audio-frame" 
+                allow="autoplay; encrypted-media"
+                referrerpolicy="no-referrer"
+                class="w-10 h-10 pointer-events-none opacity-0"></iframe>
     </div>
-    <!-- Visible mini YouTube player (YouTube will not play hidden or tiny players) -->
-    <template x-if="websiteSong.mode === 'youtube' && websiteSong.isPlaying && websiteSong.youtubeId">
-        <div class="fixed bottom-3 left-3 z-[60] rounded-xl overflow-hidden border border-efootball-border shadow-lg bg-black" style="width:220px">
-            <iframe id="pes-youtube-audio-frame"
-                    :src="`https://www.youtube.com/embed/${websiteSong.youtubeId}?autoplay=1&controls=1&loop=1&playsinline=1&playlist=${websiteSong.youtubeId}`"
-                    allow="autoplay; encrypted-media"
-                    referrerpolicy="strict-origin-when-cross-origin"
-                    style="width:220px;height:124px;border:0;display:block"></iframe>
-        </div>
-    </template>
 
     <!-- Toast Notification -->
     <div x-show="toast.show" 
@@ -191,7 +188,7 @@
             <div class="flex items-center justify-between border-b border-efootball-border pb-4">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-2xl bg-white border-2 border-emerald-400 p-1 flex items-center justify-center shrink-0 shadow-lg">
-                        <img src="/__l5e/assets-v1/6932a2cb-6a31-4990-9b47-d695f7666c85/mpesa-crest.png" alt="Academy Crest" class="w-full h-full object-contain">
+                        <img src="/mpesa-academy-icon.png" alt="Academy Crest" class="w-full h-full object-contain">
                     </div>
                     <div>
                         <h3 class="font-header text-2xl font-black text-white leading-none">SUPER ADMIN</h3>
@@ -284,7 +281,7 @@
                     </div>
                     <div>
                         <h3 class="font-header text-2xl font-black text-white leading-none">MATCHDAY MEDIA HUB</h3>
-                        <p class="text-[10px] text-purple-300" x-text="(isSuperAdmin || isAdmin) ? 'Admin Upload Studio & Matchday Feed' : 'Official Matchday Gallery & Highlights Feed'"></p>
+                        <p class="text-[10px] text-purple-300" x-text="canUploadMedia() ? 'Admin Upload Studio & Matchday Feed' : 'Official Matchday Gallery & Highlights Feed'"></p>
                     </div>
                 </div>
                 <button @click="openMediaSidebar = false" class="text-gray-400 hover:text-white p-1 rounded-xl hover:bg-white/10">
@@ -293,13 +290,13 @@
             </div>
 
             <!-- Non-Admin Upload Access Banner -->
-            <template x-if="!isSuperAdmin && !isAdmin">
+            <template x-if="!canUploadMedia()">
                 <div class="p-3 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex items-start gap-2.5 text-xs">
                     <i data-lucide="lock" class="w-4 h-4 text-amber-400 shrink-0 mt-0.5"></i>
                     <div>
                         <span class="font-black text-amber-300 block uppercase tracking-wider text-[10px]">Admin Upload Restricted</span>
                         <p class="text-gray-300 text-[11px] leading-relaxed">
-                            Only League Administrators can upload photos, videos, and YouTube reels. Viewers can browse the official Matchday Feed below.
+                            Only Technological Managers and Super Admin can upload photos, videos, and YouTube reels. Viewers can browse the official Matchday Feed below.
                         </p>
                     </div>
                 </div>
@@ -307,31 +304,31 @@
 
             <!-- Media Category Switcher -->
             <div class="grid grid-cols-4 gap-1 p-1 bg-black/40 border border-efootball-border rounded-2xl text-xs font-bold">
-                <button @click="if (isSuperAdmin || isAdmin) { mediaTab = 'images'; } else { showToast('Only Administrators can upload media'); mediaTab = 'gallery'; }" 
+                <button @click="if (canUploadMedia()) { mediaTab = 'images'; } else { showToast('Access Restricted: Only Technological Managers or Super Admin can upload media'); mediaTab = 'gallery'; }" 
                         :class="mediaTab === 'images' ? 'bg-efootball-cyan text-black shadow-md' : 'text-gray-300 hover:text-white'" 
                         class="py-2 rounded-xl transition text-center flex flex-col items-center gap-1">
                     <i data-lucide="image" class="w-3.5 h-3.5"></i>
                     <span class="text-[10px] flex items-center gap-0.5">
                         Photo
-                        <i x-show="!isSuperAdmin && !isAdmin" data-lucide="lock" class="w-2.5 h-2.5 text-amber-400"></i>
+                        <i x-show="!canUploadMedia()" data-lucide="lock" class="w-2.5 h-2.5 text-amber-400"></i>
                     </span>
                 </button>
-                <button @click="if (isSuperAdmin || isAdmin) { mediaTab = 'videos'; } else { showToast('Only Administrators can upload media'); mediaTab = 'gallery'; }" 
+                <button @click="if (canUploadMedia()) { mediaTab = 'videos'; } else { showToast('Access Restricted: Only Technological Managers or Super Admin can upload media'); mediaTab = 'gallery'; }" 
                         :class="mediaTab === 'videos' ? 'bg-efootball-magenta text-white shadow-md' : 'text-gray-300 hover:text-white'" 
                         class="py-2 rounded-xl transition text-center flex flex-col items-center gap-1">
                     <i data-lucide="film" class="w-3.5 h-3.5"></i>
                     <span class="text-[10px] flex items-center gap-0.5">
                         Video
-                        <i x-show="!isSuperAdmin && !isAdmin" data-lucide="lock" class="w-2.5 h-2.5 text-amber-400"></i>
+                        <i x-show="!canUploadMedia()" data-lucide="lock" class="w-2.5 h-2.5 text-amber-400"></i>
                     </span>
                 </button>
-                <button @click="if (isSuperAdmin || isAdmin) { mediaTab = 'youtube'; } else { showToast('Only Administrators can upload media'); mediaTab = 'gallery'; }" 
+                <button @click="if (canUploadMedia()) { mediaTab = 'youtube'; } else { showToast('Access Restricted: Only Technological Managers or Super Admin can upload media'); mediaTab = 'gallery'; }" 
                         :class="mediaTab === 'youtube' ? 'bg-red-600 text-white shadow-md' : 'text-gray-300 hover:text-white'" 
                         class="py-2 rounded-xl transition text-center flex flex-col items-center gap-1">
                     <i data-lucide="youtube" class="w-3.5 h-3.5"></i>
                     <span class="text-[10px] flex items-center gap-0.5">
                         YouTube
-                        <i x-show="!isSuperAdmin && !isAdmin" data-lucide="lock" class="w-2.5 h-2.5 text-amber-400"></i>
+                        <i x-show="!canUploadMedia()" data-lucide="lock" class="w-2.5 h-2.5 text-amber-400"></i>
                     </span>
                 </button>
                 <button @click="mediaTab = 'gallery'" :class="mediaTab === 'gallery' ? 'bg-amber-400 text-black shadow-md' : 'text-gray-300 hover:text-white'" class="py-2 rounded-xl transition text-center flex flex-col items-center gap-1">
@@ -341,7 +338,7 @@
             </div>
 
             <!-- TAB 1: UPLOAD IMAGES (Admin Only) -->
-            <div x-show="mediaTab === 'images' && (isAdmin || isSuperAdmin)" class="space-y-4">
+            <div x-show="mediaTab === 'images' && canUploadMedia()" class="space-y-4">
                 <div class="p-4 bg-black/50 border border-efootball-border rounded-2xl space-y-3">
                     <span class="text-xs font-black uppercase text-efootball-cyan tracking-wider flex items-center gap-1.5">
                         <i data-lucide="upload" class="w-3.5 h-3.5"></i> Upload Matchday Photo
@@ -402,7 +399,7 @@
             </div>
 
             <!-- TAB 2: UPLOAD VIDEO CLIPS (Admin Only) -->
-            <div x-show="mediaTab === 'videos' && (isAdmin || isSuperAdmin)" class="space-y-4">
+            <div x-show="mediaTab === 'videos' && canUploadMedia()" class="space-y-4">
                 <div class="p-4 bg-black/50 border border-efootball-border rounded-2xl space-y-3">
                     <span class="text-xs font-black uppercase text-efootball-magenta tracking-wider flex items-center gap-1.5">
                         <i data-lucide="video" class="w-3.5 h-3.5"></i> Upload Video Clip or MP4 Link
@@ -450,7 +447,7 @@
             </div>
 
             <!-- TAB 3: YOUTUBE REELS LINK (Admin Only) -->
-            <div x-show="mediaTab === 'youtube' && (isAdmin || isSuperAdmin)" class="space-y-4">
+            <div x-show="mediaTab === 'youtube' && canUploadMedia()" class="space-y-4">
                 <div class="p-4 bg-black/50 border border-efootball-border rounded-2xl space-y-3">
                     <span class="text-xs font-black uppercase text-red-500 tracking-wider flex items-center gap-1.5">
                         <i data-lucide="youtube" class="w-4 h-4"></i> Embed YouTube Video / Highlight
@@ -494,7 +491,7 @@
             <div x-show="mediaTab === 'gallery'" class="space-y-3">
                 <div class="flex items-center justify-between">
                     <span class="text-xs font-black uppercase text-gray-300" x-text="'All Uploaded Media (' + mediaGallery.length + ')'"></span>
-                    <template x-if="isAdmin || isSuperAdmin">
+                    <template x-if="canUploadMedia()">
                         <button @click="mediaTab = 'images'" class="text-[11px] text-efootball-cyan hover:underline flex items-center gap-1 font-bold">
                             <i data-lucide="plus" class="w-3.5 h-3.5"></i> Admin: New Upload
                         </button>
@@ -534,7 +531,7 @@
                                     <h5 class="text-xs font-black text-white truncate max-w-[240px]" x-text="item.title"></h5>
                                     <p class="text-[10px] text-gray-400" x-text="item.matchweek || item.category"></p>
                                 </div>
-                                <template x-if="isAdmin || isSuperAdmin">
+                                <template x-if="canUploadMedia()">
                                     <button @click="deleteMediaItem(item.id)" class="text-rose-400 hover:text-rose-300 p-1 rounded-lg hover:bg-rose-500/20 text-[10px]" title="Delete Media">
                                         <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                                     </button>
@@ -586,12 +583,12 @@
                         <span x-text="websiteSong.isPlaying ? 'Pause Anthem' : 'Play Anthem'"></span>
                     </button>
 
-                    <button style="display:none" @click="nextAnthemTrack()" class="p-1.5 bg-efootball-border/60 hover:bg-efootball-border text-gray-200 rounded-xl transition" title="Next eFootball Anthem Track">
+                    <button @click="nextAnthemTrack()" class="p-1.5 bg-efootball-border/60 hover:bg-efootball-border text-gray-200 rounded-xl transition" title="Next eFootball Anthem Track">
                         <i data-lucide="skip-forward" class="w-3.5 h-3.5"></i>
                     </button>
 
-                    <!-- Admin Quick Song Change Button -->
-                    <template x-if="isAdmin || isSuperAdmin">
+                    <!-- Admin Quick Song Change Button (Tech Manager & Super Admin) -->
+                    <template x-if="canManageSong()">
                         <button @click="openSongModal = true" class="px-2.5 py-1 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-black rounded-xl font-black text-xs transition flex items-center gap-1 shadow-md" title="Change Website Anthem via YouTube or Audio">
                             <i data-lucide="music-2" class="w-3.5 h-3.5"></i>
                             <span class="hidden sm:inline">Change Song</span>
@@ -612,7 +609,7 @@
                 <!-- Branding: Official School Logo & Crest -->
                 <div class="flex items-center gap-3.5 cursor-pointer group" @click="activeTab = 'table'">
                     <div class="relative w-12 h-12 rounded-2xl bg-white border-2 border-emerald-400 p-1 flex items-center justify-center shrink-0 shadow-xl shadow-emerald-500/20 group-hover:scale-105 group-hover:border-efootball-cyan transition-all duration-300">
-                        <img src="/__l5e/assets-v1/6932a2cb-6a31-4990-9b47-d695f7666c85/mpesa-crest.png" alt="M-Pesa Foundation Academy Crest" class="w-full h-full object-contain">
+                        <img src="/mpesa-academy-icon.png" alt="M-Pesa Foundation Academy Crest" class="w-full h-full object-contain">
                         <span class="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full border-2 border-black animate-pulse"></span>
                     </div>
                     <div>
@@ -637,6 +634,10 @@
                     <!-- Super Admin Master Status Badge -->
                     <template x-if="isSuperAdmin">
                         <div class="flex items-center gap-2">
+                            <button @click="openProfileModal = true" class="flex items-center gap-1.5 bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 text-cyan-300 px-3 py-2 rounded-2xl text-xs font-bold transition">
+                                <i data-lucide="user-check" class="w-4 h-4 text-cyan-400"></i>
+                                <span class="hidden sm:inline">My Profile</span>
+                            </button>
                             <button @click="openSuperAdminSidebar = true" class="flex items-center gap-2 bg-gradient-to-r from-efootball-magenta to-amber-500 text-black px-3.5 py-2 rounded-2xl text-xs font-black shadow-lg hover:brightness-110 transition">
                                 <i data-lucide="crown" class="w-4 h-4"></i>
                                 <span>Super Admin Menu</span>
@@ -650,20 +651,27 @@
                     <template x-if="currentRole && !isSuperAdmin">
                         <div class="flex items-center gap-2 bg-gradient-to-r from-efootball-purple to-efootball-cardLight border border-efootball-cyan/40 px-3.5 py-2 rounded-2xl text-xs font-bold shadow-lg">
                             <span class="w-2.5 h-2.5 rounded-full bg-efootball-green animate-pulse"></span>
-                            <div class="flex flex-col">
+                            <div class="flex flex-col cursor-pointer" @click="openProfileModal = true" title="Click to view full role authorized actions">
                                 <span class="text-[9px] text-gray-400 font-semibold uppercase leading-tight">Official Workspace</span>
-                                <span class="text-efootball-cyan font-extrabold leading-tight" x-text="currentRoleData ? currentRoleData.name : 'Authorized Official'"></span>
+                                <span class="text-efootball-cyan font-extrabold leading-tight hover:underline" x-text="currentRoleData ? currentRoleData.name : 'Authorized Official'"></span>
                             </div>
+                            <button @click="openProfileModal = true" class="bg-cyan-500/20 hover:bg-cyan-500 text-cyan-300 hover:text-black px-2 py-0.5 rounded-lg text-[10px] font-bold transition">Profile</button>
                             <button @click="logoutRole()" class="ml-1 bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white px-2 py-0.5 rounded-lg text-[10px] font-bold transition">Logout</button>
                         </div>
                     </template>
 
                     <!-- Discrete Staff Portal Access Button (Visible to Public for logging in) -->
                     <template x-if="!currentRole && !isSuperAdmin">
-                        <button @click="openRoleLoginModal = true" class="flex items-center gap-2 bg-black/60 hover:bg-efootball-cardLight border border-efootball-border hover:border-efootball-cyan text-gray-300 hover:text-efootball-cyan px-3.5 py-2 rounded-2xl text-xs font-bold transition shadow">
-                            <i data-lucide="lock" class="w-3.5 h-3.5 text-efootball-cyan"></i>
-                            <span>Officials Portal</span>
-                        </button>
+                        <div class="flex items-center gap-2">
+                            <button @click="openProfileModal = true" class="hidden sm:flex items-center gap-1.5 text-xs text-gray-400 hover:text-cyan-400 px-2.5 py-2 rounded-2xl hover:bg-white/5 transition">
+                                <i data-lucide="user" class="w-3.5 h-3.5"></i>
+                                <span>Role Directory</span>
+                            </button>
+                            <button @click="openRoleLoginModal = true" class="flex items-center gap-2 bg-black/60 hover:bg-efootball-cardLight border border-efootball-border hover:border-efootball-cyan text-gray-300 hover:text-efootball-cyan px-3.5 py-2 rounded-2xl text-xs font-bold transition shadow">
+                                <i data-lucide="lock" class="w-3.5 h-3.5 text-efootball-cyan"></i>
+                                <span>Officials Portal</span>
+                            </button>
+                        </div>
                     </template>
                 </div>
             </div>
@@ -1182,8 +1190,8 @@
                             </div>
                         </div>
 
-                        <!-- Tool 2: Preset Anthems & Audio Uploader (disabled: only admin YouTube songs play) -->
-                        <div style="display:none"  class="p-5 bg-black/50 rounded-3xl border border-efootball-border space-y-4">
+                        <!-- Tool 2: Preset Anthems & Audio Uploader -->
+                        <div class="p-5 bg-black/50 rounded-3xl border border-efootball-border space-y-4">
                             <div class="flex items-center gap-2">
                                 <i data-lucide="sparkles" class="w-5 h-5 text-amber-300"></i>
                                 <h5 class="text-sm font-black text-white uppercase">Preset Soundtracks & File Upload</h5>
@@ -1289,17 +1297,17 @@
 
                 <!-- Custom Workspace View Based on Appointed Role -->
                 <div class="space-y-6">
-                <!-- 9 UNIQUE ROLE-BASED DASHBOARDS (Clean, Focused, Specific Tools & Data) -->
+                <!-- 7 APPOINTED EXECUTIVE ROLE-BASED WORKSPACES -->
                 <div class="space-y-6">
 
-                    <!-- 1. BRAMUEL AMIRAH: PRESIDENT, MPESA SUNDAY LEAGUE -->
-                    <div x-show="currentRole === 'BRAMUEL_AMIRAH'" class="space-y-6">
-                        <div class="flex items-center justify-between border-b border-efootball-border/50 pb-2">
+                    <!-- 1. PRESIDENT: BRAMUEL AMIRAH -->
+                    <div x-show="currentRole === 'PRESIDENT'" class="space-y-6">
+                        <div class="flex items-center justify-between border-b border-efootball-border/50 pb-3">
                             <div>
                                 <h4 class="font-header text-2xl font-black uppercase text-amber-300">Executive Presidency Chamber</h4>
-                                <p class="text-xs text-gray-300">Head of State • Decrees Issuer • Prize Pool Certifying Authority • Appeals Tribunal</p>
+                                <p class="text-xs text-gray-300">Overall Leadership • Policy & Rules Oversight • Major Dispute Resolution • Executive Meetings</p>
                             </div>
-                            <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-amber-400/20 text-amber-300 border border-amber-400/30">Presidential Seal Verified</span>
+                            <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-amber-400/20 text-amber-300 border border-amber-400/30">Presidential Seal Active</span>
                         </div>
 
                         <!-- Presidential Key Metrics -->
@@ -1307,47 +1315,47 @@
                             <div class="bg-black/50 p-4 rounded-2xl border border-efootball-border space-y-1">
                                 <span class="text-[10px] uppercase font-bold text-gray-400">Total Championship Prize Pool</span>
                                 <div class="text-2xl font-black text-amber-300 font-mono">KES 50,000</div>
-                                <span class="text-[10px] text-gray-400">Plus Official Trophies & Medals</span>
+                                <span class="text-[10px] text-gray-400">Trophies & Golden Boot Confirmed</span>
                             </div>
                             <div class="bg-black/50 p-4 rounded-2xl border border-efootball-border space-y-1">
-                                <span class="text-[10px] uppercase font-bold text-gray-400">Executive Sanctions Under Review</span>
-                                <div class="text-2xl font-black text-efootball-cyan font-mono" x-text="injuryReports.length"></div>
-                                <span class="text-[10px] text-gray-400">Disciplinary Cases Active</span>
+                                <span class="text-[10px] uppercase font-bold text-gray-400">Active Disciplinary Sanctions</span>
+                                <div class="text-2xl font-black text-rose-400 font-mono" x-text="injuryReports.length"></div>
+                                <span class="text-[10px] text-gray-400">Under Executive Review</span>
                             </div>
                             <div class="bg-black/50 p-4 rounded-2xl border border-efootball-border space-y-1">
-                                <span class="text-[10px] uppercase font-bold text-gray-400">Decrees Signed & Live</span>
-                                <div class="text-2xl font-black text-efootball-green font-mono" x-text="newsArticles.filter(n => n.category === 'Official Bulletin').length"></div>
-                                <span class="text-[10px] text-gray-400">Promulgated Ordinances</span>
+                                <span class="text-[10px] uppercase font-bold text-gray-400">Official Decrees & Bulletins</span>
+                                <div class="text-2xl font-black text-emerald-400 font-mono" x-text="newsArticles.filter(n => n.category.includes('Bulletin') || n.category.includes('Decree')).length"></div>
+                                <span class="text-[10px] text-gray-400">Published to League</span>
                             </div>
                         </div>
 
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <!-- Tool 1: Issue Presidential Decree -->
+                            <!-- Tool 1: Promulgate Formal Presidential Decree -->
                             <div class="bg-black/50 p-5 rounded-3xl border border-amber-400/30 space-y-4">
                                 <div class="flex items-center gap-2">
                                     <i data-lucide="scroll" class="w-5 h-5 text-amber-400"></i>
                                     <h5 class="text-sm font-black text-white uppercase">Issue Formal Presidential Decree</h5>
                                 </div>
                                 <div class="space-y-3">
-                                    <input type="text" x-model="presidentialDecree.title" placeholder="e.g. Decree No. 04: Sanctioning Sunday Derby Schedule & Fair Play" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3.5 py-2 text-xs text-white">
+                                    <input type="text" x-model="presidentialDecree.title" placeholder="e.g. Decree No. 05: Sunday Derby Kickoff Order & Spectator Code" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3.5 py-2 text-xs text-white">
                                     <select x-model="presidentialDecree.category" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3.5 py-2 text-xs text-white">
-                                        <option value="Championship Decree">Championship Decree</option>
+                                        <option value="Official Bulletin">Official Bulletin</option>
                                         <option value="Executive Directive">Executive Directive</option>
-                                        <option value="Disciplinary Amnesty / Ruling">Disciplinary Amnesty / Ruling</option>
-                                        <option value="Prize Pool Proclamation">Prize Pool Proclamation</option>
+                                        <option value="Disciplinary Ruling">Disciplinary Ruling</option>
+                                        <option value="Championship Proclamation">Championship Proclamation</option>
                                     </select>
-                                    <textarea x-model="presidentialDecree.content" rows="4" placeholder="Enter proclamation text, executive reasoning, and enactment date..." class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3.5 py-2 text-xs text-white"></textarea>
+                                    <textarea x-model="presidentialDecree.content" rows="4" placeholder="Executive rationale, rules enforced, and binding instructions for clubs and crew..." class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3.5 py-2 text-xs text-white"></textarea>
                                     <button @click="submitPresidentialDecree()" class="w-full bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-black font-black py-2.5 rounded-xl text-xs shadow-lg transition">
-                                        Sign & Transmit to Super Admin Queue
+                                        Sign & Publish Decree to News Room
                                     </button>
                                 </div>
                             </div>
 
-                            <!-- Tool 2: Presidential Appeals Tribunal Hearing -->
+                            <!-- Tool 2: Appeals Tribunal & Major Dispute Resolution -->
                             <div class="bg-black/50 p-5 rounded-3xl border border-efootball-border space-y-4">
                                 <div class="flex items-center gap-2">
                                     <i data-lucide="scale" class="w-5 h-5 text-efootball-cyan"></i>
-                                    <h5 class="text-sm font-black text-white uppercase">Presidential Appeals Tribunal Docket</h5>
+                                    <h5 class="text-sm font-black text-white uppercase">Presidential Appeals Tribunal (Major Disputes)</h5>
                                 </div>
                                 <div class="space-y-3">
                                     <select x-model="presidentialAppeal.teamId" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3.5 py-2 text-xs text-white">
@@ -1361,115 +1369,138 @@
                                         <option value="SANCTION_UPHELD">Ruling: Sanction Upheld in Full</option>
                                         <option value="RULING_OVERTURNED">Ruling: Sanction Overturned & Cleared</option>
                                     </select>
-                                    <textarea x-model="presidentialAppeal.justification" rows="3" placeholder="Appellate hearing findings and tribunal order..." class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3.5 py-2 text-xs text-white"></textarea>
+                                    <textarea x-model="presidentialAppeal.justification" rows="3" placeholder="Appellate hearing findings, tribunal verdict, and executive resolution..." class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3.5 py-2 text-xs text-white"></textarea>
                                     <button @click="submitPresidentialAppeal()" class="w-full bg-efootball-cyan text-black font-black py-2.5 rounded-xl text-xs hover:bg-cyan-300 transition shadow-lg">
-                                        Submit Appellate Finding to Super Admin
+                                        Deliver Binding Tribunal Ruling
                                     </button>
                                 </div>
+                            </div>
+
+                            <!-- Tool 3: Convene Executive Council Meeting -->
+                            <div class="bg-black/50 p-5 rounded-3xl border border-efootball-border space-y-4 lg:col-span-2">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <i data-lucide="users" class="w-5 h-5 text-amber-300"></i>
+                                        <h5 class="text-sm font-black text-white uppercase">Convene Executive Administrative Meeting</h5>
+                                    </div>
+                                    <span class="text-xs text-gray-400">Leads administrative crew & department heads</span>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <input type="text" x-model="presidentialMeeting.title" placeholder="Meeting Title: e.g. Mid-Season Administrative Review & Disciplinary Audit" class="bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
+                                    <input type="text" x-model="presidentialMeeting.date" placeholder="Meeting Date / Venue: e.g. Sunday 3:00 PM @ Pavilion" class="bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
+                                </div>
+                                <textarea x-model="presidentialMeeting.agenda" rows="3" placeholder="Meeting agenda items, required department heads (Officiating, Records, Tech, Registrar), and policy discussion topics..." class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white"></textarea>
+                                <button @click="callExecutiveMeeting()" class="bg-amber-400 hover:bg-amber-300 text-black font-black px-6 py-2.5 rounded-xl text-xs transition shadow-lg">
+                                    Dispatch Meeting Notice to Official Bulletin
+                                </button>
                             </div>
                         </div>
                     </div>
 
-                    <!-- 2. TRADY LEWIS: TECHNOLOGICAL MANAGER -->
-                    <div x-show="currentRole === 'TRADY_LEWIS'" class="space-y-6">
-                        <div class="flex items-center justify-between border-b border-efootball-border/50 pb-2">
+                    <!-- 2. DEPUTY PRESIDENT: JOSEPH KAMANDE -->
+                    <div x-show="currentRole === 'DEPUTY_PRESIDENT'" class="space-y-6">
+                        <div class="flex items-center justify-between border-b border-efootball-border/50 pb-3">
                             <div>
-                                <h4 class="font-header text-2xl font-black uppercase text-efootball-cyan">Technological Command Desk</h4>
-                                <p class="text-xs text-gray-300">Digital Scoreboards • Server Diagnostics • Access Security Desk • Matchday Screen Controllers</p>
+                                <h4 class="font-header text-2xl font-black uppercase text-teal-300">Executive Deputy Presidency Chamber</h4>
+                                <p class="text-xs text-gray-300">Assists President • Departmental Progress Monitoring • Acting Executive Authority • Operations</p>
                             </div>
-                            <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-efootball-cyan/20 text-efootball-cyan border border-efootball-cyan/30">System Console Active</span>
+                            <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-teal-400/20 text-teal-300 border border-teal-400/30">Deputy Seal Verified</span>
                         </div>
 
-                        <!-- System Diagnostics & Telemetry -->
+                        <!-- Departmental Monitoring Cards -->
                         <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
                             <div class="bg-black/50 p-4 rounded-2xl border border-efootball-border space-y-1">
-                                <span class="text-[10px] uppercase font-bold text-gray-400">Portal Runtime Latency</span>
-                                <div class="text-2xl font-black text-emerald-400 font-mono">14 ms</div>
-                                <span class="text-[10px] text-gray-400">Optimal Performance</span>
+                                <span class="text-[10px] uppercase font-bold text-gray-400">Registrar Dept</span>
+                                <div class="text-lg font-black text-emerald-400" x-text="teams.length + ' Clubs Cleared'"></div>
+                                <span class="text-[10px] text-gray-400">Squad caps audited</span>
                             </div>
                             <div class="bg-black/50 p-4 rounded-2xl border border-efootball-border space-y-1">
-                                <span class="text-[10px] uppercase font-bold text-gray-400">Local Storage Memory</span>
-                                <div class="text-2xl font-black text-efootball-cyan font-mono">182 KB</div>
-                                <span class="text-[10px] text-gray-400">Database Synchronized</span>
+                                <span class="text-[10px] uppercase font-bold text-gray-400">Officiating Dept</span>
+                                <div class="text-lg font-black text-efootball-yellow" x-text="matches.filter(m => m.referees && m.referees.centerRef).length + ' / ' + matches.length"></div>
+                                <span class="text-[10px] text-gray-400">Fixtures assigned</span>
                             </div>
                             <div class="bg-black/50 p-4 rounded-2xl border border-efootball-border space-y-1">
-                                <span class="text-[10px] uppercase font-bold text-gray-400">Authorized Officials</span>
-                                <div class="text-2xl font-black text-efootball-yellow font-mono" x-text="officialsList.filter(o => !o.paused).length + ' / 9'"></div>
-                                <span class="text-[10px] text-gray-400">Security Access Granted</span>
+                                <span class="text-[10px] uppercase font-bold text-gray-400">Records Dept</span>
+                                <div class="text-lg font-black text-indigo-400" x-text="playerStatsList.length + ' Players'"></div>
+                                <span class="text-[10px] text-gray-400">Leaderboard synced</span>
                             </div>
                             <div class="bg-black/50 p-4 rounded-2xl border border-efootball-border space-y-1">
-                                <span class="text-[10px] uppercase font-bold text-gray-400">Digital Scoreboard Mode</span>
-                                <div class="text-sm font-black text-white font-mono uppercase mt-1">LED eFootball</div>
-                                <span class="text-[10px] text-emerald-400">Online & Live</span>
+                                <span class="text-[10px] uppercase font-bold text-gray-400">Tech Dept</span>
+                                <div class="text-lg font-black text-efootball-cyan font-mono">100% Uptime</div>
+                                <span class="text-[10px] text-gray-400">Website & streams live</span>
                             </div>
                         </div>
 
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <!-- Tool 1: Digital Scoreboard Customizer -->
-                            <div class="bg-black/50 p-5 rounded-3xl border border-efootball-border space-y-4">
+                            <!-- Tool 1: Issue Operational Directive on Behalf of President -->
+                            <div class="bg-black/50 p-5 rounded-3xl border border-teal-400/30 space-y-4">
                                 <div class="flex items-center gap-2">
-                                    <i data-lucide="tv" class="w-5 h-5 text-efootball-cyan"></i>
-                                    <h5 class="text-sm font-black text-white uppercase">Pitchside Digital Scoreboard Controller</h5>
+                                    <i data-lucide="send" class="w-5 h-5 text-teal-400"></i>
+                                    <h5 class="text-sm font-black text-white uppercase">Issue Operational Directive (Acting on President's Behalf)</h5>
                                 </div>
                                 <div class="space-y-3">
-                                    <div>
-                                        <label class="block text-[11px] font-bold text-gray-400 mb-1">Scoreboard Banner Ticker Text</label>
-                                        <input type="text" x-model="techScoreboardBanner" placeholder="e.g. M-PESA SUNDAY LEAGUE • OFFICIAL EFOOTBALL CHAMPIONSHIP" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
-                                    </div>
-                                    <div>
-                                        <label class="block text-[11px] font-bold text-gray-400 mb-1">LED Timer Stoppage Format</label>
-                                        <select class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
-                                            <option>Continuous 90 Min + Extra Time Stoppage (+3)</option>
-                                            <option>Halftime 45 Min Split Clock</option>
-                                            <option>Tournament Penalty Shootout HUD</option>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <select x-model="deputyDirective.department" class="bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
+                                            <option value="ALL">All Departments</option>
+                                            <option value="Officiating">Officiating Department</option>
+                                            <option value="Registration">Registration & Regulations</option>
+                                            <option value="Records">Records & Files</option>
+                                            <option value="Technology">Technology & Media</option>
+                                        </select>
+                                        <select x-model="deputyDirective.priority" class="bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
+                                            <option value="HIGH">Priority: Urgent Action</option>
+                                            <option value="MEDIUM">Priority: Standard</option>
+                                            <option value="CRITICAL">Priority: Critical Matchday</option>
                                         </select>
                                     </div>
-                                    <button @click="submitTechItem('SCOREBOARD', 'Digital Scoreboard Config Updated', techScoreboardBanner)" class="w-full bg-efootball-cyan text-black font-black py-2.5 rounded-xl text-xs hover:bg-cyan-300 transition shadow-lg">
-                                        Push Scoreboard Update to Super Admin
+                                    <input type="text" x-model="deputyDirective.directive" placeholder="Directive Title: e.g. Matchday 2 Pitch Marking & Referee Check-in" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3.5 py-2 text-xs text-white">
+                                    <textarea x-model="deputyDirective.instructions" rows="3" placeholder="Specific departmental tasks, accountability milestones, and deadlines..." class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3.5 py-2 text-xs text-white"></textarea>
+                                    <button @click="submitDeputyDirective()" class="w-full bg-teal-400 hover:bg-teal-300 text-black font-black py-2.5 rounded-xl text-xs transition shadow-lg">
+                                        Issue Directive to Department Heads
                                     </button>
                                 </div>
                             </div>
 
-                            <!-- Tool 2: Technical Incident & Security Log -->
+                            <!-- Tool 2: Matchday Operations & Field Logistics Clearance -->
                             <div class="bg-black/50 p-5 rounded-3xl border border-efootball-border space-y-4">
                                 <div class="flex items-center gap-2">
-                                    <i data-lucide="shield-alert" class="w-5 h-5 text-efootball-magenta"></i>
-                                    <h5 class="text-sm font-black text-white uppercase">Technical Security & Equipment Incident Log</h5>
+                                    <i data-lucide="clipboard-check" class="w-5 h-5 text-efootball-yellow"></i>
+                                    <h5 class="text-sm font-black text-white uppercase">Matchday Operations & Logistics Clearance</h5>
                                 </div>
                                 <div class="space-y-3">
-                                    <input type="text" x-model="techReport.title" placeholder="Incident Title: e.g. Pitch Screen Display HDMI Sync" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
-                                    <textarea x-model="techReport.content" rows="4" placeholder="Technical diagnostic, affected hardware, and recommended corrective action..." class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white"></textarea>
-                                    <button @click="submitTechItem('TECH_REPORT', techReport.title, techReport.content)" class="w-full bg-efootball-magenta text-white font-black py-2.5 rounded-xl text-xs hover:bg-pink-600 transition shadow-lg">
-                                        Transmit Tech Incident to Super Admin
+                                    <input type="text" x-model="deputyLogisticsReport.title" placeholder="Report Title: e.g. Sunday Kickoff Equipment & Marshal Briefing Complete" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3.5 py-2 text-xs text-white">
+                                    <textarea x-model="deputyLogisticsReport.content" rows="4" placeholder="Equipment inventory check (FIFA match balls, bibs, corner flags), paramedic nurse station readiness, field marshals roster..." class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3.5 py-2 text-xs text-white"></textarea>
+                                    <button @click="submitOperationsChecklist()" class="w-full bg-gradient-to-r from-efootball-cyan to-teal-400 hover:brightness-110 text-black font-black py-2.5 rounded-xl text-xs transition shadow-lg">
+                                        Publish Logistics Clearance Report
                                     </button>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- 3. CHERYL COSMAS: REGISTER AND REGULATIONS MANAGER -->
-                    <div x-show="currentRole === 'CHERYL_COSMAS'" class="space-y-6">
-                        <div class="flex items-center justify-between border-b border-efootball-border/50 pb-2">
+                    <!-- 3. REGISTER AND REGULATIONS MANAGER: CHERYL COSMAS -->
+                    <div x-show="currentRole === 'REGULATIONS_MANAGER'" class="space-y-6">
+                        <div class="flex items-center justify-between border-b border-efootball-border/50 pb-3">
                             <div>
                                 <h4 class="font-header text-2xl font-black uppercase text-emerald-400">Registration & Regulations Office</h4>
-                                <p class="text-xs text-gray-300">Admission Numbers Verifier • Squad Cap Auditor (Max 25/Club) • Regulatory Rule Amendments</p>
+                                <p class="text-xs text-gray-300">Club & Player Records • Admission Number Eligibility Checks • Squad Cap Auditing (Max 25) • Violations Inquest</p>
                             </div>
                             <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-400/20 text-emerald-300 border border-emerald-400/30">Official Registrar</span>
                         </div>
 
-                        <!-- Tool 1: Live Student ADM Verifier -->
+                        <!-- Tool 1: Live Student ADM Number Eligibility Verifier -->
                         <div class="bg-black/50 p-5 rounded-3xl border border-emerald-400/30 space-y-4">
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center gap-2">
                                     <i data-lucide="user-check" class="w-5 h-5 text-emerald-400"></i>
                                     <h5 class="text-sm font-black text-white uppercase">Live Student ADM Number Eligibility Verifier</h5>
                                 </div>
-                                <span class="text-xs text-gray-400">Database Check</span>
+                                <span class="text-xs text-gray-400">Eligibility & Regulations Check</span>
                             </div>
                             <div class="flex gap-2">
                                 <input type="text" x-model="registrarSearchAdm" placeholder="Enter Student ADM Number (e.g. ADM-2024-0101)..." class="flex-1 bg-efootball-bg border border-efootball-border rounded-xl px-3.5 py-2 text-xs text-white font-mono uppercase">
                                 <button @click="verifyStudentAdm()" class="bg-emerald-400 text-black font-black px-5 py-2 rounded-xl text-xs hover:bg-emerald-300 transition">
-                                    Verify Status
+                                    Verify Player
                                 </button>
                             </div>
                             <!-- Verification Result Preview -->
@@ -1488,68 +1519,120 @@
                         </div>
 
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <!-- Tool 2: Squad Cap Compliance Audit -->
+                            <!-- Tool 2: Fast Official Registration Desk -->
                             <div class="bg-black/50 p-5 rounded-3xl border border-efootball-border space-y-4">
                                 <div class="flex items-center gap-2">
-                                    <i data-lucide="users" class="w-5 h-5 text-efootball-cyan"></i>
-                                    <h5 class="text-sm font-black text-white uppercase">Squad Cap Compliance Auditor (Max 25)</h5>
+                                    <i data-lucide="user-plus" class="w-5 h-5 text-emerald-400"></i>
+                                    <h5 class="text-sm font-black text-white uppercase">Official Registration Desk (Players & Personnel)</h5>
                                 </div>
-                                <div class="space-y-2 max-h-56 overflow-y-auto custom-scrollbar">
-                                    <template x-for="t in teams" :key="t.id">
-                                        <div class="p-3 bg-efootball-bg rounded-xl border border-efootball-border flex items-center justify-between text-xs">
-                                            <div class="flex items-center gap-2">
-                                                <span class="w-3 h-3 rounded-full" :style="`background-color: ${t.color}`"></span>
-                                                <span class="font-extrabold text-white" x-text="t.name"></span>
-                                            </div>
-                                            <div class="flex items-center gap-2">
-                                                <span class="font-mono font-bold text-gray-300" x-text="(t.squad ? t.squad.length : 0) + ' / 25 Registered'"></span>
-                                                <span class="text-[9px] px-2 py-0.5 rounded-full font-bold uppercase"
-                                                      :class="(t.squad ? t.squad.length : 0) <= 25 ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'"
-                                                      x-text="(t.squad ? t.squad.length : 0) <= 25 ? 'COMPLIANT' : 'OVER CAP'"></span>
-                                            </div>
-                                        </div>
-                                    </template>
+                                <div class="space-y-3">
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <select x-model="quickPersonnelForm.teamId" class="bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
+                                            <template x-for="t in teams" :key="t.id">
+                                                <option :value="t.id" x-text="t.name"></option>
+                                            </template>
+                                        </select>
+                                        <select x-model="quickPersonnelForm.position" class="bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
+                                            <option value="FWD">Forward (FWD)</option>
+                                            <option value="MID">Midfielder (MID)</option>
+                                            <option value="DEF">Defender (DEF)</option>
+                                            <option value="GK">Goalkeeper (GK)</option>
+                                        </select>
+                                    </div>
+                                    <div class="grid grid-cols-3 gap-2">
+                                        <input type="text" x-model="quickPersonnelForm.name" placeholder="Full Athlete Name" class="col-span-2 bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
+                                        <input type="number" x-model="quickPersonnelForm.number" placeholder="Jersey #" class="bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white font-mono">
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <input type="text" x-model="quickPersonnelForm.admissionNumber" placeholder="ADM-2024-XXXX" class="bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white font-mono uppercase">
+                                        <select x-model="quickPersonnelForm.foot" class="bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
+                                            <option value="Right">Right Foot</option>
+                                            <option value="Left">Left Foot</option>
+                                            <option value="Both">Both Feet</option>
+                                        </select>
+                                    </div>
+                                    <button @click="quickRegisterPersonnel()" class="w-full bg-emerald-400 hover:bg-emerald-300 text-black font-black py-2.5 rounded-xl text-xs transition shadow-lg">
+                                        Register & License to Official Squad
+                                    </button>
                                 </div>
                             </div>
 
-                            <!-- Tool 3: Submit Rule / Regulation Amendment -->
+                            <!-- Tool 3: Squad Cap Auditor & Regulatory Sanction Inquest -->
                             <div class="bg-black/50 p-5 rounded-3xl border border-efootball-border space-y-4">
-                                <div class="flex items-center gap-2">
-                                    <i data-lucide="book-open" class="w-5 h-5 text-emerald-400"></i>
-                                    <h5 class="text-sm font-black text-white uppercase">Propose New League Regulation</h5>
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <i data-lucide="shield-alert" class="w-5 h-5 text-rose-400"></i>
+                                        <h5 class="text-sm font-black text-white uppercase">Report Rule Violation / Eligibility Inquest</h5>
+                                    </div>
                                 </div>
                                 <div class="space-y-3">
-                                    <input type="text" x-model="roleSubmissionForm.title" placeholder="Regulation Title: e.g. Rule 14: Substitution Windows" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
-                                    <textarea x-model="roleSubmissionForm.content" rows="3" placeholder="Full wording, violation penalties, and implementation timetable..." class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white"></textarea>
-                                    <button @click="submitRoleItem('RULE', roleSubmissionForm.title, roleSubmissionForm.content)" class="w-full bg-emerald-400 text-black font-black py-2.5 rounded-xl text-xs hover:bg-emerald-300 transition shadow-lg">
-                                        Send Rule to Super Admin for Ratification
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <select x-model="violationReport.teamId" class="bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
+                                            <template x-for="t in teams" :key="t.id">
+                                                <option :value="t.id" x-text="t.name"></option>
+                                            </template>
+                                        </select>
+                                        <select x-model="violationReport.type" class="bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
+                                            <option value="UNREGISTERED_PLAYER">Unregistered Player Fielded</option>
+                                            <option value="SQUAD_CAP_EXCEEDED">Squad Exceeds 25-Player Cap</option>
+                                            <option value="INVALID_ADM_NUMBER">Falsified / Invalid ADM</option>
+                                            <option value="ILLEGAL_SUBSTITUTION">Illegal Substitution Window</option>
+                                        </select>
+                                    </div>
+                                    <textarea x-model="violationReport.details" rows="3" placeholder="Case facts, offending matchweek, player details, and regulatory clause violated..." class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3.5 py-2 text-xs text-white"></textarea>
+                                    <button @click="reportRegulationViolation()" class="w-full bg-rose-500 hover:bg-rose-600 text-white font-black py-2.5 rounded-xl text-xs transition shadow-lg">
+                                        Submit Violation Report to Tribunal
                                     </button>
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Squad Cap Compliance Overview -->
+                        <div class="bg-black/50 p-5 rounded-3xl border border-efootball-border space-y-3">
+                            <div class="flex items-center justify-between">
+                                <h5 class="text-xs font-black text-gray-300 uppercase tracking-wider">Club Squad Compliance Audit (Cap: 25 Players)</h5>
+                                <button @click="activeTab = 'teams'" class="text-xs text-efootball-cyan hover:underline font-bold">Open Full Squads Roster &rarr;</button>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                <template x-for="t in teams" :key="t.id">
+                                    <div class="p-3 bg-efootball-bg rounded-2xl border border-efootball-border/80 flex items-center justify-between text-xs">
+                                        <div class="flex items-center gap-2">
+                                            <span class="w-3.5 h-3.5 rounded-full shrink-0" :style="`background-color: ${t.color}`"></span>
+                                            <span class="font-extrabold text-white truncate max-w-[130px]" x-text="t.name"></span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="font-mono font-bold text-gray-300" x-text="(t.squad ? t.squad.length : 0) + ' / 25'"></span>
+                                            <button @click="openSquadModal(t)" class="p-1 text-efootball-cyan hover:bg-efootball-cyan/20 rounded-lg" title="Manage Squad">
+                                                <i data-lucide="edit" class="w-3.5 h-3.5"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- 4. MITCHELLE MUTHONI: MATCH OFFICIATING PROGRAMMES MANAGER -->
-                    <div x-show="currentRole === 'MITCHELLE_MUTHONI'" class="space-y-6">
-                        <div class="flex items-center justify-between border-b border-efootball-border/50 pb-2">
+                    <!-- 4. MATCH OFFICIATING PROGRAMMES MANAGER: MITCHELLE MUTHONI -->
+                    <div x-show="currentRole === 'MATCH_OFFICIATING_MANAGER'" class="space-y-6">
+                        <div class="flex items-center justify-between border-b border-efootball-border/50 pb-3">
                             <div>
-                                <h4 class="font-header text-2xl font-black uppercase text-efootball-yellow">Referees & Match Officials Docket</h4>
-                                <p class="text-xs text-gray-300">Officials Appointment Roster • Disciplinary Card Hearings • Match Referee Performance Grading</p>
+                                <h4 class="font-header text-2xl font-black uppercase text-efootball-yellow">Match Officiating Programmes Office</h4>
+                                <p class="text-xs text-gray-300">Referee Assignments • Match Schedules • Impartial Officiating Standards • Disciplinary Cards</p>
                             </div>
                             <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-efootball-yellow/20 text-efootball-yellow border border-efootball-yellow/30">Chief Referee Assessor</span>
                         </div>
 
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <!-- Tool 1: Matchday Referees Appointment Desk -->
+                            <!-- Tool 1: Referees Match Assignment Desk -->
                             <div class="bg-black/50 p-5 rounded-3xl border border-efootball-yellow/30 space-y-4">
                                 <div class="flex items-center gap-2">
                                     <i data-lucide="flag" class="w-5 h-5 text-efootball-yellow"></i>
                                     <h5 class="text-sm font-black text-white uppercase">Matchweek Referees Deployment Desk</h5>
                                 </div>
                                 <div class="space-y-3">
-                                    <select x-model="refereeAppointment.matchId" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
-                                        <option value="">Select Target Matchweek Fixture</option>
-                                        <template x-for="m in matches.slice(0, 8)" :key="m.id">
+                                    <select x-model="refereeAppointment.matchId" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3.5 py-2 text-xs text-white">
+                                        <option value="">Select Target Match Fixture</option>
+                                        <template x-for="m in matches" :key="m.id">
                                             <option :value="m.id" x-text="`MW ${m.matchweek}: ${getTeamName(m.homeId)} vs ${getTeamName(m.awayId)} (${m.time})`"></option>
                                         </template>
                                     </select>
@@ -1561,20 +1644,20 @@
                                         <input type="text" x-model="refereeAppointment.asstRef2" placeholder="Assistant Referee 2" class="bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
                                         <input type="text" x-model="refereeAppointment.fourthOfficial" placeholder="4th Official / Board Steward" class="bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
                                     </div>
-                                    <button @click="submitRefereeDeployment()" class="w-full bg-efootball-yellow text-black font-black py-2.5 rounded-xl text-xs hover:bg-yellow-300 transition shadow-lg">
-                                        Post Referees Deployment for Super Admin Approval
+                                    <button @click="assignRefereesToMatch()" class="w-full bg-efootball-yellow hover:bg-yellow-300 text-black font-black py-2.5 rounded-xl text-xs transition shadow-lg">
+                                        Deploy Match Officials to Fixture
                                     </button>
                                 </div>
                             </div>
 
-                            <!-- Tool 2: Card Disciplinary Hearing Submissions -->
+                            <!-- Tool 2: Card Disciplinary Hearings & Sanctions -->
                             <div class="bg-black/50 p-5 rounded-3xl border border-efootball-border space-y-4">
                                 <div class="flex items-center gap-2">
                                     <i data-lucide="alert-triangle" class="w-5 h-5 text-rose-400"></i>
-                                    <h5 class="text-sm font-black text-white uppercase">Red & Yellow Card Disciplinary Hearings</h5>
+                                    <h5 class="text-sm font-black text-white uppercase">Red & Yellow Card Disciplinary Action</h5>
                                 </div>
                                 <div class="space-y-3">
-                                    <input type="text" x-model="cardHearing.playerName" placeholder="Player Name: e.g. Brian Mwangi" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
+                                    <input type="text" x-model="cardHearing.playerName" placeholder="Player Name: e.g. Kevin Omondi" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
                                     <div class="grid grid-cols-2 gap-2">
                                         <select x-model="cardHearing.cardType" class="bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
                                             <option value="DIRECT_RED">Direct Red Card (Violent Conduct)</option>
@@ -1583,21 +1666,37 @@
                                         </select>
                                         <input type="text" x-model="cardHearing.sanction" placeholder="Sanction: 1 Match Ban" class="bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
                                     </div>
-                                    <textarea x-model="cardHearing.notes" rows="3" placeholder="Match incident minute, referee report summary, and match assessor observations..." class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white"></textarea>
-                                    <button @click="submitCardHearing()" class="w-full bg-rose-500 text-white font-black py-2.5 rounded-xl text-xs hover:bg-rose-600 transition shadow-lg">
-                                        Submit Hearing Sanction to Super Admin
+                                    <textarea x-model="cardHearing.notes" rows="3" placeholder="Match incident minute, referee official report summary, and assessor notes..." class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white"></textarea>
+                                    <button @click="submitCardHearing()" class="w-full bg-rose-500 hover:bg-rose-600 text-white font-black py-2.5 rounded-xl text-xs transition shadow-lg">
+                                        Publish Sanction to Suspension Roster
                                     </button>
                                 </div>
+                            </div>
+
+                            <!-- Tool 3: Officiating Technical Standards Directive -->
+                            <div class="bg-black/50 p-5 rounded-3xl border border-efootball-border space-y-4 lg:col-span-2">
+                                <div class="flex items-center gap-2">
+                                    <i data-lucide="book" class="w-5 h-5 text-efootball-cyan"></i>
+                                    <h5 class="text-sm font-black text-white uppercase">Issue Refereeing Standards & Technical Guidance</h5>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <input type="text" x-model="officiatingConcern.title" placeholder="Directive: e.g. Zero Tolerance on Dissent & Delaying Restart" class="bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
+                                    <input type="text" x-model="officiatingConcern.section" placeholder="Rule Section: e.g. Rule 12 Fouls & Misconduct" class="bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
+                                </div>
+                                <textarea x-model="officiatingConcern.content" rows="3" placeholder="Officiating instructions, penalty area handling standards, advantage rule application, and referee performance directives..." class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white"></textarea>
+                                <button @click="submitOfficiatingConcern()" class="bg-efootball-cyan hover:bg-cyan-300 text-black font-black px-6 py-2.5 rounded-xl text-xs transition shadow-lg">
+                                    Broadcast Technical Directive to Referees Roster
+                                </button>
                             </div>
                         </div>
                     </div>
 
-                    <!-- 5. TONNIE MARK ODUNDO: RECORDS AND FILE MANAGER -->
-                    <div x-show="currentRole === 'TONNIE_ODUNDO'" class="space-y-6">
-                        <div class="flex items-center justify-between border-b border-efootball-border/50 pb-2">
+                    <!-- 5. RECORDS AND FILE MANAGER: TONNIE MARK ODUNDO -->
+                    <div x-show="currentRole === 'RECORDS_MANAGER'" class="space-y-6">
+                        <div class="flex items-center justify-between border-b border-efootball-border/50 pb-3">
                             <div>
                                 <h4 class="font-header text-2xl font-black uppercase text-indigo-400">Records & Official Archive Vault</h4>
-                                <p class="text-xs text-gray-300">Match Sheets Archivist • Statistics Docket Certifier • 1-Click Roster CSV/JSON Export</p>
+                                <p class="text-xs text-gray-300">Official Documents • Match Sheets & Results • Standings & Stats • Administrative Proceedings Record</p>
                             </div>
                             <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-indigo-400/20 text-indigo-300 border border-indigo-400/30">Official Archivist</span>
                         </div>
@@ -1633,207 +1732,237 @@
                                 </div>
                                 <p class="text-xs text-gray-400">Affix digital Records stamp certifying match results as official league archival record.</p>
                                 <button @click="certifyMatchArchive()" class="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-bold py-2 rounded-xl text-xs transition">
-                                    Certify & Stamp Current Week
+                                    Certify & Stamp Archive
                                 </button>
                             </div>
                         </div>
+
+                        <!-- Dedicated Editing Shortcuts & Proceedings Minutes -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <!-- Tool: Quick Editors Access -->
+                            <div class="bg-black/50 p-5 rounded-3xl border border-indigo-400/30 space-y-4">
+                                <div class="flex items-center gap-2">
+                                    <i data-lucide="edit-3" class="w-5 h-5 text-indigo-400"></i>
+                                    <h5 class="text-sm font-black text-white uppercase">Direct Data Record Stations</h5>
+                                </div>
+                                <p class="text-xs text-gray-300">As Records and File Manager, you have direct authorization to modify player stats and match scorecards.</p>
+                                <div class="grid grid-cols-2 gap-3 pt-2">
+                                    <button @click="openNewPlayerStatModal()" class="p-3 bg-efootball-bg border border-efootball-border hover:border-efootball-cyan rounded-2xl text-left space-y-1 transition group">
+                                        <div class="flex items-center gap-2 text-efootball-cyan font-extrabold text-xs">
+                                            <i data-lucide="user-plus" class="w-4 h-4"></i>
+                                            <span>New Player Stat</span>
+                                        </div>
+                                        <p class="text-[10px] text-gray-400">Add player to leaderboard</p>
+                                    </button>
+                                    <button @click="activeTab = 'fixtures'" class="p-3 bg-efootball-bg border border-efootball-border hover:border-efootball-cyan rounded-2xl text-left space-y-1 transition group">
+                                        <div class="flex items-center gap-2 text-efootball-yellow font-extrabold text-xs">
+                                            <i data-lucide="clipboard" class="w-4 h-4"></i>
+                                            <span>Scoreboard Editor</span>
+                                        </div>
+                                        <p class="text-[10px] text-gray-400">Enter goals, cards & scores</p>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Tool: Log Administrative Decision & Minutes -->
+                            <div class="bg-black/50 p-5 rounded-3xl border border-efootball-border space-y-4">
+                                <div class="flex items-center gap-2">
+                                    <i data-lucide="file-text" class="w-5 h-5 text-indigo-300"></i>
+                                    <h5 class="text-sm font-black text-white uppercase">Record Official Administrative Proceedings</h5>
+                                </div>
+                                <div class="space-y-3">
+                                    <input type="text" x-model="adminMinuteForm.title" placeholder="Minute Title: e.g. Council Resolution on Extra Time Rules" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
+                                    <input type="text" x-model="adminMinuteForm.attendees" placeholder="Attendees: President, Deputy President, Tech Manager, Registrar" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
+                                    <textarea x-model="adminMinuteForm.content" rows="3" placeholder="Key administrative decisions, passed resolutions, and archival notes..." class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white"></textarea>
+                                    <button @click="logAdministrativeDecision()" class="w-full bg-indigo-500 hover:bg-indigo-400 text-white font-black py-2.5 rounded-xl text-xs transition shadow-lg">
+                                        Archive Administrative Minute
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- 6. LEVIS WANYAMA: DEPUTY CO-CURRICULAR -->
-                    <div x-show="currentRole === 'LEVIS_WANYAMA'" class="space-y-6">
-                        <div class="flex items-center justify-between border-b border-efootball-border/50 pb-2">
+                    <!-- 6. TECHNOLOGICAL MANAGER: TRADY LEWIS -->
+                    <div x-show="currentRole === 'TECH_MANAGER'" class="space-y-6">
+                        <div class="flex items-center justify-between border-b border-efootball-border/50 pb-3">
                             <div>
-                                <h4 class="font-header text-2xl font-black uppercase text-sky-400">Co-Curricular & School Liaison Office</h4>
-                                <p class="text-xs text-gray-300">Academy Administration Liaison • Pitch Timetable & Floodlights • Academic Eligibility Auditor</p>
+                                <h4 class="font-header text-2xl font-black uppercase text-efootball-cyan">Technological Command Desk</h4>
+                                <p class="text-xs text-gray-300">Digital Platforms • Live Scoreboards • Media Broadcast • Website Updates • Anthems</p>
                             </div>
-                            <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-sky-400/20 text-sky-300 border border-sky-400/30">School Liaison Officer</span>
+                            <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-efootball-cyan/20 text-efootball-cyan border border-efootball-cyan/30">System Console Active</span>
+                        </div>
+
+                        <!-- System Diagnostics & Telemetry -->
+                        <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                            <div class="bg-black/50 p-4 rounded-2xl border border-efootball-border space-y-1">
+                                <span class="text-[10px] uppercase font-bold text-gray-400">Portal Runtime Latency</span>
+                                <div class="text-2xl font-black text-emerald-400 font-mono">14 ms</div>
+                                <span class="text-[10px] text-gray-400">Optimal Performance</span>
+                            </div>
+                            <div class="bg-black/50 p-4 rounded-2xl border border-efootball-border space-y-1">
+                                <span class="text-[10px] uppercase font-bold text-gray-400">Local Storage Memory</span>
+                                <div class="text-2xl font-black text-efootball-cyan font-mono">182 KB</div>
+                                <span class="text-[10px] text-gray-400">Database Synchronized</span>
+                            </div>
+                            <div class="bg-black/50 p-4 rounded-2xl border border-efootball-border space-y-1">
+                                <span class="text-[10px] uppercase font-bold text-gray-400">Authorized Officials</span>
+                                <div class="text-2xl font-black text-efootball-yellow font-mono" x-text="officialsList.filter(o => !o.paused).length + ' / 7'"></div>
+                                <span class="text-[10px] text-gray-400">Security Access Granted</span>
+                            </div>
+                            <div class="bg-black/50 p-4 rounded-2xl border border-efootball-border space-y-1">
+                                <span class="text-[10px] uppercase font-bold text-gray-400">Digital Scoreboard Mode</span>
+                                <div class="text-sm font-black text-white font-mono uppercase mt-1">LED eFootball</div>
+                                <span class="text-[10px] text-emerald-400">Online & Live</span>
+                            </div>
                         </div>
 
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <!-- Tool 1: Pitch Booking Timetable Controller -->
-                            <div class="bg-black/50 p-5 rounded-3xl border border-sky-400/30 space-y-4">
-                                <div class="flex items-center gap-2">
-                                    <i data-lucide="calendar" class="w-5 h-5 text-sky-400"></i>
-                                    <h5 class="text-sm font-black text-white uppercase">Academy Pitch Booking & Timetable Liaison</h5>
-                                </div>
-                                <div class="space-y-3">
-                                    <select class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
-                                        <option>School Main Arena (Floodlights Scheduled 4:00 PM - 6:30 PM)</option>
-                                        <option>Yellow Fortress Pitch B (Available 1:30 PM - 5:00 PM)</option>
-                                        <option>Senior DP Complex (Academy Ground 3)</option>
-                                    </select>
-                                    <input type="text" x-model="pitchSlotNotice.title" placeholder="Booking Notice: e.g. Nov 1st Ground Maintenance & Floodlights Cleared" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
-                                    <textarea x-model="pitchSlotNotice.content" rows="3" placeholder="School administration approval details, groundskeeper roster, and access gates..." class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white"></textarea>
-                                    <button @click="submitRoleItem('NEWS', pitchSlotNotice.title, pitchSlotNotice.content)" class="w-full bg-sky-400 text-black font-black py-2.5 rounded-xl text-xs hover:bg-sky-300 transition shadow-lg">
-                                        Submit Timetable Clearance to Super Admin
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Tool 2: Student Academic Standing Audit -->
+                            <!-- Tool 1: Digital Scoreboard Customizer -->
                             <div class="bg-black/50 p-5 rounded-3xl border border-efootball-border space-y-4">
                                 <div class="flex items-center gap-2">
-                                    <i data-lucide="graduation-cap" class="w-5 h-5 text-amber-300"></i>
-                                    <h5 class="text-sm font-black text-white uppercase">Academic Eligibility Standing Clearance</h5>
+                                    <i data-lucide="tv" class="w-5 h-5 text-efootball-cyan"></i>
+                                    <h5 class="text-sm font-black text-white uppercase">Pitchside Digital Scoreboard Controller</h5>
                                 </div>
-                                <p class="text-xs text-gray-300 leading-relaxed">
-                                    All student players must maintain satisfactory academic standing and faculty clearance at M-Pesa Foundation Academy to participate in Sunday League fixtures.
-                                </p>
                                 <div class="space-y-3">
-                                    <input type="text" x-model="academicNotice.title" placeholder="Academic Clearance Digest: e.g. MW 1 All 5 Clubs Cleared by Deans" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
-                                    <textarea x-model="academicNotice.content" rows="3" placeholder="Summary of academic eligibility audits across Grade 10 and DP cohorts..." class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white"></textarea>
-                                    <button @click="submitRoleItem('NEWS', academicNotice.title, academicNotice.content)" class="w-full bg-amber-400 text-black font-black py-2.5 rounded-xl text-xs hover:bg-amber-300 transition shadow-lg">
-                                        Submit Academic Certificate to Super Admin
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-gray-400 mb-1">Scoreboard Banner Ticker Text</label>
+                                        <input type="text" x-model="techScoreboardBanner" placeholder="e.g. M-PESA SUNDAY LEAGUE • OFFICIAL EFOOTBALL CHAMPIONSHIP" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
+                                    </div>
+                                    <button @click="submitTechItem('SCOREBOARD', techScoreboardBanner, '')" class="w-full bg-efootball-cyan text-black font-black py-2.5 rounded-xl text-xs hover:bg-cyan-300 transition shadow-lg">
+                                        Update Pitchside LED Ticker
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Tool 2: Technical Platform Update Bulletin -->
+                            <div class="bg-black/50 p-5 rounded-3xl border border-efootball-border space-y-4">
+                                <div class="flex items-center gap-2">
+                                    <i data-lucide="cpu" class="w-5 h-5 text-efootball-cyan"></i>
+                                    <h5 class="text-sm font-black text-white uppercase">Publish Digital Platform Update</h5>
+                                </div>
+                                <div class="space-y-3">
+                                    <input type="text" x-model="techReport.title" placeholder="Update Title: e.g. Real-Time Scoreboard Sync Enhanced" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
+                                    <textarea x-model="techReport.content" rows="3" placeholder="Platform enhancements, server sync details, match schedule updates, and live streaming links..." class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white"></textarea>
+                                    <button @click="submitTechItem('TECH_REPORT', techReport.title, techReport.content)" class="w-full bg-efootball-cyan text-black font-black py-2.5 rounded-xl text-xs hover:bg-cyan-300 transition shadow-lg">
+                                        Publish Platform Update to Website
                                     </button>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- 7. JOSEPH KAMANDE: DEPUTY PRESIDENT -->
-                    <div x-show="currentRole === 'JOSEPH_KAMANDE'" class="space-y-6">
-                        <div class="flex items-center justify-between border-b border-efootball-border/50 pb-2">
-                            <div>
-                                <h4 class="font-header text-2xl font-black uppercase text-teal-400">Matchday Operations & Logistics Command</h4>
-                                <p class="text-xs text-gray-300">Logistics Superintendent • Match Balls & Bibs Inventory • Field Marshals • Incident Dispatch</p>
+                        <!-- Direct Platform Controls -->
+                        <div class="p-5 bg-black/50 rounded-3xl border border-efootball-border/80 flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-2xl bg-amber-400/20 text-amber-300 flex items-center justify-center font-bold">
+                                    <i data-lucide="music" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <h5 class="text-xs font-black uppercase text-white">Stadium Anthem & Audio Station</h5>
+                                    <p class="text-[10px] text-gray-400">Configure background matchday synthesizer or custom YouTube soundtrack.</p>
+                                </div>
                             </div>
-                            <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-teal-400/20 text-teal-300 border border-teal-400/30">Operations Director</span>
-                        </div>
-
-                        <!-- Logistics Inventory Checklist -->
-                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                            <div class="bg-black/50 p-4 rounded-2xl border border-efootball-border space-y-1">
-                                <span class="text-[10px] uppercase font-bold text-gray-400">FIFA Match Balls</span>
-                                <div class="text-2xl font-black text-teal-300 font-mono">16 Balls</div>
-                                <span class="text-[10px] text-emerald-400">Pumped & Inspected</span>
-                            </div>
-                            <div class="bg-black/50 p-4 rounded-2xl border border-efootball-border space-y-1">
-                                <span class="text-[10px] uppercase font-bold text-gray-400">Training & Bib Sets</span>
-                                <div class="text-2xl font-black text-white font-mono">5 Sets (50 Bibs)</div>
-                                <span class="text-[10px] text-gray-400">All Club Colors</span>
-                            </div>
-                            <div class="bg-black/50 p-4 rounded-2xl border border-efootball-border space-y-1">
-                                <span class="text-[10px] uppercase font-bold text-gray-400">Medical / First Aid</span>
-                                <div class="text-2xl font-black text-rose-400 font-mono">2 Kits</div>
-                                <span class="text-[10px] text-gray-400">Nurse Station Ready</span>
-                            </div>
-                            <div class="bg-black/50 p-4 rounded-2xl border border-efootball-border space-y-1">
-                                <span class="text-[10px] uppercase font-bold text-gray-400">Field Marshals</span>
-                                <div class="text-2xl font-black text-efootball-yellow font-mono">8 Marshals</div>
-                                <span class="text-[10px] text-gray-400">Crowd & Tunnel Duty</span>
-                            </div>
-                        </div>
-
-                        <!-- Operations Filing -->
-                        <div class="bg-black/50 p-5 rounded-3xl border border-efootball-border space-y-4">
                             <div class="flex items-center gap-2">
-                                <i data-lucide="clipboard-list" class="w-5 h-5 text-teal-400"></i>
-                                <h5 class="text-sm font-black text-white uppercase">Submit Matchday Logistics & Readiness Report</h5>
-                            </div>
-                            <div class="space-y-3 max-w-2xl">
-                                <input type="text" x-model="opsReport.title" placeholder="Logistics Report: e.g. Matchday 1 Pitch Logistics Complete & Cleared" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
-                                <textarea x-model="opsReport.content" rows="3" placeholder="Equipment inventory status, pitch marking verification, medical staffing, and kickoff readiness..." class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white"></textarea>
-                                <button @click="submitRoleItem('NEWS', opsReport.title, opsReport.content)" class="bg-teal-400 text-black font-black px-6 py-2.5 rounded-xl text-xs hover:bg-teal-300 transition shadow-lg">
-                                    Send Operations Clearance to Super Admin
+                                <button @click="openSongModal = true" class="px-4 py-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-black font-black rounded-xl text-xs transition shadow-lg">
+                                    Configure Matchday Anthem
+                                </button>
+                                <button @click="openMediaSidebar = true; mediaTab = 'images'" class="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-black rounded-xl text-xs transition shadow-lg">
+                                    Open Media Studio
                                 </button>
                             </div>
                         </div>
                     </div>
 
-                    <!-- 8. RYAN KAIGI: CO-FOUNDER, MPESA SUNDAY LEAGUE -->
-                    <div x-show="currentRole === 'RYAN_KAIGI'" class="space-y-6">
-                        <div class="flex items-center justify-between border-b border-efootball-border/50 pb-2">
+                    <!-- 7. ASSISTANT TECHNOLOGICAL MANAGER: AHMED KUSOW -->
+                    <div x-show="currentRole === 'ASST_TECH_MANAGER'" class="space-y-6">
+                        <div class="flex items-center justify-between border-b border-efootball-border/50 pb-3">
                             <div>
-                                <h4 class="font-header text-2xl font-black uppercase text-efootball-magenta">Founders Hall & Constitutional Charter</h4>
-                                <p class="text-xs text-gray-300">Executive Charter Architect • Founding Vision Custodian • Hall of Fame Nominations</p>
+                                <h4 class="font-header text-2xl font-black uppercase text-violet-400">Digital Broadcast & Assistant Tech Desk</h4>
+                                <p class="text-xs text-gray-300">Supports Technological Manager • Match Reports & Results • YouTube Reels • Continuity Standby</p>
                             </div>
-                            <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-efootball-magenta/20 text-efootball-magenta border border-efootball-magenta/30">Founding Trustee</span>
+                            <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-violet-400/20 text-violet-300 border border-violet-400/30">Broadcast Assistant Active</span>
+                        </div>
+
+                        <!-- Standby Status Banner -->
+                        <div class="p-4 rounded-2xl border flex items-center justify-between"
+                             :class="techStandbyMode ? 'bg-amber-500/20 border-amber-500/40 text-amber-300' : 'bg-black/50 border-efootball-border text-gray-300'">
+                            <div class="flex items-center gap-3">
+                                <i :data-lucide="techStandbyMode ? 'alert-circle' : 'shield-check'" class="w-6 h-6" :class="techStandbyMode ? 'text-amber-400' : 'text-emerald-400'"></i>
+                                <div>
+                                    <h5 class="text-xs font-black uppercase" :class="techStandbyMode ? 'text-amber-300' : 'text-white'" x-text="techStandbyMode ? 'STANDBY ACTIVE: Primary Digital Platform Controller' : 'Standard Mode: Supporting Technological Manager'"></h5>
+                                    <p class="text-[10px] text-gray-400">Ensures continuity of digital operations when the Technological Manager is unavailable.</p>
+                                </div>
+                            </div>
+                            <button @click="toggleStandbyStatus()" class="px-4 py-2 rounded-xl text-xs font-black transition shadow"
+                                    :class="techStandbyMode ? 'bg-amber-400 text-black hover:bg-amber-300' : 'bg-efootball-cyan text-black hover:bg-cyan-300'"
+                                    x-text="techStandbyMode ? 'Stand Down Standby' : 'Activate Emergency Standby'">
+                            </button>
                         </div>
 
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <!-- Tool 1: Charter Amendment Proposal -->
-                            <div class="bg-black/50 p-5 rounded-3xl border border-efootball-magenta/30 space-y-4">
-                                <div class="flex items-center gap-2">
-                                    <i data-lucide="award" class="w-5 h-5 text-efootball-magenta"></i>
-                                    <h5 class="text-sm font-black text-white uppercase">Founders Constitutional Charter Amendment</h5>
-                                </div>
-                                <div class="space-y-3">
-                                    <input type="text" x-model="charterAmendment.title" placeholder="Charter Title: e.g. Founding Decree on Tournament Expansion" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
-                                    <textarea x-model="charterAmendment.content" rows="4" placeholder="Constitutional principle, league tradition protection, and foundational decree..." class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white"></textarea>
-                                    <button @click="submitRoleItem('RULE', charterAmendment.title, charterAmendment.content)" class="w-full bg-gradient-to-r from-efootball-magenta to-pink-600 text-white font-black py-2.5 rounded-xl text-xs hover:brightness-110 transition shadow-lg">
-                                        Submit Charter Clause to Super Admin
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Tool 2: Hall of Fame & Heritage Honours -->
-                            <div class="bg-black/50 p-5 rounded-3xl border border-efootball-border space-y-4">
-                                <div class="flex items-center gap-2">
-                                    <i data-lucide="trophy" class="w-5 h-5 text-amber-300"></i>
-                                    <h5 class="text-sm font-black text-white uppercase">Hall of Fame Legacy Nominations</h5>
-                                </div>
-                                <div class="space-y-3">
-                                    <input type="text" x-model="hallOfFameNomination.title" placeholder="Nominee Name & Honour: e.g. Class of 2024 Legend Induction" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
-                                    <textarea x-model="hallOfFameNomination.content" rows="4" placeholder="Achievements, goals scored, leadership impact, and citation for induction..." class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white"></textarea>
-                                    <button @click="submitRoleItem('NEWS', hallOfFameNomination.title, hallOfFameNomination.content)" class="w-full bg-amber-400 text-black font-black py-2.5 rounded-xl text-xs hover:bg-amber-300 transition shadow-lg">
-                                        Propose Hall of Fame Induction
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 9. AHMED KUSOW: ASSISTANT TECHNOLOGICAL MANAGER -->
-                    <div x-show="currentRole === 'AHMED_KUSOW'" class="space-y-6">
-                        <div class="flex items-center justify-between border-b border-efootball-border/50 pb-2">
-                            <div>
-                                <h4 class="font-header text-2xl font-black uppercase text-violet-400">Digital Broadcast & Highlights Studio</h4>
-                                <p class="text-xs text-gray-300">Streaming Coordinator • YouTube Highlight Integration • Pitchside Cameras Roster</p>
-                            </div>
-                            <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-violet-400/20 text-violet-300 border border-violet-400/30">Broadcast Controller</span>
-                        </div>
-
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <!-- Tool 1: YouTube Highlight Stream Dispatcher -->
+                            <!-- Tool 1: Publish Match Reports & Announcements -->
                             <div class="bg-black/50 p-5 rounded-3xl border border-violet-400/30 space-y-4">
                                 <div class="flex items-center gap-2">
-                                    <i data-lucide="video" class="w-5 h-5 text-violet-400"></i>
-                                    <h5 class="text-sm font-black text-white uppercase">Publish YouTube Highlight Reel</h5>
+                                    <i data-lucide="file-edit" class="w-5 h-5 text-violet-400"></i>
+                                    <h5 class="text-sm font-black text-white uppercase">Publish Match Report & Results Announcement</h5>
                                 </div>
                                 <div class="space-y-3">
-                                    <input type="text" x-model="highlightSubmission.title" placeholder="Highlight Title: e.g. Samba Boys vs G10A Match Highlights" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
-                                    <input type="text" x-model="highlightSubmission.videoUrl" placeholder="YouTube URL: https://www.youtube.com/watch?v=..." class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white font-mono">
-                                    <input type="text" x-model="highlightSubmission.matchweek" placeholder="Matchweek Tag: e.g. Matchweek 1" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
-                                    <textarea x-model="highlightSubmission.description" rows="2" placeholder="Key goals, saves, and timestamps description..." class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white"></textarea>
-                                    <button @click="submitYouTubeHighlight()" class="w-full bg-violet-500 hover:bg-violet-400 text-white font-black py-2.5 rounded-xl text-xs transition shadow-lg">
-                                        Send Highlight Reel to Super Admin for Live Stream
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <input type="text" x-model="asstTechArticle.title" placeholder="Report Title: e.g. Matchweek 1 Derby Recap" class="bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
+                                        <select x-model="asstTechArticle.matchweek" class="bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
+                                            <option value="MW 1">Matchweek 1</option>
+                                            <option value="MW 2">Matchweek 2</option>
+                                            <option value="MW 3">Matchweek 3</option>
+                                            <option value="MW 4">Matchweek 4</option>
+                                            <option value="Derby Special">Derby Special</option>
+                                        </select>
+                                    </div>
+                                    <textarea x-model="asstTechArticle.content" rows="3" placeholder="Match events recap, standout performers, final scoreline analysis, and league table impact..." class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white"></textarea>
+                                    <button @click="publishAsstTechReport()" class="w-full bg-violet-500 hover:bg-violet-400 text-white font-black py-2.5 rounded-xl text-xs transition shadow-lg">
+                                        Publish Report Live to News Room
                                     </button>
                                 </div>
                             </div>
 
-                            <!-- Tool 2: Pitchside Cameras Deployment Roster -->
+                            <!-- Tool 2: Publish YouTube Highlights & Video Reels -->
                             <div class="bg-black/50 p-5 rounded-3xl border border-efootball-border space-y-4">
                                 <div class="flex items-center gap-2">
+                                    <i data-lucide="video" class="w-5 h-5 text-rose-400"></i>
+                                    <h5 class="text-sm font-black text-white uppercase">Publish YouTube Match Highlight Reel</h5>
+                                </div>
+                                <div class="space-y-3">
+                                    <input type="text" x-model="highlightSubmission.title" placeholder="Highlight Title: e.g. Top 5 Goals of Matchday 1" class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white">
+                                    <input type="text" x-model="highlightSubmission.videoUrl" placeholder="YouTube URL: https://www.youtube.com/watch?v=..." class="w-full bg-efootball-bg border border-efootball-border rounded-xl px-3 py-2 text-xs text-white font-mono">
+                                    <button @click="submitYouTubeHighlight()" class="w-full bg-gradient-to-r from-red-600 to-rose-600 hover:brightness-110 text-white font-black py-2.5 rounded-xl text-xs transition shadow-lg">
+                                        Publish Video to Media Stream
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tool 3: Pitchside Camera Stations & Equipment Diagnostics -->
+                        <div class="bg-black/50 p-5 rounded-3xl border border-efootball-border space-y-3">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
                                     <i data-lucide="camera" class="w-5 h-5 text-efootball-cyan"></i>
-                                    <h5 class="text-sm font-black text-white uppercase">Pitchside Camera Crew & Equipment Check</h5>
+                                    <h5 class="text-xs font-black text-white uppercase">Pitchside Camera Stations & Streaming Readiness</h5>
                                 </div>
-                                <div class="space-y-2.5 text-xs">
-                                    <div class="p-3 bg-efootball-bg rounded-xl border border-efootball-border flex items-center justify-between">
-                                        <span>Main High-Gantry Camera (Tactical 50fps)</span>
-                                        <span class="text-emerald-400 font-mono font-bold">READY (Battery 95%)</span>
-                                    </div>
-                                    <div class="p-3 bg-efootball-bg rounded-xl border border-efootball-border flex items-center justify-between">
-                                        <span>Goalmouth Cam Station (Behind North Goal)</span>
-                                        <span class="text-emerald-400 font-mono font-bold">ONLINE</span>
-                                    </div>
-                                    <div class="p-3 bg-efootball-bg rounded-xl border border-efootball-border flex items-center justify-between">
-                                        <span>Sideline Handheld Gimbal (Celebrations & Benches)</span>
-                                        <span class="text-efootball-cyan font-mono font-bold">ASSIGNED</span>
-                                    </div>
-                                </div>
-                                <button @click="showToast('Camera stations and memory cards checked!')" class="w-full bg-efootball-border hover:bg-efootball-cyan hover:text-black text-gray-200 font-bold py-2 rounded-xl text-xs transition">
-                                    Run Live Camera Battery & Card Diagnostics
+                                <button @click="checkPitchsideCameras()" class="text-xs bg-efootball-cyan/20 hover:bg-efootball-cyan text-efootball-cyan hover:text-black font-bold px-3 py-1 rounded-xl transition">
+                                    Run Equipment Diagnostics
                                 </button>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                                <div class="p-3 bg-efootball-bg rounded-xl border border-efootball-border flex items-center justify-between">
+                                    <span>High Gantry Tactical Cam</span>
+                                    <span class="text-emerald-400 font-mono font-bold">READY (95%)</span>
+                                </div>
+                                <div class="p-3 bg-efootball-bg rounded-xl border border-efootball-border flex items-center justify-between">
+                                    <span>Goalmouth Angle Cam</span>
+                                    <span class="text-emerald-400 font-mono font-bold">ONLINE</span>
+                                </div>
+                                <div class="p-3 bg-efootball-bg rounded-xl border border-efootball-border flex items-center justify-between">
+                                    <span>Sideline Celebration Cam</span>
+                                    <span class="text-efootball-cyan font-mono font-bold">ASSIGNED</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1953,8 +2082,8 @@
                     <h2 class="font-header text-4xl font-black text-white uppercase tracking-wide">Player Stats Leaderboard</h2>
                     <p class="text-sm text-gray-300">Golden Boot race, Playmaker assists, Clean sheets, and Discipline</p>
                 </div>
-                <!-- Admin Add New Player Stat Button -->
-                <template x-if="isAdmin || isSuperAdmin">
+                <!-- Admin Add New Player Stat Button (Records & File Manager & Super Admin) -->
+                <template x-if="canEditPlayerStats()">
                     <button @click="openNewPlayerStatModal()" class="flex items-center gap-2 bg-gradient-to-r from-efootball-cyan to-emerald-400 text-black font-black px-4 py-2 rounded-2xl text-xs hover:shadow-neon-cyan transition shadow-lg self-start md:self-auto">
                         <i data-lucide="plus-circle" class="w-4 h-4"></i>
                         <span>Register Player Stat</span>
@@ -2010,7 +2139,7 @@
                                 <th class="py-4 px-3 text-center text-emerald-400">Clean Sheets</th>
                                 <th class="py-4 px-3 text-center text-amber-400">Yellows</th>
                                 <th class="py-4 px-3 text-center text-rose-500">Reds</th>
-                                <th x-show="isAdmin || isSuperAdmin" class="py-4 px-3 text-center text-efootball-cyan">Admin Edit</th>
+                                <th x-show="canEditPlayerStats()" class="py-4 px-3 text-center text-efootball-cyan">Admin Edit</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-efootball-border/50 text-sm font-semibold">
@@ -2032,7 +2161,7 @@
                                     <td class="py-4 px-3 text-center text-emerald-400 font-bold" x-text="p.cleanSheets || 0"></td>
                                     <td class="py-4 px-3 text-center text-amber-400 font-black" x-text="p.yellowCards || 0"></td>
                                     <td class="py-4 px-3 text-center text-rose-500 font-black" x-text="p.redCards || 0"></td>
-                                    <td x-show="isAdmin || isSuperAdmin" class="py-4 px-3 text-center">
+                                    <td x-show="canEditPlayerStats()" class="py-4 px-3 text-center">
                                         <button @click="openEditPlayerStatsModal(p)" class="px-2.5 py-1 bg-efootball-cyan/20 hover:bg-efootball-cyan text-efootball-cyan hover:text-black rounded-xl text-xs font-bold transition flex items-center gap-1 mx-auto">
                                             <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
                                             <span>Edit</span>
@@ -2132,8 +2261,8 @@
                                         </div>
                                     </template>
 
-                                    <!-- Admin Match Score Editor Button -->
-                                    <template x-if="isAdmin || isSuperAdmin">
+                                    <!-- Admin Match Score Editor Button (Records & File Manager, Tech Managers, Super Admin) -->
+                                    <template x-if="canEditFixturesAndScores()">
                                         <div class="pt-2 border-t border-efootball-border/40 flex items-center justify-end gap-2">
                                             <button @click="openFixtureEditModal(match)" class="flex items-center gap-1.5 text-xs bg-efootball-cyan/20 hover:bg-efootball-cyan text-efootball-cyan hover:text-black font-extrabold px-3 py-1.5 rounded-xl transition">
                                                 <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
@@ -2156,10 +2285,10 @@
                     <h2 class="font-header text-4xl font-black text-white uppercase tracking-wide">Clubs, Squads & Pia Coaches</h2>
                     <p class="text-sm text-gray-300">Custom Team Logos, Kits, Home Pitches, Pia Coaches, and Player Rosters</p>
                 </div>
-                <template x-if="isSuperAdmin">
+                <template x-if="canManageClubs()">
                     <button @click="openCreateTeamModal = true" class="flex items-center gap-2 bg-gradient-to-r from-efootball-cyan via-emerald-400 to-efootball-green text-black font-black px-5 py-2.5 rounded-2xl text-xs hover:shadow-neon-cyan transition shadow-xl">
                         <i data-lucide="plus-circle" class="w-4 h-4"></i>
-                        <span>+ Super Admin: Create New Team</span>
+                        <span>+ Register New Club</span>
                     </button>
                 </template>
             </div>
@@ -2189,14 +2318,16 @@
                                     </div>
                                 </div>
                                 
-                                <template x-if="isSuperAdmin">
+                                <template x-if="canManageClubs()">
                                     <div class="flex items-center gap-1">
                                         <button @click="openTeamEditModal(team)" class="p-2 rounded-xl bg-efootball-purple hover:bg-efootball-cyan hover:text-black text-efootball-cyan border border-efootball-border transition shadow" title="Edit Club & Kit">
                                             <i data-lucide="palette" class="w-4 h-4"></i>
                                         </button>
-                                        <button @click="deleteTeam(team.id)" class="p-2 rounded-xl bg-rose-950/60 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/30 transition shadow" title="Delete Team">
-                                            <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                        </button>
+                                        <template x-if="isSuperAdmin">
+                                            <button @click="deleteTeam(team.id)" class="p-2 rounded-xl bg-rose-950/60 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/30 transition shadow" title="Delete Team">
+                                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                            </button>
+                                        </template>
                                     </div>
                                 </template>
                             </div>
@@ -2243,7 +2374,7 @@
                                     <h4 class="text-xs font-black text-gray-300 uppercase tracking-wider">
                                         Squad Players (<span x-text="team.squad ? team.squad.length : 0"></span>)
                                     </h4>
-                                    <template x-if="isSuperAdmin">
+                                    <template x-if="canManageRegistrations()">
                                         <button @click="openSquadModal(team)" class="text-xs bg-efootball-cyan text-black px-3 py-1 rounded-xl font-black flex items-center gap-1 hover:bg-cyan-300 transition shadow">
                                             <i data-lucide="users" class="w-3 h-3"></i> Manage Squad
                                         </button>
@@ -2276,7 +2407,7 @@
                                             </div>
                                             <div class="flex items-center gap-2">
                                                 <span class="text-[10px] bg-efootball-bg font-mono font-bold px-2 py-0.5 rounded text-gray-300" x-text="player.position || 'FWD'"></span>
-                                                <template x-if="isAdmin || isSuperAdmin">
+                                                <template x-if="canEditPlayerStats()">
                                                     <button type="button" @click="editSquadPlayerStat(player, team)" class="text-[10px] bg-efootball-cyan/20 hover:bg-efootball-cyan text-efootball-cyan hover:text-black font-bold px-2 py-0.5 rounded-lg transition flex items-center gap-1 shadow" title="Edit player stats and starts">
                                                         <i data-lucide="edit-3" class="w-3 h-3"></i>
                                                         <span>Edit Stats</span>
@@ -2304,10 +2435,10 @@
                     <h2 class="font-header text-4xl font-black text-white uppercase tracking-wide">Official News Room</h2>
                     <p class="text-sm text-gray-300">Match reports, press conferences, and verified bulletins</p>
                 </div>
-                <template x-if="isSuperAdmin">
+                <template x-if="canPublishNews()">
                     <button @click="openPostModal('news')" class="flex items-center gap-2 bg-efootball-cyan text-black font-black px-4 py-2 rounded-2xl text-xs hover:bg-cyan-300 transition shadow-lg">
                         <i data-lucide="pen-tool" class="w-4 h-4"></i>
-                        <span>+ Super Admin: Publish News</span>
+                        <span>+ Publish News / Announcement</span>
                     </button>
                 </template>
             </div>
@@ -2323,7 +2454,7 @@
                             <h3 class="font-extrabold text-xl text-white hover:text-efootball-cyan transition" x-text="item.title"></h3>
                             <p class="text-xs text-gray-300 leading-relaxed" x-text="item.content"></p>
                         </div>
-                        <template x-if="isSuperAdmin">
+                        <template x-if="isSuperAdmin || currentRole === 'TECH_MANAGER'">
                             <div class="pt-3 border-t border-efootball-border/40 flex justify-end">
                                 <button @click="deleteNewsItem(item.id)" class="text-xs text-rose-400 hover:text-rose-300 font-bold flex items-center gap-1">
                                     <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Delete Article
@@ -2347,13 +2478,13 @@
                     <p class="text-sm text-gray-300">Live school matchday gallery with high-resolution action photos, direct video clips, and YouTube reels</p>
                 </div>
                 <div class="flex items-center gap-3">
-                    <template x-if="isAdmin || isSuperAdmin">
+                    <template x-if="canUploadMedia()">
                         <button @click="openMediaSidebar = true; mediaTab = 'images'" class="flex items-center gap-2 bg-gradient-to-r from-purple-600 via-efootball-magenta to-pink-600 text-white font-black px-5 py-2.5 rounded-2xl text-xs hover:brightness-110 transition shadow-xl">
                             <i data-lucide="upload" class="w-4 h-4"></i>
                             <span>Admin: Upload Media (Photo / Video / YouTube)</span>
                         </button>
                     </template>
-                    <template x-if="!isAdmin && !isSuperAdmin">
+                    <template x-if="!canUploadMedia()">
                         <button @click="openMediaSidebar = true; mediaTab = 'gallery'" class="flex items-center gap-2 bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 border border-purple-500/50 font-bold px-4 py-2.5 rounded-2xl text-xs transition shadow-lg">
                             <i data-lucide="clapperboard" class="w-4 h-4 text-purple-300"></i>
                             <span>Browse Matchday Gallery</span>
@@ -2413,7 +2544,7 @@
                                 <h4 class="font-extrabold text-base text-white truncate" x-text="item.title"></h4>
                                 <div class="flex items-center justify-between text-xs text-gray-400 mt-1">
                                     <span x-text="item.matchweek || item.category"></span>
-                                    <template x-if="isAdmin || isSuperAdmin">
+                                    <template x-if="isSuperAdmin || currentRole === 'TECH_MANAGER'">
                                         <button @click.stop="deleteMediaItem(item.id)" class="text-rose-400 hover:text-rose-300 p-1 rounded-lg hover:bg-rose-500/20 text-[10px]">
                                             <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Delete
                                         </button>
@@ -2524,7 +2655,7 @@
             <div class="flex items-center justify-between border-b border-efootball-border pb-4">
                 <div class="flex items-center gap-3">
                     <div class="w-11 h-11 rounded-2xl bg-white border-2 border-emerald-400 p-1 flex items-center justify-center shrink-0 shadow-lg">
-                        <img src="/__l5e/assets-v1/6932a2cb-6a31-4990-9b47-d695f7666c85/mpesa-crest.png" alt="M-Pesa Foundation Academy Logo" class="w-full h-full object-contain">
+                        <img src="/mpesa-academy-icon.png" alt="M-Pesa Foundation Academy Logo" class="w-full h-full object-contain">
                     </div>
                     <div>
                         <h3 class="font-header text-3xl font-black text-white uppercase leading-none">Officials Portal</h3>
@@ -2556,7 +2687,7 @@
             <div class="flex items-center justify-between border-b border-efootball-border pb-4">
                 <div class="flex items-center gap-3">
                     <div class="w-11 h-11 rounded-2xl bg-white border-2 border-amber-400 p-1 flex items-center justify-center shrink-0 shadow-lg">
-                        <img src="/__l5e/assets-v1/6932a2cb-6a31-4990-9b47-d695f7666c85/mpesa-crest.png" alt="M-Pesa Foundation Academy Logo" class="w-full h-full object-contain">
+                        <img src="/mpesa-academy-icon.png" alt="M-Pesa Foundation Academy Logo" class="w-full h-full object-contain">
                     </div>
                     <div>
                         <h3 class="font-header text-3xl font-black text-white uppercase leading-none">Super Admin Authority</h3>
@@ -3444,7 +3575,7 @@
         <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
             <div class="flex items-center gap-3">
                 <div class="w-9 h-9 rounded-xl bg-white border border-emerald-400 p-1 flex items-center justify-center shrink-0 shadow">
-                    <img src="/__l5e/assets-v1/6932a2cb-6a31-4990-9b47-d695f7666c85/mpesa-crest.png" alt="M-Pesa Foundation Academy Logo" class="w-full h-full object-contain">
+                    <img src="/mpesa-academy-icon.png" alt="M-Pesa Foundation Academy Logo" class="w-full h-full object-contain">
                 </div>
                 <div>
                     <span class="font-extrabold text-white uppercase tracking-wider block">M-Pesa Foundation Academy • Sunday League</span>
@@ -3562,6 +3693,27 @@
                 // Role Submissions Form
                 roleSubmissionForm: { title: '', content: '' },
 
+                // Role-Specific Workspaces State (7 Dedicated Roles)
+                presidentialDecree: { title: '', category: 'Executive Directive', content: '' },
+                presidentialAppeal: { teamId: '', verdict: 'SANCTION_REDUCED', justification: '' },
+                presidentialMeeting: { title: '', date: '', agenda: '' },
+                deputyDirective: { department: 'ALL', priority: 'HIGH', directive: '', instructions: '' },
+                deputyLogisticsReport: { title: '', content: '' },
+                registrarSearchAdm: '',
+                admVerificationResult: null,
+                quickPersonnelForm: { teamId: 1, type: 'PLAYER', name: '', number: 9, position: 'FWD', foot: 'Right', admissionNumber: '', email: '' },
+                violationReport: { teamId: 1, type: 'INELIGIBLE_PLAYER', details: '', penalty: 'Points Deduction / Fine' },
+                refereeAppointment: { matchId: '', centerRef: '', asstRef1: '', asstRef2: '', fourthOfficial: '' },
+                refereeEvaluation: { matchId: '', refereeName: '', rating: 5, notes: '' },
+                cardHearing: { playerName: '', cardType: 'DIRECT_RED', sanction: '1 Match Ban', notes: '' },
+                officiatingConcern: { title: '', section: 'Rule 12: Fouls & Misconduct', content: '' },
+                adminMinuteForm: { title: '', category: 'Executive Council Minute', content: '', attendees: '' },
+                techScoreboardBanner: 'M-PESA SUNDAY LEAGUE • OFFICIAL EFOOTBALL CHAMPIONSHIP',
+                techReport: { title: '', content: '' },
+                asstTechArticle: { title: '', matchweek: 'MW 1', content: '' },
+                highlightSubmission: { title: '', videoUrl: '', matchweek: 'MW 1', description: '' },
+                techStandbyMode: false,
+
                 toast: { show: false, message: '' },
 
                 // Player Stats Management State
@@ -3582,22 +3734,25 @@
                 countdown: { days: '00', hours: '00', minutes: '00', seconds: '00' },
                 countdownInterval: null,
 
-                // Website Song & Stadium Anthem System (Synthesizer + YouTube)
+                // Website Song & Stadium Anthem System (Synthesizer + YouTube + Uploaded Audio)
                 websiteSong: {
-                    mode: 'youtube', // only admin-set YouTube songs play
-                    title: 'No anthem set yet',
-                    youtubeUrl: '',
-                    youtubeId: null,
+                    mode: 'synth', // 'synth' (Web Audio API) | 'youtube' | 'custom'
+                    title: 'PES 2026 Matchday Anthem (Electronic Synthesizer)',
+                    youtubeUrl: 'https://www.youtube.com/watch?v=kYtGl1DX5qI',
+                    youtubeId: 'kYtGl1DX5qI',
                     volume: 0.45,
                     isPlaying: false,
                     userInteracted: false,
-                    customAudioUrl: null
+                    adminActivated: false,
+                    pendingAutoplay: false,
+                    customAudioUrl: null,
+                    customDataUrl: null
                 },
                 openSongModal: false,
-                adminPasscode: '',
+                openProfileModal: false,
                 customSongForm: {
-                    url: '',
-                    title: ''
+                    url: 'https://www.youtube.com/watch?v=kYtGl1DX5qI',
+                    title: 'PES 2026 Matchday Anthem'
                 },
 
                 // Media Hub System (Images, Videos, YouTube reels)
@@ -3825,52 +3980,83 @@
                         if (window.lucide) lucide.createIcons();
                     });
 
-                    // Restore persistent custom uploaded song from IndexedDB if present
-                    if (window.SongAudioDB) {
-                        SongAudioDB.getAudio().then(record => {
-                            if (record && record.blob) {
-                                const restoredUrl = URL.createObjectURL(record.blob);
-                                this.websiteSong.customAudioUrl = restoredUrl;
-                                if (record.metadata && record.metadata.title) {
-                                    this.websiteSong.title = record.metadata.title;
-                                }
-                                const customAudio = document.getElementById('pes-custom-audio-element');
-                                if (customAudio) {
-                                    customAudio.src = restoredUrl;
-                                    customAudio.volume = this.websiteSong.volume ?? 0.6;
-                                }
-                                if (false) {
-                                    this.startWebsiteSong();
-                                }
-                            }
-                        }).catch(e => console.warn('Could not restore persistent song audio:', e));
+                    // 1. Synchronously bind stored custom audio data URL if present in localStorage
+                    const storedDataUrl = localStorage.getItem('mpesa_pes_custom_audio_data_v7');
+                    if (storedDataUrl) {
+                        this.websiteSong.customAudioUrl = storedDataUrl;
+                        this.websiteSong.customDataUrl = storedDataUrl;
+                        const customAudio = document.getElementById('pes-custom-audio-element');
+                        if (customAudio) {
+                            customAudio.src = storedDataUrl;
+                            customAudio.volume = this.websiteSong.volume ?? 0.6;
+                        }
                     }
 
-                    // Load the admin's song from online storage
-                    fetch('/api/public/song', { cache: 'no-store' }).then(r => r.json()).then(d => {
-                        if (d && d.youtube_id) {
-                            const changed = d.youtube_id !== this.websiteSong.youtubeId;
-                            this.websiteSong.mode = 'youtube';
-                            this.websiteSong.youtubeId = d.youtube_id;
-                            this.websiteSong.youtubeUrl = d.youtube_url || '';
-                            this.websiteSong.title = d.title || 'League Anthem';
-                            if (changed && this.websiteSong.isPlaying) this.startWebsiteSong();
-                        } else {
-                            this.websiteSong.youtubeId = null; this.websiteSong.title = 'No anthem set yet';
-                        }
-                    }).catch(() => {});
+                    // 2. Asynchronously check IndexedDB for binary song blob fallback
+                    if (window.SongAudioDB) {
+                        SongAudioDB.getAudio().then(record => {
+                            if (record) {
+                                const audioSource = record.dataUrl || (record.blob ? URL.createObjectURL(record.blob) : null);
+                                if (audioSource) {
+                                    this.websiteSong.customAudioUrl = audioSource;
+                                    this.websiteSong.customDataUrl = audioSource;
+                                    if (record.metadata && record.metadata.title) {
+                                        this.websiteSong.title = record.metadata.title;
+                                    }
+                                    const customAudio = document.getElementById('pes-custom-audio-element');
+                                    if (customAudio && customAudio.src !== audioSource) {
+                                        customAudio.src = audioSource;
+                                        customAudio.volume = this.websiteSong.volume ?? 0.6;
+                                    }
+                                    if (this.websiteSong.adminActivated || this.websiteSong.isPlaying) {
+                                        this.startWebsiteSong(true);
+                                    }
+                                }
+                            }
+                        }).catch(e => console.warn('Persistent song audio check:', e));
+                    }
 
-                    // Automatic Website Song Playback Setup
-                    setTimeout(() => {
-                        this.startWebsiteSong();
-                    }, 600);
+                    // 3. Attach native audio listeners to keep player state in exact sync with UI
+                    const customAudio = document.getElementById('pes-custom-audio-element');
+                    if (customAudio) {
+                        customAudio.addEventListener('playing', () => {
+                            if (this.websiteSong.mode === 'custom') {
+                                this.websiteSong.isPlaying = true;
+                                this.websiteSong.pendingAutoplay = false;
+                                this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
+                            }
+                        });
+                        customAudio.addEventListener('pause', () => {
+                            if (this.websiteSong.mode === 'custom' && !this.websiteSong.pendingAutoplay) {
+                                this.websiteSong.isPlaying = false;
+                                this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
+                            }
+                        });
+                        customAudio.addEventListener('ended', () => {
+                            if (this.websiteSong.mode === 'custom') {
+                                customAudio.currentTime = 0;
+                                customAudio.play().catch(() => {});
+                            }
+                        });
+                        customAudio.addEventListener('error', (err) => {
+                            console.warn('Native custom audio element error:', err);
+                        });
+                    }
 
-                    // Global first-interaction listener to unblock sound if browser blocked initial autoplay
+                    // 4. Automatic Anthem Playback Setup
+                    // Automatically plays the anthem once admin has set and activated it
+                    if (this.websiteSong.adminActivated || this.websiteSong.isPlaying) {
+                        setTimeout(() => {
+                            this.startWebsiteSong(true);
+                        }, 300);
+                    }
+
+                    // 5. Global unblock gesture: unblocks audio on first touch/click if browser blocked clean-load autoplay
                     const unlockAudio = () => {
-                        if (!this.websiteSong.isPlaying) {
-                            this.startWebsiteSong();
-                        }
                         this.websiteSong.userInteracted = true;
+                        if (this.websiteSong.adminActivated || this.websiteSong.isPlaying || this.websiteSong.pendingAutoplay) {
+                            this.startWebsiteSong(false);
+                        }
                     };
                     ['click', 'touchstart', 'keydown'].forEach(evt => {
                         window.addEventListener(evt, unlockAudio, { once: true });
@@ -3909,7 +4095,6 @@
                     const code = this.roleCodeInput.trim().toLowerCase();
                     // Master Super Admin check: accepts msl-27
                     if (code === 'msl-27' || code === 'admin123' || code === 'superadmin' || code === 'msl-super-admin') {
-                        this.adminPasscode = code;
                         this.isSuperAdmin = true;
                         this.isAdmin = true;
                         this.currentRole = 'SUPER_ADMIN';
@@ -3917,13 +4102,16 @@
                         this.roleCodeInput = '';
                         this.roleError = '';
                         this.activeTab = 'adminDashboard';
-                        this.showToast('👑 Master Super Admin Control Unlocked!');
+                        this.showToast('👑 Master Super Admin Control Unlocked! Full privileges granted.');
                         this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
                         return;
                     }
 
-                    // Official Code check
-                    const match = this.officialsList.find(o => o.code.toLowerCase() === code);
+                    // Official Code check (checks official code and altCodes)
+                    const match = this.officialsList.find(o => 
+                        o.code.toLowerCase() === code || 
+                        (o.altCodes && o.altCodes.some(ac => ac.toLowerCase() === code))
+                    );
                     if (match) {
                         if (match.paused) {
                             this.roleError = 'Access Denied: This official access code has been paused/banned by the Super Admin.';
@@ -3938,14 +4126,13 @@
                         this.showToast(`Welcome, ${match.name}! ${match.role} Workspace Unlocked.`);
                         this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
                     } else {
-                        this.roleError = 'Invalid code. Access restricted to authorized personnel only.';
+                        this.roleError = 'Invalid code. Access restricted to authorized league personnel only.';
                     }
                 },
 
                 verifyAdminPassword() {
                     const input = this.adminPasswordInput.trim().toLowerCase();
                     if (input === 'msl-27' || input === 'admin123' || input === 'superadmin' || input === 'msl-super-admin') {
-                        this.adminPasscode = input;
                         this.isSuperAdmin = true;
                         this.isAdmin = true;
                         this.currentRole = 'SUPER_ADMIN';
@@ -3985,17 +4172,76 @@
                 getRoleIcon(key) {
                     const map = {
                         'SUPER_ADMIN': 'crown',
-                        'RYAN_KAIGI': 'compass',
-                        'BRAMUEL_AMIRAH': 'award',
-                        'JOSEPH_KAMANDE': 'layers',
-                        'LEVIS_WANYAMA': 'book-open',
-                        'CHERYL_COSMAS': 'file-check',
-                        'MITCHELLE_MUTHONI': 'flag',
-                        'TONNIE_ODUNDO': 'archive',
-                        'TRADY_LEWIS': 'cpu',
-                        'AHMED_KUSOW': 'tv'
+                        'PRESIDENT': 'award',
+                        'DEPUTY_PRESIDENT': 'layers',
+                        'REGULATIONS_MANAGER': 'file-check',
+                        'MATCH_OFFICIATING_MANAGER': 'flag',
+                        'RECORDS_MANAGER': 'archive',
+                        'TECH_MANAGER': 'cpu',
+                        'ASST_TECH_MANAGER': 'tv'
                     };
                     return map[key] || 'briefcase';
+                },
+
+                // ==================== ROLE-RESTRICTED PERMISSIONS MATRIX ====================
+                // Super Admin can do everything; each member can only edit what his role requires.
+                canSuperAdmin() {
+                    return Boolean(this.isSuperAdmin);
+                },
+
+                canEditPlayerStats() {
+                    return this.isSuperAdmin || this.currentRole === 'RECORDS_MANAGER';
+                },
+
+                canEditFixturesAndScores() {
+                    return this.isSuperAdmin || 
+                           this.currentRole === 'RECORDS_MANAGER' || 
+                           this.currentRole === 'TECH_MANAGER' || 
+                           this.currentRole === 'ASST_TECH_MANAGER';
+                },
+
+                canAssignReferees() {
+                    return this.isSuperAdmin || this.currentRole === 'MATCH_OFFICIATING_MANAGER';
+                },
+
+                canManageRegistrations() {
+                    return this.isSuperAdmin || this.currentRole === 'REGULATIONS_MANAGER';
+                },
+
+                canManageClubs() {
+                    return this.isSuperAdmin || this.currentRole === 'REGULATIONS_MANAGER';
+                },
+
+                canPublishNews() {
+                    return this.isSuperAdmin || 
+                           this.currentRole === 'PRESIDENT' || 
+                           this.currentRole === 'DEPUTY_PRESIDENT' || 
+                           this.currentRole === 'TECH_MANAGER' || 
+                           this.currentRole === 'ASST_TECH_MANAGER';
+                },
+
+                canUploadMedia() {
+                    return this.isSuperAdmin || 
+                           this.currentRole === 'TECH_MANAGER' || 
+                           this.currentRole === 'ASST_TECH_MANAGER';
+                },
+
+                canManageSong() {
+                    return this.isSuperAdmin || this.currentRole === 'TECH_MANAGER';
+                },
+
+                canManageDiscipline() {
+                    return this.isSuperAdmin || 
+                           this.currentRole === 'PRESIDENT' || 
+                           this.currentRole === 'DEPUTY_PRESIDENT' || 
+                           this.currentRole === 'MATCH_OFFICIATING_MANAGER' || 
+                           this.currentRole === 'RECORDS_MANAGER';
+                },
+
+                canManageRules() {
+                    return this.isSuperAdmin || 
+                           this.currentRole === 'PRESIDENT' || 
+                           this.currentRole === 'REGULATIONS_MANAGER';
                 },
 
                 // ==================== MASTER PERSONNEL MODULE LOGIC ====================
@@ -4420,8 +4666,396 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                     this.showToast('Submission rejected and removed.');
                 },
 
+                // ==================== ROLE-SPECIFIC WORKSPACE METHODS (7 ROLES) ====================
+                // 1. President Methods
+                submitPresidentialDecree() {
+                    if (!this.presidentialDecree.title.trim() || !this.presidentialDecree.content.trim()) {
+                        this.showToast('Please provide a decree title and content.');
+                        return;
+                    }
+                    this.newsArticles.unshift({
+                        id: Date.now(),
+                        title: this.presidentialDecree.title.trim(),
+                        category: this.presidentialDecree.category || 'Official Bulletin',
+                        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                        author: 'Bramuel Amirah (President)',
+                        content: this.presidentialDecree.content.trim(),
+                        videoUrl: ''
+                    });
+                    this.saveStoredData();
+                    this.showToast('👑 Presidential Decree enacted and published live to News Room!');
+                    this.presidentialDecree = { title: '', category: 'Executive Directive', content: '' };
+                },
+
+                submitPresidentialAppeal() {
+                    if (!this.presidentialAppeal.justification.trim()) {
+                        this.showToast('Please enter the tribunal findings and justification.');
+                        return;
+                    }
+                    const teamName = this.presidentialAppeal.teamId ? this.getTeamName(Number(this.presidentialAppeal.teamId)) : 'Appealing Club';
+                    const verdictText = this.presidentialAppeal.verdict === 'RULING_OVERTURNED' 
+                        ? 'Sanction Overturned & Cleared' 
+                        : (this.presidentialAppeal.verdict === 'SANCTION_REDUCED' ? 'Sanction Commuted / Reduced' : 'Sanction Upheld in Full');
+                    
+                    this.newsArticles.unshift({
+                        id: Date.now(),
+                        title: `Presidential Tribunal Ruling: ${teamName} (${verdictText})`,
+                        category: 'Appeals Ruling',
+                        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                        author: 'Presidential Appeals Tribunal',
+                        content: this.presidentialAppeal.justification.trim(),
+                        videoUrl: ''
+                    });
+                    this.saveStoredData();
+                    this.showToast('⚖️ Presidential Tribunal appellate verdict delivered & published!');
+                    this.presidentialAppeal = { teamId: '', verdict: 'SANCTION_REDUCED', justification: '' };
+                },
+
+                callExecutiveMeeting() {
+                    if (!this.presidentialMeeting.title.trim() || !this.presidentialMeeting.agenda.trim()) {
+                        this.showToast('Please enter meeting title and agenda.');
+                        return;
+                    }
+                    this.newsArticles.unshift({
+                        id: Date.now(),
+                        title: `Executive Council Meeting: ${this.presidentialMeeting.title.trim()}`,
+                        category: 'Meeting Convocation',
+                        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                        author: 'Office of the President',
+                        content: `Scheduled Date: ${this.presidentialMeeting.date || 'Upcoming Sunday'}\n\nAgenda:\n${this.presidentialMeeting.agenda.trim()}`,
+                        videoUrl: ''
+                    });
+                    this.saveStoredData();
+                    this.showToast('🏛️ Executive Council meeting notice dispatched & published!');
+                    this.presidentialMeeting = { title: '', date: '', agenda: '' };
+                },
+
+                // 2. Deputy President Methods
+                submitDeputyDirective() {
+                    if (!this.deputyDirective.directive.trim() || !this.deputyDirective.instructions.trim()) {
+                        this.showToast('Please provide directive title and operational instructions.');
+                        return;
+                    }
+                    this.newsArticles.unshift({
+                        id: Date.now(),
+                        title: `Deputy Presidential Directive: ${this.deputyDirective.directive.trim()}`,
+                        category: 'Operations Memo',
+                        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                        author: 'Joseph Kamande (Deputy President)',
+                        content: `Target Dept: ${this.deputyDirective.department} (Priority: ${this.deputyDirective.priority})\n\n${this.deputyDirective.instructions.trim()}`,
+                        videoUrl: ''
+                    });
+                    this.saveStoredData();
+                    this.showToast('📋 Operational directive issued on behalf of the President!');
+                    this.deputyDirective = { department: 'ALL', priority: 'HIGH', directive: '', instructions: '' };
+                },
+
+                submitOperationsChecklist() {
+                    if (!this.deputyLogisticsReport.title.trim() || !this.deputyLogisticsReport.content.trim()) {
+                        this.showToast('Please enter report title and logistics details.');
+                        return;
+                    }
+                    this.newsArticles.unshift({
+                        id: Date.now(),
+                        title: this.deputyLogisticsReport.title.trim(),
+                        category: 'Logistics Clearance',
+                        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                        author: 'Deputy Presidency (Operations)',
+                        content: this.deputyLogisticsReport.content.trim(),
+                        videoUrl: ''
+                    });
+                    this.saveStoredData();
+                    this.showToast('⚽ Matchday operations & field logistics cleared!');
+                    this.deputyLogisticsReport = { title: '', content: '' };
+                },
+
+                // 3. Register & Regulations Manager Methods
+                verifyStudentAdm() {
+                    const query = this.registrarSearchAdm.trim().toUpperCase();
+                    if (!query) {
+                        this.showToast('Please enter an ADM number to check.');
+                        return;
+                    }
+                    let found = null;
+                    for (const team of this.teams) {
+                        for (const player of (team.squad || [])) {
+                            if (player.admissionNumber && player.admissionNumber.toUpperCase() === query) {
+                                found = { ...player, teamId: team.id };
+                                break;
+                            }
+                        }
+                        if (found) break;
+                    }
+                    if (found) {
+                        this.admVerificationResult = found;
+                        this.showToast(`Verified: ${found.name} is cleared and registered with ${this.getTeamName(found.teamId)}.`);
+                    } else {
+                        this.admVerificationResult = null;
+                        this.showToast(`No registered student athlete found with ADM "${query}". Check records.`);
+                    }
+                },
+
+                quickRegisterPersonnel() {
+                    if (!this.quickPersonnelForm.name.trim()) {
+                        this.showToast('Please provide a name for registration.');
+                        return;
+                    }
+                    const targetTeam = this.teams.find(t => t.id == this.quickPersonnelForm.teamId);
+                    if (!targetTeam) {
+                        this.showToast('Invalid club selected.');
+                        return;
+                    }
+                    if (!targetTeam.squad) targetTeam.squad = [];
+                    if (targetTeam.squad.length >= 25 && this.quickPersonnelForm.type === 'PLAYER') {
+                        this.showToast('Squad Cap Exceeded: Maximum 25 players per club allowed!');
+                        return;
+                    }
+
+                    targetTeam.squad.push({
+                        name: this.quickPersonnelForm.name.trim(),
+                        number: Number(this.quickPersonnelForm.number) || 9,
+                        position: this.quickPersonnelForm.position || 'FWD',
+                        foot: this.quickPersonnelForm.foot || 'Right',
+                        admissionNumber: this.quickPersonnelForm.admissionNumber.trim() || `ADM-2024-${Math.floor(1000 + Math.random() * 9000)}`,
+                        email: this.quickPersonnelForm.email.trim() || `${this.quickPersonnelForm.name.toLowerCase().replace(/\s+/g, '.')}@mpesa.ac.ke`,
+                        photoUrl: ''
+                    });
+                    this.saveStoredData();
+                    this.showToast(`✅ Registered: ${this.quickPersonnelForm.name} officially added to ${targetTeam.name}!`);
+                    this.quickPersonnelForm = { teamId: targetTeam.id, type: 'PLAYER', name: '', number: 9, position: 'FWD', foot: 'Right', admissionNumber: '', email: '' };
+                },
+
+                reportRegulationViolation() {
+                    if (!this.violationReport.details.trim()) {
+                        this.showToast('Please provide details of the violation.');
+                        return;
+                    }
+                    const clubName = this.getTeamName(Number(this.violationReport.teamId));
+                    this.newsArticles.unshift({
+                        id: Date.now(),
+                        title: `Regulatory Notice: Violation Inquest - ${clubName}`,
+                        category: 'Regulatory Inquest',
+                        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                        author: 'Cheryl Cosmas (Register & Regulations)',
+                        content: `Alleged Infraction: ${this.violationReport.type}\nRecommended Sanction: ${this.violationReport.penalty}\n\nEvidence & Case Summary:\n${this.violationReport.details.trim()}`,
+                        videoUrl: ''
+                    });
+                    this.saveStoredData();
+                    this.showToast('⚠️ Regulation violation reported & logged for disciplinary tribunal review!');
+                    this.violationReport.details = '';
+                },
+
+                // 4. Match Officiating Programmes Manager Methods
+                assignRefereesToMatch() {
+                    if (!this.refereeAppointment.matchId) {
+                        this.showToast('Please select a fixture to assign referees.');
+                        return;
+                    }
+                    const match = this.matches.find(m => m.id == this.refereeAppointment.matchId);
+                    if (!match) return;
+                    match.referees = {
+                        centerRef: this.refereeAppointment.centerRef.trim() || 'Assigned FIFA Referee',
+                        asstRef1: this.refereeAppointment.asstRef1.trim() || 'Assistant Referee 1',
+                        asstRef2: this.refereeAppointment.asstRef2.trim() || 'Assistant Referee 2',
+                        fourthOfficial: this.refereeAppointment.fourthOfficial.trim() || '4th Official'
+                    };
+                    this.saveStoredData();
+                    this.showToast(`🚩 Match Officials assigned to MW ${match.matchweek}: ${this.getTeamName(match.homeId)} vs ${this.getTeamName(match.awayId)}!`);
+                },
+
+                submitRefereeEvaluation() {
+                    if (!this.refereeEvaluation.refereeName.trim()) {
+                        this.showToast('Please specify the referee being evaluated.');
+                        return;
+                    }
+                    this.showToast(`⭐ Evaluation logged for ${this.refereeEvaluation.refereeName}: Grade ${this.refereeEvaluation.rating}/5 Fair Play score recorded.`);
+                    this.refereeEvaluation = { matchId: '', refereeName: '', rating: 5, notes: '' };
+                },
+
+                submitCardHearing() {
+                    if (!this.cardHearing.playerName.trim()) {
+                        this.showToast('Please provide the player name.');
+                        return;
+                    }
+                    this.injuryReports.unshift({
+                        id: Date.now(),
+                        playerName: this.cardHearing.playerName.trim(),
+                        teamId: this.teams[0]?.id || 1,
+                        status: 'SUSPENDED',
+                        details: `${this.cardHearing.cardType.replace(/_/g, ' ')}: ${this.cardHearing.notes.trim() || 'Official match ban enforced'}`,
+                        returnDate: this.cardHearing.sanction || '1 Match Ban'
+                    });
+                    this.saveStoredData();
+                    this.showToast(`🟥 Disciplinary card sanction logged: ${this.cardHearing.playerName} suspended.`);
+                    this.cardHearing = { playerName: '', cardType: 'DIRECT_RED', sanction: '1 Match Ban', notes: '' };
+                },
+
+                submitOfficiatingConcern() {
+                    if (!this.officiatingConcern.title.trim() || !this.officiatingConcern.content.trim()) {
+                        this.showToast('Please enter title and guidance content.');
+                        return;
+                    }
+                    this.newsArticles.unshift({
+                        id: Date.now(),
+                        title: `Referees Technical Directive: ${this.officiatingConcern.title.trim()}`,
+                        category: 'Officiating Standard',
+                        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                        author: 'Mitchelle Muthoni (Match Officiating Manager)',
+                        content: `Regulation Section: ${this.officiatingConcern.section}\n\n${this.officiatingConcern.content.trim()}`,
+                        videoUrl: ''
+                    });
+                    this.saveStoredData();
+                    this.showToast('📢 Officiating standard directive published to league!');
+                    this.officiatingConcern = { title: '', section: 'Rule 12: Fouls & Misconduct', content: '' };
+                },
+
+                // 5. Records and File Manager Methods
+                exportRostersJSON() {
+                    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.teams, null, 2));
+                    const dl = document.createElement('a');
+                    dl.setAttribute("href", dataStr);
+                    dl.setAttribute("download", `mpesa_sunday_league_rosters_${new Date().toISOString().slice(0,10)}.json`);
+                    document.body.appendChild(dl);
+                    dl.click();
+                    dl.remove();
+                    this.showToast('📁 Official Rosters JSON document downloaded successfully!');
+                },
+
+                exportStatsCSV() {
+                    let csv = "Rank,Player Name,Club,Position,Preferred Foot,Goals,Assists,Starts,Apps,Clean Sheets,Yellow Cards,Red Cards\n";
+                    this.playerStatsList.forEach((p, idx) => {
+                        csv += `${idx + 1},"${p.name}","${this.getTeamName(p.teamId)}",${p.position || 'FWD'},${p.foot || 'Right'},${p.goals},${p.assists},${p.starts ?? p.matches ?? 0},${p.matches ?? p.starts ?? 0},${p.cleanSheets || 0},${p.yellowCards || 0},${p.redCards || 0}\n`;
+                    });
+                    const dataStr = "data:text/csv;charset=utf-8," + encodeURIComponent(csv);
+                    const dl = document.createElement('a');
+                    dl.setAttribute("href", dataStr);
+                    dl.setAttribute("download", `mpesa_player_stats_leaderboard_${new Date().toISOString().slice(0,10)}.csv`);
+                    document.body.appendChild(dl);
+                    dl.click();
+                    dl.remove();
+                    this.showToast('📊 Player Statistics CSV spreadsheet downloaded successfully!');
+                },
+
+                certifyMatchArchive() {
+                    const finishedCount = this.matches.filter(m => m.status === 'FINISHED').length;
+                    this.newsArticles.unshift({
+                        id: Date.now(),
+                        title: `Official Records Certification: Matchweek Sheets Sealed`,
+                        category: 'Certified Records',
+                        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                        author: 'Tonnie Mark Odundo (Records and File Manager)',
+                        content: `Official archival audit complete. All ${finishedCount} completed fixtures, goal logs, standings, and player stats have been verified, digitally stamped, and permanently archived.`,
+                        videoUrl: ''
+                    });
+                    this.saveStoredData();
+                    this.showToast('🏛️ Official Matchweek records stamped & digitally certified!');
+                },
+
+                logAdministrativeDecision() {
+                    if (!this.adminMinuteForm.title.trim() || !this.adminMinuteForm.content.trim()) {
+                        this.showToast('Please enter minute title and proceeding details.');
+                        return;
+                    }
+                    this.newsArticles.unshift({
+                        id: Date.now(),
+                        title: `Administrative Minute: ${this.adminMinuteForm.title.trim()}`,
+                        category: this.adminMinuteForm.category || 'Executive Council Minute',
+                        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                        author: 'Records and File Office',
+                        content: `Attendees: ${this.adminMinuteForm.attendees || 'Executive Committee'}\n\nProceedings & Resolution:\n${this.adminMinuteForm.content.trim()}`,
+                        videoUrl: ''
+                    });
+                    this.saveStoredData();
+                    this.showToast('📝 Administrative proceedings minute entered into official archives!');
+                    this.adminMinuteForm = { title: '', category: 'Executive Council Minute', content: '', attendees: '' };
+                },
+
+                // 6. Technological Manager Methods
+                submitTechItem(type, title, content) {
+                    if (type === 'SCOREBOARD') {
+                        this.showToast('📺 Pitchside Digital LED Ticker banner updated: ' + (title || 'Live ticker active'));
+                    } else {
+                        if (!title || !title.trim()) return;
+                        this.newsArticles.unshift({
+                            id: Date.now(),
+                            title: `Tech Bulletin: ${title.trim()}`,
+                            category: 'Digital Platform',
+                            date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                            author: 'Trady Lewis (Technological Manager)',
+                            content: content ? content.trim() : 'Digital operations update.',
+                            videoUrl: ''
+                        });
+                        this.saveStoredData();
+                        this.showToast('💻 Technological update published live to digital platforms!');
+                        this.techReport = { title: '', content: '' };
+                    }
+                },
+
+                runPlatformDiagnostics() {
+                    this.showToast('⚡ Diagnostics complete: LocalStorage sync 100% • Audio stream optimal • 14ms response');
+                },
+
+                // 7. Assistant Technological Manager Methods
+                publishAsstTechReport() {
+                    if (!this.asstTechArticle.title.trim() || !this.asstTechArticle.content.trim()) {
+                        this.showToast('Please provide match report title and content.');
+                        return;
+                    }
+                    this.newsArticles.unshift({
+                        id: Date.now(),
+                        title: this.asstTechArticle.title.trim(),
+                        category: 'Match Report',
+                        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                        author: 'Ahmed Kusow (Assistant Tech Manager)',
+                        content: `[${this.asstTechArticle.matchweek}]\n\n${this.asstTechArticle.content.trim()}`,
+                        videoUrl: ''
+                    });
+                    this.saveStoredData();
+                    this.showToast('📰 Match report published to News Room!');
+                    this.asstTechArticle = { title: '', matchweek: 'MW 1', content: '' };
+                },
+
+                submitYouTubeHighlight() {
+                    if (!this.highlightSubmission.title.trim() || !this.highlightSubmission.videoUrl.trim()) {
+                        this.showToast('Please enter title and YouTube link.');
+                        return;
+                    }
+                    const ytId = this.extractYouTubeId(this.highlightSubmission.videoUrl);
+                    if (!ytId) {
+                        this.showToast('Please enter a valid YouTube link.');
+                        return;
+                    }
+                    this.mediaGallery.unshift({
+                        id: Date.now(),
+                        type: 'YOUTUBE',
+                        title: this.highlightSubmission.title.trim(),
+                        url: this.highlightSubmission.videoUrl.trim(),
+                        category: 'Highlights',
+                        matchweek: this.highlightSubmission.matchweek || 'Matchweek',
+                        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                    });
+                    this.saveStoredData();
+                    this.showToast('🎥 Match highlight reel published live to Media Feed!');
+                    this.highlightSubmission = { title: '', videoUrl: '', matchweek: 'MW 1', description: '' };
+                },
+
+                checkPitchsideCameras() {
+                    this.showToast('📹 Camera stations checked: High-Gantry 95%, Goalmouth online, Sideline gimbal ready.');
+                },
+
+                toggleStandbyStatus() {
+                    this.techStandbyMode = !this.techStandbyMode;
+                    this.showToast(this.techStandbyMode 
+                        ? '🚨 Standby Activated: Assistant Tech Manager acting as Primary Digital Platform Controller!'
+                        : '✅ Standby Stand-Down: Technological Manager actively online.');
+                },
+
                 // ==================== TEAMS & PITCHES ====================
                 createNewTeam() {
+                    if (!this.canManageClubs()) {
+                        this.showToast('Access Restricted: Only Register and Regulations Manager or Super Admin can register new clubs.');
+                        return;
+                    }
                     if (!this.newTeamForm.name.trim()) return;
                     const id = Date.now();
                     const newTeam = {
@@ -4453,6 +5087,10 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                 },
 
                 openTeamEditModal(team) {
+                    if (!this.canManageClubs()) {
+                        this.showToast('Access Restricted: Only Register and Regulations Manager or Super Admin can edit clubs.');
+                        return;
+                    }
                     this.editingTeam = JSON.parse(JSON.stringify(team));
                     if (!this.editingTeam.coach) this.editingTeam.coach = { name: '', role: 'Pia Head Coach', email: '' };
                     if (!this.editingTeam.assistantCoach) this.editingTeam.assistantCoach = { name: '' };
@@ -4461,6 +5099,10 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                 },
 
                 saveTeamDetails() {
+                    if (!this.canManageClubs()) {
+                        this.showToast('Access Restricted: Only Register and Regulations Manager or Super Admin can edit clubs.');
+                        return;
+                    }
                     const idx = this.teams.findIndex(t => t.id === this.editingTeam.id);
                     if (idx !== -1) {
                         this.teams[idx] = { ...this.editingTeam };
@@ -4472,6 +5114,10 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                 },
 
                 deleteTeam(teamId) {
+                    if (!this.isSuperAdmin) {
+                        this.showToast('Access Restricted: Only Super Admin can delete clubs.');
+                        return;
+                    }
                     if (this.teams.length <= 2) {
                         this.showToast('Cannot delete: Minimum 2 clubs required.');
                         return;
@@ -4484,6 +5130,10 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                 },
 
                 openSquadModal(team) {
+                    if (!this.canManageRegistrations()) {
+                        this.showToast('Access Restricted: Only Register and Regulations Manager or Super Admin can manage squads.');
+                        return;
+                    }
                     this.editingTeam = team;
                     this.editingSquadList = JSON.parse(JSON.stringify(team.squad || []));
                     this.openSquadManagerModal = true;
@@ -4494,6 +5144,10 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                 },
 
                 saveSquadChanges() {
+                    if (!this.canManageRegistrations()) {
+                        this.showToast('Access Restricted: Only Register and Regulations Manager or Super Admin can modify squads.');
+                        return;
+                    }
                     const idx = this.teams.findIndex(t => t.id === this.editingTeam.id);
                     if (idx !== -1) {
                         this.teams[idx].squad = JSON.parse(JSON.stringify(this.editingSquadList));
@@ -4572,6 +5226,10 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
 
                 // ==================== PLAYER STATS MANAGEMENT ====================
                 openEditPlayerStatsModal(stat) {
+                    if (!this.canEditPlayerStats()) {
+                        this.showToast('Access Restricted: Only Records and File Manager or Super Admin can edit player stats.');
+                        return;
+                    }
                     this.editingPlayerStat = JSON.parse(JSON.stringify(stat));
                     if (this.editingPlayerStat.starts === undefined) {
                         this.editingPlayerStat.starts = this.editingPlayerStat.matches || 0;
@@ -4585,6 +5243,10 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                 },
 
                 openNewPlayerStatModal() {
+                    if (!this.canEditPlayerStats()) {
+                        this.showToast('Access Restricted: Only Records and File Manager or Super Admin can register new player stats.');
+                        return;
+                    }
                     this.editingPlayerStat = {
                         id: Date.now(),
                         name: '',
@@ -4605,6 +5267,10 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                 },
 
                 editSquadPlayerStat(player, team) {
+                    if (!this.canEditPlayerStats()) {
+                        this.showToast('Access Restricted: Only Records and File Manager or Super Admin can edit player stats.');
+                        return;
+                    }
                     let stat = this.playerStatsList.find(s => s.name.toLowerCase() === player.name.toLowerCase());
                     if (!stat) {
                         stat = {
@@ -4627,6 +5293,10 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                 },
 
                 savePlayerStatDetails() {
+                    if (!this.canEditPlayerStats()) {
+                        this.showToast('Access Restricted: Only Records and File Manager or Super Admin can edit player stats.');
+                        return;
+                    }
                     if (!this.editingPlayerStat || !this.editingPlayerStat.name.trim()) {
                         this.showToast('Please enter a valid player name.');
                         return;
@@ -4647,6 +5317,10 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                 },
 
                 deletePlayerStat(id) {
+                    if (!this.canEditPlayerStats()) {
+                        this.showToast('Access Restricted: Only Records and File Manager or Super Admin can delete player stats.');
+                        return;
+                    }
                     this.playerStatsList = this.playerStatsList.filter(p => p.id !== id);
                     this.saveStoredData();
                     this.openPlayerStatsModal = false;
@@ -4773,6 +5447,10 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                 },
 
                 openFixtureEditModal(match) {
+                    if (!this.canEditFixturesAndScores()) {
+                        this.showToast('Access Restricted: Only Records & File Manager, Technological Managers, or Super Admin can edit fixture scores.');
+                        return;
+                    }
                     this.editingFixture = JSON.parse(JSON.stringify(match));
                     if (!this.editingFixture.goalEvents) {
                         this.editingFixture.goalEvents = [];
@@ -4790,6 +5468,10 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                 },
 
                 saveFixtureDetails() {
+                    if (!this.canEditFixturesAndScores()) {
+                        this.showToast('Access Restricted: Only Records & File Manager, Technological Managers, or Super Admin can save fixture scores.');
+                        return;
+                    }
                     const idx = this.matches.findIndex(m => m.id === this.editingFixture.id);
                     if (idx !== -1) {
                         this.matches[idx] = { ...this.editingFixture };
@@ -4894,39 +5576,80 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                     return (match && match[2].length === 11) ? match[2] : '';
                 },
 
-                startWebsiteSong() {
-                    // Only the YouTube song set by an administrator is allowed to play.
-                    this.stopSynthesizedBeat();
-                    const customAudio = document.getElementById('pes-custom-audio-element');
-                    if (customAudio) customAudio.pause();
-                    if (this.websiteSong.mode !== 'youtube' || !this.websiteSong.youtubeId) {
-                        this.websiteSong.isPlaying = false;
-                        return;
+                startWebsiteSong(isAutoPlay = false) {
+                    try {
+                        this.websiteSong.isPlaying = true;
+                        const customAudio = document.getElementById('pes-custom-audio-element');
+                        const ytFrame = document.getElementById('pes-youtube-audio-frame');
+
+                        if (this.websiteSong.mode === 'custom' && (this.websiteSong.customAudioUrl || this.websiteSong.customDataUrl)) {
+                            // Mode 1: Uploaded Audio Track (MP3 / WAV / OGG / AAC)
+                            this.stopSynthesizedBeat();
+                            if (ytFrame) ytFrame.src = '';
+                            if (customAudio) {
+                                const audioSrc = this.websiteSong.customAudioUrl || this.websiteSong.customDataUrl;
+                                if (customAudio.src !== audioSrc) {
+                                    customAudio.src = audioSrc;
+                                }
+                                customAudio.volume = this.websiteSong.volume ?? 0.6;
+                                const playPromise = customAudio.play();
+                                if (playPromise !== undefined) {
+                                    playPromise.then(() => {
+                                        this.websiteSong.isPlaying = true;
+                                        this.websiteSong.pendingAutoplay = false;
+                                        this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
+                                    }).catch(e => {
+                                        console.log('Audio autoplay waiting for user interaction:', e);
+                                        this.websiteSong.isPlaying = true;
+                                        this.websiteSong.pendingAutoplay = true;
+                                    });
+                                }
+                            }
+                        } else if (this.websiteSong.mode === 'youtube' && this.websiteSong.youtubeId) {
+                            // Mode 2: YouTube Audio Frame
+                            this.stopSynthesizedBeat();
+                            if (customAudio) customAudio.pause();
+                            if (ytFrame) {
+                                const targetUrl = `https://www.youtube-nocookie.com/embed/${this.websiteSong.youtubeId}?autoplay=1&enablejsapi=1&controls=0&loop=1&playlist=${this.websiteSong.youtubeId}&playsinline=1`;
+                                if (!ytFrame.src || ytFrame.src.indexOf(this.websiteSong.youtubeId) === -1) {
+                                    ytFrame.src = targetUrl;
+                                }
+                                this.websiteSong.isPlaying = true;
+                            }
+                        } else {
+                            // Mode 3: Native Web Audio PES Synthesizer Beat
+                            if (customAudio) customAudio.pause();
+                            if (ytFrame) ytFrame.src = '';
+                            this.playSynthesizedPESBeat();
+                        }
+                    } catch (e) {
+                        console.warn('Autoplay audio unblock error:', e);
                     }
-                    this.websiteSong.isPlaying = true;
                 },
 
                 pauseWebsiteSong() {
                     this.websiteSong.isPlaying = false;
+                    this.websiteSong.pendingAutoplay = false;
                     this.stopSynthesizedBeat();
                     const customAudio = document.getElementById('pes-custom-audio-element');
                     if (customAudio) customAudio.pause();
                     const frame = document.getElementById('pes-youtube-audio-frame');
                     if (frame) frame.src = '';
+                    this.saveStoredData();
                 },
 
                 toggleWebsiteSong() {
-                    if (this.websiteSong.isPlaying) {
+                    if (this.websiteSong.isPlaying && !this.websiteSong.pendingAutoplay) {
                         this.pauseWebsiteSong();
                         this.showToast('Soundtrack paused.');
                     } else {
-                        if (!this.websiteSong.youtubeId) { this.showToast('No song has been set by the admin yet.'); return; }
-                        this.startWebsiteSong();
+                        this.websiteSong.adminActivated = true;
+                        this.startWebsiteSong(false);
                         this.showToast('Playing: ' + this.websiteSong.title);
                     }
                 },
 
-                nextAnthemTrack() { return;
+                nextAnthemTrack() {
                     this.currentTrackIndex = (this.currentTrackIndex + 1) % this.audioTracks.length;
                     const presetList = ['PES_OFFICIAL', 'CHAMPIONS_LEAGUE', 'SAMBA_FESTIVAL', 'ACADEMY_SYMPHONY'];
                     this.playPresetSong(presetList[this.currentTrackIndex % presetList.length]);
@@ -4941,7 +5664,6 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                 },
 
                 changeSongFromYouTube(url, title) {
-                    if (!(this.isAdmin || this.isSuperAdmin)) { this.showToast('Only Administrators can change the song'); return; }
                     const ytId = this.extractYouTubeId(url);
                     if (!ytId) {
                         this.showToast('Please enter a valid YouTube URL (e.g. https://www.youtube.com/watch?v=...)');
@@ -4953,20 +5675,19 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                     this.websiteSong.mode = 'youtube';
                     this.websiteSong.youtubeUrl = url.trim();
                     this.websiteSong.youtubeId = ytId;
+                    this.websiteSong.adminActivated = true;
+                    this.websiteSong.isPlaying = true;
                     this.websiteSong.title = (title && title.trim()) ? title.trim() : 'Official YouTube Anthem (' + ytId + ')';
-                    this.startWebsiteSong();
+                    this.startWebsiteSong(false);
                     this.saveStoredData();
-                    fetch('/api/public/song', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ passcode: this.adminPasscode, youtubeId: ytId, youtubeUrl: this.websiteSong.youtubeUrl, title: this.websiteSong.title }) })
-                        .then(r => r.ok ? this.showToast('Song saved online — all visitors will hear it.') : r.json().then(j => this.showToast(j.error || 'Could not save song online')))
-                        .catch(() => this.showToast('Could not save song online'));
                     this.showToast('League Anthem updated & broadcasting: ' + this.websiteSong.title);
                 },
 
-                playPresetSong(presetKey) { this.showToast('Only the admin YouTube song can play.'); return;
+                playPresetSong(presetKey) {
                     this.stopSynthesizedBeat();
                     const customAudio = document.getElementById('pes-custom-audio-element');
                     if (customAudio) customAudio.pause();
+                    this.websiteSong.adminActivated = true;
                     if (presetKey === 'PES_OFFICIAL') {
                         this.websiteSong.mode = 'youtube';
                         this.websiteSong.youtubeUrl = 'https://www.youtube.com/watch?v=kYtGl1DX5qI';
@@ -4987,7 +5708,7 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                         this.websiteSong.youtubeId = null;
                         this.websiteSong.title = 'M-Pesa Foundation Academy Victory Symphony';
                     }
-                    this.startWebsiteSong();
+                    this.startWebsiteSong(false);
                     this.saveStoredData();
                     this.showToast('Broadcast Anthem: ' + this.websiteSong.title);
                 },
@@ -4999,40 +5720,76 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                     const ytFrame = document.getElementById('pes-youtube-audio-frame');
                     if (ytFrame) ytFrame.src = '';
 
-                    const objectUrl = URL.createObjectURL(file);
                     const cleanName = file.name.replace(/\.[^/.]+$/, "");
-                    this.websiteSong.mode = 'custom';
-                    this.websiteSong.customAudioUrl = objectUrl;
-                    this.websiteSong.title = cleanName + ' (Uploaded Audio)';
-                    this.websiteSong.isPlaying = true;
+                    const fallbackObjUrl = URL.createObjectURL(file);
 
-                    const customAudio = document.getElementById('pes-custom-audio-element');
-                    if (customAudio) {
+                    // Read file as Base64 Data URL for bulletproof, cross-session audio storage
+                    const reader = new FileReader();
+                    reader.onload = (readerEvt) => {
+                        const dataUrl = readerEvt.target.result;
+                        this.websiteSong.mode = 'custom';
+                        this.websiteSong.customAudioUrl = dataUrl;
+                        this.websiteSong.customDataUrl = dataUrl;
+                        this.websiteSong.title = cleanName + ' (Uploaded Audio)';
+                        this.websiteSong.adminActivated = true;
+                        this.websiteSong.isPlaying = true;
+                        this.websiteSong.pendingAutoplay = false;
+
+                        // Save to localStorage if size permits
                         try {
-                            customAudio.pause();
-                            customAudio.src = objectUrl;
-                            customAudio.currentTime = 0;
-                            customAudio.volume = this.websiteSong.volume ?? 0.6;
-                            const playPromise = customAudio.play();
-                            if (playPromise !== undefined) {
-                                playPromise.then(() => {
-                                    this.websiteSong.isPlaying = true;
-                                    this.showToast('🎵 Now playing uploaded anthem: ' + cleanName);
-                                }).catch(err => {
-                                    console.warn('Audio gesture required:', err);
-                                    this.showToast('🎵 Anthem uploaded! Click "Play Anthem" above to listen');
-                                });
-                            }
+                            localStorage.setItem('mpesa_pes_custom_audio_data_v7', dataUrl);
                         } catch (err) {
-                            console.error('Audio playback error:', err);
-                            this.showToast('🎵 Anthem uploaded! Tap "Play Anthem" to start sound.');
+                            console.warn('Audio dataUrl exceeded localStorage quota, indexedDB will persist it', err);
                         }
-                    }
 
-                    // Save file to IndexedDB for persistent audio across refreshes
-                    SongAudioDB.saveAudio(file, { title: this.websiteSong.title, name: file.name, type: file.type });
-                    this.saveStoredData();
-                    this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
+                        // Save to IndexedDB
+                        if (window.SongAudioDB) {
+                            SongAudioDB.saveAudio(file, { title: this.websiteSong.title, name: file.name, type: file.type, dataUrl: dataUrl });
+                        }
+
+                        // Play directly on native audio element
+                        const customAudio = document.getElementById('pes-custom-audio-element');
+                        if (customAudio) {
+                            try {
+                                customAudio.src = dataUrl;
+                                customAudio.currentTime = 0;
+                                customAudio.volume = this.websiteSong.volume ?? 0.6;
+                                const playPromise = customAudio.play();
+                                if (playPromise !== undefined) {
+                                    playPromise.then(() => {
+                                        this.websiteSong.isPlaying = true;
+                                        this.showToast('🎵 Now playing uploaded anthem: ' + cleanName);
+                                    }).catch(err => {
+                                        console.warn('Playback error:', err);
+                                        this.showToast('🎵 Anthem uploaded! Tap "Play Anthem" above to listen');
+                                    });
+                                }
+                            } catch (err) {
+                                console.error('Audio load error:', err);
+                            }
+                        }
+
+                        this.saveStoredData();
+                        this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
+                    };
+
+                    reader.onerror = () => {
+                        // Fallback to object URL if FileReader failed
+                        this.websiteSong.mode = 'custom';
+                        this.websiteSong.customAudioUrl = fallbackObjUrl;
+                        this.websiteSong.title = cleanName + ' (Uploaded Audio)';
+                        this.websiteSong.adminActivated = true;
+                        this.websiteSong.isPlaying = true;
+                        const customAudio = document.getElementById('pes-custom-audio-element');
+                        if (customAudio) {
+                            customAudio.src = fallbackObjUrl;
+                            customAudio.volume = this.websiteSong.volume ?? 0.6;
+                            customAudio.play().catch(() => {});
+                        }
+                        this.saveStoredData();
+                    };
+
+                    reader.readAsDataURL(file);
                 },
 
                 playSynthesizedPESBeat() {
@@ -5110,8 +5867,8 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                 },
 
                 submitMediaItem(type) {
-                    if (!this.isAdmin && !this.isSuperAdmin) {
-                        this.showToast('Security Alert: Only League Administrators can upload matchday media.');
+                    if (!this.canUploadMedia()) {
+                        this.showToast('Security Alert: Only Technological Managers or Super Admin can upload matchday media.');
                         return;
                     }
                     let url = '';
@@ -5164,8 +5921,8 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                 },
 
                 deleteMediaItem(id) {
-                    if (!this.isAdmin && !this.isSuperAdmin) {
-                        this.showToast('Security Alert: Only League Administrators can delete media.');
+                    if (!this.canUploadMedia()) {
+                        this.showToast('Security Alert: Only Technological Managers or Super Admin can delete media.');
                         return;
                     }
                     this.mediaGallery = this.mediaGallery.filter(m => m.id !== id);
@@ -5210,13 +5967,20 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                 },
 
                 saveMediaPost() {
+                    if (!this.canPublishNews()) {
+                        this.showToast('Access Restricted: Only authorized officials (President, Deputy, Tech Managers, Super Admin) can publish news.');
+                        return;
+                    }
                     if (!this.newPost.title.trim()) return;
+                    const authorName = this.isSuperAdmin 
+                        ? 'Super Admin' 
+                        : (this.currentRoleData ? `${this.currentRoleData.name} (${this.currentRoleData.role})` : 'League Official');
                     this.newsArticles.unshift({
                         id: Date.now(),
                         title: this.newPost.title.trim(),
                         category: 'League Announcement',
                         date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-                        author: 'Super Admin',
+                        author: authorName,
                         content: this.newPost.content.trim(),
                         videoUrl: this.newPost.videoUrl
                     });
@@ -5226,6 +5990,10 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                 },
 
                 deleteNewsItem(id) {
+                    if (!this.isSuperAdmin && this.currentRole !== 'TECH_MANAGER') {
+                        this.showToast('Access Restricted: Only Technological Manager or Super Admin can delete news.');
+                        return;
+                    }
                     this.newsArticles = this.newsArticles.filter(n => n.id !== id);
                     this.saveStoredData();
                     this.showToast('Article deleted.');
@@ -5240,7 +6008,7 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                     const storedHighlights = localStorage.getItem('mpesa_pes_highlights_v6');
                     const storedInjuries = localStorage.getItem('mpesa_pes_injuries_v6');
                     const storedRules = localStorage.getItem('mpesa_pes_rules_v6');
-                    const storedOfficials = localStorage.getItem('mpesa_pes_officials_v6');
+                    const storedOfficials = localStorage.getItem('mpesa_pes_officials_v7');
                     const storedPending = localStorage.getItem('mpesa_pes_pending_v6');
                     const storedSong = localStorage.getItem('mpesa_pes_song_v7');
                     const storedMedia = localStorage.getItem('mpesa_pes_media_gallery_v7');
@@ -5249,9 +6017,6 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                         try {
                             const parsed = JSON.parse(storedSong);
                             this.websiteSong = Object.assign(this.websiteSong, parsed);
-                            if (this.websiteSong.mode !== 'youtube' || ['kYtGl1DX5qI','0Qqd6T_A9LY','gCYcHz2k5x0'].includes(this.websiteSong.youtubeId)) {
-                                this.websiteSong.mode = 'youtube'; this.websiteSong.youtubeId = null; this.websiteSong.youtubeUrl = ''; this.websiteSong.title = 'No anthem set yet'; this.websiteSong.customAudioUrl = null;
-                            }
                             this.customSongForm = {
                                 url: parsed.youtubeUrl || '',
                                 title: parsed.title || ''
@@ -5272,7 +6037,12 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                         try { this.pendingApprovals = JSON.parse(storedPending); } catch (e) {}
                     }
                     if (storedOfficials) {
-                        try { this.officialsList = JSON.parse(storedOfficials); } catch (e) {}
+                        try {
+                            const parsed = JSON.parse(storedOfficials);
+                            if (Array.isArray(parsed) && parsed.length === 7 && parsed.some(o => o.key === 'PRESIDENT')) {
+                                this.officialsList = parsed;
+                            }
+                        } catch (e) {}
                     }
 
                     const defaultSquads = {
@@ -5481,7 +6251,7 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                         localStorage.setItem('mpesa_pes_highlights_v6', JSON.stringify(this.highlightVideos));
                         localStorage.setItem('mpesa_pes_injuries_v6', JSON.stringify(this.injuryReports));
                         localStorage.setItem('mpesa_pes_rules_v6', JSON.stringify(this.leagueRules));
-                        localStorage.setItem('mpesa_pes_officials_v6', JSON.stringify(this.officialsList));
+                        localStorage.setItem('mpesa_pes_officials_v7', JSON.stringify(this.officialsList));
                         localStorage.setItem('mpesa_pes_pending_v6', JSON.stringify(this.pendingApprovals));
                         try {
                             localStorage.setItem('mpesa_pes_song_v7', JSON.stringify(this.websiteSong));

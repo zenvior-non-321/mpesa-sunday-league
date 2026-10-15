@@ -5,9 +5,17 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "M-Pesa Sunday League | Fixtures, Results & Officials" },
-      { name: "description", content: "M-Pesa Sunday League eFootball standings, fixtures, match highlights and league officials." },
+      {
+        name: "description",
+        content:
+          "M-Pesa Sunday League eFootball standings, fixtures, match highlights and league officials.",
+      },
       { property: "og:title", content: "M-Pesa Sunday League | Fixtures, Results & Officials" },
-      { property: "og:description", content: "Follow league results, fixtures, highlights and meet the M-Pesa Sunday League officials." },
+      {
+        property: "og:description",
+        content:
+          "Follow league results, fixtures, highlights and meet the M-Pesa Sunday League officials.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
