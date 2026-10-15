@@ -13,6 +13,7 @@
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary_large_image">
     <script src="/league-officials.js"></script>
+    <script src="/anthem-player.js"></script>
     <!-- Script Error Guard to intercept unhandled cross-origin errors -->
     <script>
         window.addEventListener('error', function(e) {
@@ -73,6 +74,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Teko:wght@500;600;700&display=swap" rel="stylesheet">
     <style>
+        html, body { overflow-x: hidden; max-width: 100%; }
+        [x-cloak] { display: none !important; }
         body {
             font-family: 'Inter', sans-serif;
             background-color: #070512;
@@ -155,11 +158,18 @@
         <!-- Native Audio Element for Uploaded MP3 / WAV Files -->
         <audio id="pes-custom-audio-element" loop preload="auto" playsinline crossOrigin="anonymous"></audio>
 
-        <!-- Privacy-Enhanced YouTube Audio Frame -->
-        <iframe id="pes-youtube-audio-frame" 
-                allow="autoplay; encrypted-media"
-                referrerpolicy="no-referrer"
-                class="w-10 h-10 pointer-events-none opacity-0"></iframe>
+    </div>
+
+    <!-- Visible League Anthem player (YouTube only plays visible players, incl. on phones) -->
+    <div x-show="websiteSong.mode === 'youtube' && websiteSong.youtubeId" x-cloak
+         class="fixed bottom-3 left-3 z-40 w-40 sm:w-56 rounded-xl overflow-hidden border border-efootball-cyan/40 bg-black shadow-2xl">
+        <div class="flex items-center justify-between gap-1 px-2 py-1 bg-efootball-purple/90">
+            <span class="text-[10px] font-bold text-efootball-cyan truncate" x-text="websiteSong.title || 'League Anthem'"></span>
+        </div>
+        <div class="relative w-full" style="aspect-ratio:16/9">
+            <div id="pes-yt-player" class="absolute inset-0 w-full h-full"></div>
+        </div>
+        <div x-show="websiteSong.needsTap" class="px-2 py-1 text-[10px] font-bold text-black bg-efootball-yellow text-center">Tap the video above to start the anthem</div>
     </div>
 
     <!-- Toast Notification -->
@@ -554,8 +564,8 @@
     <header class="sticky top-0 z-40 bg-[#070512]/95 backdrop-blur-xl border-b border-efootball-border shadow-2xl">
         <!-- Top PES Soundtrack Live Player Bar -->
         <div class="bg-gradient-to-r from-efootball-purple via-[#120d29] to-efootball-purple border-b border-efootball-border/60 py-2 px-4 sm:px-8">
-            <div class="max-w-7xl mx-auto flex items-center justify-between gap-4 text-xs">
-                <div class="flex items-center gap-3">
+            <div class="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-2 sm:gap-4 text-xs">
+                <div class="flex items-center flex-wrap gap-2 sm:gap-3 min-w-0">
                     <div class="flex items-center gap-1.5 bg-black/40 px-2.5 py-0.5 rounded-full border border-efootball-cyan/30">
                         <span class="w-2 h-2 rounded-full bg-efootball-cyan animate-ping"></span>
                         <span class="font-extrabold text-efootball-cyan tracking-wider uppercase text-[10px]">PES Soundtrack Live</span>
@@ -570,7 +580,7 @@
                 </div>
 
                 <!-- Soundtrack Controls -->
-                <div class="flex items-center gap-2.5 sm:gap-3">
+                <div class="flex items-center flex-wrap gap-2 sm:gap-3">
                     <div class="flex items-end gap-1 h-5 w-8 px-1" x-show="websiteSong.isPlaying">
                         <span class="w-1 bg-efootball-cyan rounded-full eq-bar-1"></span>
                         <span class="w-1 bg-efootball-magenta rounded-full eq-bar-2"></span>
@@ -3646,6 +3656,7 @@
                 isSuperAdmin: false,
                 openAdminModal: false,
                 adminPasswordInput: '',
+                authCode: '',
                 adminError: '',
 
                 // Super Admin Navigation & Subviews
@@ -3974,6 +3985,29 @@
 
                 initApp() {
                     this.loadStoredData();
+                    this.websiteSong.needsTap = false;
+                    if (window.PesAnthem) {
+                        PesAnthem.setVolume(this.websiteSong.volume ?? 0.6);
+                        PesAnthem.onState((st) => {
+                            if (st === 1) { this.websiteSong.isPlaying = true; this.websiteSong.needsTap = false; this.websiteSong.pendingAutoplay = false; }
+                            else if (st === 2 && this.websiteSong.mode === 'youtube') { this.websiteSong.isPlaying = false; }
+                            this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
+                        });
+                        if (this.websiteSong.mode === 'youtube' && this.websiteSong.youtubeId) PesAnthem.cue(this.websiteSong.youtubeId);
+                    }
+                    // Load the league song saved centrally by an admin (same for every visitor/device)
+                    fetch('/api/public/song', { cache: 'no-store' })
+                        .then(r => r.ok ? r.json() : {})
+                        .then(d => {
+                            if (d && d.youtube_id) {
+                                this.websiteSong.mode = 'youtube';
+                                this.websiteSong.youtubeId = d.youtube_id;
+                                this.websiteSong.youtubeUrl = d.youtube_url || ('https://www.youtube.com/watch?v=' + d.youtube_id);
+                                this.websiteSong.title = d.title || 'League Anthem';
+                                if (window.PesAnthem) PesAnthem.cue(d.youtube_id);
+                            }
+                        })
+                        .catch(() => {});
                     this.recalculateStandings();
                     this.startCountdown();
                     this.$nextTick(() => {
@@ -4095,6 +4129,7 @@
                     const code = this.roleCodeInput.trim().toLowerCase();
                     // Master Super Admin check: accepts msl-27
                     if (code === 'msl-27' || code === 'admin123' || code === 'superadmin' || code === 'msl-super-admin') {
+                        this.authCode = code;
                         this.isSuperAdmin = true;
                         this.isAdmin = true;
                         this.currentRole = 'SUPER_ADMIN';
@@ -4133,6 +4168,7 @@
                 verifyAdminPassword() {
                     const input = this.adminPasswordInput.trim().toLowerCase();
                     if (input === 'msl-27' || input === 'admin123' || input === 'superadmin' || input === 'msl-super-admin') {
+                        this.authCode = input;
                         this.isSuperAdmin = true;
                         this.isAdmin = true;
                         this.currentRole = 'SUPER_ADMIN';
@@ -5585,7 +5621,7 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                         if (this.websiteSong.mode === 'custom' && (this.websiteSong.customAudioUrl || this.websiteSong.customDataUrl)) {
                             // Mode 1: Uploaded Audio Track (MP3 / WAV / OGG / AAC)
                             this.stopSynthesizedBeat();
-                            if (ytFrame) ytFrame.src = '';
+                            if (window.PesAnthem) PesAnthem.pause();
                             if (customAudio) {
                                 const audioSrc = this.websiteSong.customAudioUrl || this.websiteSong.customDataUrl;
                                 if (customAudio.src !== audioSrc) {
@@ -5609,17 +5645,22 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                             // Mode 2: YouTube Audio Frame
                             this.stopSynthesizedBeat();
                             if (customAudio) customAudio.pause();
-                            if (ytFrame) {
-                                const targetUrl = `https://www.youtube-nocookie.com/embed/${this.websiteSong.youtubeId}?autoplay=1&enablejsapi=1&controls=0&loop=1&playlist=${this.websiteSong.youtubeId}&playsinline=1`;
-                                if (!ytFrame.src || ytFrame.src.indexOf(this.websiteSong.youtubeId) === -1) {
-                                    ytFrame.src = targetUrl;
-                                }
+                            if (window.PesAnthem) {
+                                PesAnthem.play(this.websiteSong.youtubeId);
                                 this.websiteSong.isPlaying = true;
+                                // Some phones block sound until the video itself is tapped
+                                setTimeout(() => {
+                                    if (this.websiteSong.mode === 'youtube' && !PesAnthem.isPlaying()) {
+                                        this.websiteSong.isPlaying = false;
+                                        this.websiteSong.needsTap = true;
+                                        if (!isAutoPlay) this.showToast('Tap the small video in the bottom-left corner to start the anthem');
+                                    }
+                                }, 3500);
                             }
                         } else {
                             // Mode 3: Native Web Audio PES Synthesizer Beat
                             if (customAudio) customAudio.pause();
-                            if (ytFrame) ytFrame.src = '';
+                            if (window.PesAnthem) PesAnthem.pause();
                             this.playSynthesizedPESBeat();
                         }
                     } catch (e) {
@@ -5633,8 +5674,7 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                     this.stopSynthesizedBeat();
                     const customAudio = document.getElementById('pes-custom-audio-element');
                     if (customAudio) customAudio.pause();
-                    const frame = document.getElementById('pes-youtube-audio-frame');
-                    if (frame) frame.src = '';
+                    if (window.PesAnthem) PesAnthem.pause();
                     this.saveStoredData();
                 },
 
@@ -5660,6 +5700,7 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                     this.musicVolume = vol;
                     const customAudio = document.getElementById('pes-custom-audio-element');
                     if (customAudio) customAudio.volume = vol;
+                    if (window.PesAnthem) PesAnthem.setVolume(vol);
                     this.saveStoredData();
                 },
 
@@ -5681,6 +5722,14 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                     this.startWebsiteSong(false);
                     this.saveStoredData();
                     this.showToast('League Anthem updated & broadcasting: ' + this.websiteSong.title);
+                    // Save centrally so every visitor on every device hears this song
+                    fetch('/api/public/song', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ passcode: this.authCode || '', youtubeId: ytId, youtubeUrl: url.trim(), title: this.websiteSong.title })
+                    }).then(r => {
+                        if (!r.ok) this.showToast('Song plays here, but could not be saved for all visitors (Super Admin code required).');
+                    }).catch(() => {});
                 },
 
                 playPresetSong(presetKey) {
@@ -5718,7 +5767,7 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                     if (!file) return;
                     this.stopSynthesizedBeat();
                     const ytFrame = document.getElementById('pes-youtube-audio-frame');
-                    if (ytFrame) ytFrame.src = '';
+                    if (window.PesAnthem) PesAnthem.pause();
 
                     const cleanName = file.name.replace(/\.[^/.]+$/, "");
                     const fallbackObjUrl = URL.createObjectURL(file);
