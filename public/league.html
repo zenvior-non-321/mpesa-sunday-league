@@ -13,6 +13,7 @@
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary_large_image">
     <script src="/league-officials.js"></script>
+    <script src="/anthem-player.js"></script>
     <!-- Script Error Guard to intercept unhandled cross-origin errors -->
     <script>
         window.addEventListener('error', function(e) {
@@ -155,11 +156,18 @@
         <!-- Native Audio Element for Uploaded MP3 / WAV Files -->
         <audio id="pes-custom-audio-element" loop preload="auto" playsinline crossOrigin="anonymous"></audio>
 
-        <!-- Privacy-Enhanced YouTube Audio Frame -->
-        <iframe id="pes-youtube-audio-frame" 
-                allow="autoplay; encrypted-media"
-                referrerpolicy="no-referrer"
-                class="w-10 h-10 pointer-events-none opacity-0"></iframe>
+    </div>
+
+    <!-- Visible League Anthem player (YouTube only plays visible players, incl. on phones) -->
+    <div x-show="websiteSong.mode === 'youtube' && websiteSong.youtubeId" x-cloak
+         class="fixed bottom-3 left-3 z-40 w-40 sm:w-56 rounded-xl overflow-hidden border border-efootball-cyan/40 bg-black shadow-2xl">
+        <div class="flex items-center justify-between gap-1 px-2 py-1 bg-efootball-purple/90">
+            <span class="text-[10px] font-bold text-efootball-cyan truncate" x-text="websiteSong.title || 'League Anthem'"></span>
+        </div>
+        <div class="relative w-full" style="aspect-ratio:16/9">
+            <div id="pes-yt-player" class="absolute inset-0 w-full h-full"></div>
+        </div>
+        <div x-show="websiteSong.needsTap" class="px-2 py-1 text-[10px] font-bold text-black bg-efootball-yellow text-center">Tap the video above to start the anthem</div>
     </div>
 
     <!-- Toast Notification -->
@@ -3646,6 +3654,7 @@
                 isSuperAdmin: false,
                 openAdminModal: false,
                 adminPasswordInput: '',
+                authCode: '',
                 adminError: '',
 
                 // Super Admin Navigation & Subviews
@@ -3974,6 +3983,29 @@
 
                 initApp() {
                     this.loadStoredData();
+                    this.websiteSong.needsTap = false;
+                    if (window.PesAnthem) {
+                        PesAnthem.setVolume(this.websiteSong.volume ?? 0.6);
+                        PesAnthem.onState((st) => {
+                            if (st === 1) { this.websiteSong.isPlaying = true; this.websiteSong.needsTap = false; this.websiteSong.pendingAutoplay = false; }
+                            else if (st === 2 && this.websiteSong.mode === 'youtube') { this.websiteSong.isPlaying = false; }
+                            this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
+                        });
+                        if (this.websiteSong.mode === 'youtube' && this.websiteSong.youtubeId) PesAnthem.cue(this.websiteSong.youtubeId);
+                    }
+                    // Load the league song saved centrally by an admin (same for every visitor/device)
+                    fetch('/api/public/song', { cache: 'no-store' })
+                        .then(r => r.ok ? r.json() : {})
+                        .then(d => {
+                            if (d && d.youtube_id) {
+                                this.websiteSong.mode = 'youtube';
+                                this.websiteSong.youtubeId = d.youtube_id;
+                                this.websiteSong.youtubeUrl = d.youtube_url || ('https://www.youtube.com/watch?v=' + d.youtube_id);
+                                this.websiteSong.title = d.title || 'League Anthem';
+                                if (window.PesAnthem) PesAnthem.cue(d.youtube_id);
+                            }
+                        })
+                        .catch(() => {});
                     this.recalculateStandings();
                     this.startCountdown();
                     this.$nextTick(() => {
@@ -4095,6 +4127,7 @@
                     const code = this.roleCodeInput.trim().toLowerCase();
                     // Master Super Admin check: accepts msl-27
                     if (code === 'msl-27' || code === 'admin123' || code === 'superadmin' || code === 'msl-super-admin') {
+                        this.authCode = code;
                         this.isSuperAdmin = true;
                         this.isAdmin = true;
                         this.currentRole = 'SUPER_ADMIN';
@@ -4133,6 +4166,7 @@
                 verifyAdminPassword() {
                     const input = this.adminPasswordInput.trim().toLowerCase();
                     if (input === 'msl-27' || input === 'admin123' || input === 'superadmin' || input === 'msl-super-admin') {
+                        this.authCode = input;
                         this.isSuperAdmin = true;
                         this.isAdmin = true;
                         this.currentRole = 'SUPER_ADMIN';
@@ -5609,12 +5643,17 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                             // Mode 2: YouTube Audio Frame
                             this.stopSynthesizedBeat();
                             if (customAudio) customAudio.pause();
-                            if (ytFrame) {
-                                const targetUrl = `https://www.youtube-nocookie.com/embed/${this.websiteSong.youtubeId}?autoplay=1&enablejsapi=1&controls=0&loop=1&playlist=${this.websiteSong.youtubeId}&playsinline=1`;
-                                if (!ytFrame.src || ytFrame.src.indexOf(this.websiteSong.youtubeId) === -1) {
-                                    ytFrame.src = targetUrl;
-                                }
+                            if (window.PesAnthem) {
+                                PesAnthem.play(this.websiteSong.youtubeId);
                                 this.websiteSong.isPlaying = true;
+                                // Some phones block sound until the video itself is tapped
+                                setTimeout(() => {
+                                    if (this.websiteSong.mode === 'youtube' && !PesAnthem.isPlaying()) {
+                                        this.websiteSong.isPlaying = false;
+                                        this.websiteSong.needsTap = true;
+                                        if (!isAutoPlay) this.showToast('Tap the small video in the bottom-left corner to start the anthem');
+                                    }
+                                }, 3500);
                             }
                         } else {
                             // Mode 3: Native Web Audio PES Synthesizer Beat
@@ -5633,8 +5672,7 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                     this.stopSynthesizedBeat();
                     const customAudio = document.getElementById('pes-custom-audio-element');
                     if (customAudio) customAudio.pause();
-                    const frame = document.getElementById('pes-youtube-audio-frame');
-                    if (frame) frame.src = '';
+                    if (window.PesAnthem) PesAnthem.pause();
                     this.saveStoredData();
                 },
 
@@ -5660,6 +5698,7 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                     this.musicVolume = vol;
                     const customAudio = document.getElementById('pes-custom-audio-element');
                     if (customAudio) customAudio.volume = vol;
+                    if (window.PesAnthem) PesAnthem.setVolume(vol);
                     this.saveStoredData();
                 },
 
@@ -5681,6 +5720,14 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                     this.startWebsiteSong(false);
                     this.saveStoredData();
                     this.showToast('League Anthem updated & broadcasting: ' + this.websiteSong.title);
+                    // Save centrally so every visitor on every device hears this song
+                    fetch('/api/public/song', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ passcode: this.authCode || '', youtubeId: ytId, youtubeUrl: url.trim(), title: this.websiteSong.title })
+                    }).then(r => {
+                        if (!r.ok) this.showToast('Song plays here, but could not be saved for all visitors (Super Admin code required).');
+                    }).catch(() => {});
                 },
 
                 playPresetSong(presetKey) {
