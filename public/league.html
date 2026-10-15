@@ -5619,7 +5619,7 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                         if (this.websiteSong.mode === 'custom' && (this.websiteSong.customAudioUrl || this.websiteSong.customDataUrl)) {
                             // Mode 1: Uploaded Audio Track (MP3 / WAV / OGG / AAC)
                             this.stopSynthesizedBeat();
-                            if (ytFrame) ytFrame.src = '';
+                            if (window.PesAnthem) PesAnthem.pause();
                             if (customAudio) {
                                 const audioSrc = this.websiteSong.customAudioUrl || this.websiteSong.customDataUrl;
                                 if (customAudio.src !== audioSrc) {
@@ -5658,7 +5658,7 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                         } else {
                             // Mode 3: Native Web Audio PES Synthesizer Beat
                             if (customAudio) customAudio.pause();
-                            if (ytFrame) ytFrame.src = '';
+                            if (window.PesAnthem) PesAnthem.pause();
                             this.playSynthesizedPESBeat();
                         }
                     } catch (e) {
@@ -5765,7 +5765,7 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                     if (!file) return;
                     this.stopSynthesizedBeat();
                     const ytFrame = document.getElementById('pes-youtube-audio-frame');
-                    if (ytFrame) ytFrame.src = '';
+                    if (window.PesAnthem) PesAnthem.pause();
 
                     const cleanName = file.name.replace(/\.[^/.]+$/, "");
                     const fallbackObjUrl = URL.createObjectURL(file);
