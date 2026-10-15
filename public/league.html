@@ -74,6 +74,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Teko:wght@500;600;700&display=swap" rel="stylesheet">
     <style>
+        html, body { overflow-x: hidden; max-width: 100%; }
+        [x-cloak] { display: none !important; }
         body {
             font-family: 'Inter', sans-serif;
             background-color: #070512;
@@ -562,8 +564,8 @@
     <header class="sticky top-0 z-40 bg-[#070512]/95 backdrop-blur-xl border-b border-efootball-border shadow-2xl">
         <!-- Top PES Soundtrack Live Player Bar -->
         <div class="bg-gradient-to-r from-efootball-purple via-[#120d29] to-efootball-purple border-b border-efootball-border/60 py-2 px-4 sm:px-8">
-            <div class="max-w-7xl mx-auto flex items-center justify-between gap-4 text-xs">
-                <div class="flex items-center gap-3">
+            <div class="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-2 sm:gap-4 text-xs">
+                <div class="flex items-center flex-wrap gap-2 sm:gap-3 min-w-0">
                     <div class="flex items-center gap-1.5 bg-black/40 px-2.5 py-0.5 rounded-full border border-efootball-cyan/30">
                         <span class="w-2 h-2 rounded-full bg-efootball-cyan animate-ping"></span>
                         <span class="font-extrabold text-efootball-cyan tracking-wider uppercase text-[10px]">PES Soundtrack Live</span>
@@ -578,7 +580,7 @@
                 </div>
 
                 <!-- Soundtrack Controls -->
-                <div class="flex items-center gap-2.5 sm:gap-3">
+                <div class="flex items-center flex-wrap gap-2 sm:gap-3">
                     <div class="flex items-end gap-1 h-5 w-8 px-1" x-show="websiteSong.isPlaying">
                         <span class="w-1 bg-efootball-cyan rounded-full eq-bar-1"></span>
                         <span class="w-1 bg-efootball-magenta rounded-full eq-bar-2"></span>
