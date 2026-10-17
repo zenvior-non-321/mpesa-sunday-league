@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useRoleAccess, ROLE_HIERARCHY_DATA, type LeagueRole } from '../hooks/useRoleAccess';
+import React, { useState } from "react";
+import { useRoleAccess, ROLE_HIERARCHY_DATA, type LeagueRole } from "../hooks/useRoleAccess";
 
 export function UserProfileView() {
   const {
@@ -12,20 +12,29 @@ export function UserProfileView() {
     isSuperAdmin,
   } = useRoleAccess();
 
-  const [activeTab, setActiveTab] = useState<'authorized' | 'hierarchy' | 'restricted' | 'switch'>('authorized');
-  const [filterCategory, setFilterCategory] = useState<string>('ALL');
+  const [activeTab, setActiveTab] = useState<"authorized" | "hierarchy" | "restricted" | "switch">(
+    "authorized",
+  );
+  const [filterCategory, setFilterCategory] = useState<string>("ALL");
 
-  const categories = ['ALL', 'Governance', 'Registration', 'Match Officiating', 'Records & Stats', 'Digital & Media', 'Master Administrative'];
+  const categories = [
+    "ALL",
+    "Governance",
+    "Registration",
+    "Match Officiating",
+    "Records & Stats",
+    "Digital & Media",
+    "Master Administrative",
+  ];
 
   const filteredAuthorized = authorizedActions.filter((action) => {
-    if (filterCategory === 'ALL') return true;
+    if (filterCategory === "ALL") return true;
     return action.category === filterCategory;
   });
 
   return (
     <div className="min-h-screen bg-[#070512] text-white p-4 sm:p-6 lg:p-8 font-sans">
       <div className="max-w-6xl mx-auto space-y-6">
-        
         {/* Navigation / Header Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#2e2554]">
           <div className="flex items-center gap-3.5">
@@ -35,7 +44,7 @@ export function UserProfileView() {
                 alt="M-Pesa Foundation Academy Crest"
                 className="w-full h-full object-contain"
                 onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).src = '/favicon.ico';
+                  (e.currentTarget as HTMLImageElement).src = "/favicon.ico";
                 }}
               />
               <span className="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full border-2 border-black animate-pulse" />
@@ -61,7 +70,12 @@ export function UserProfileView() {
               className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#00f0ff] via-emerald-400 to-[#00ff85] text-black font-extrabold text-xs shadow-lg hover:brightness-110 transition"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                />
               </svg>
               <span>Back to League Portal</span>
             </a>
@@ -85,8 +99,10 @@ export function UserProfileView() {
 
               <div className="space-y-1.5">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className={`bg-gradient-to-r ${roleDetails.badgeColor} text-black font-black text-[11px] px-3 py-0.5 rounded-full uppercase tracking-wider shadow-md`}>
-                    {roleTier === 0 ? '👑 Master Tier' : `Tier ${roleTier} Executive`}
+                  <span
+                    className={`bg-gradient-to-r ${roleDetails.badgeColor} text-black font-black text-[11px] px-3 py-0.5 rounded-full uppercase tracking-wider shadow-md`}
+                  >
+                    {roleTier === 0 ? "👑 Master Tier" : `Tier ${roleTier} Executive`}
                   </span>
                   <span className="text-xs text-gray-400 font-mono">
                     Clearance: <span className="text-[#00f0ff] font-bold">{currentRole}</span>
@@ -98,11 +114,13 @@ export function UserProfileView() {
                 </h2>
 
                 <p className="text-sm text-[#00f0ff] font-bold">
-                  {roleDetails.title} • <span className="text-gray-300 font-normal">{roleDetails.department}</span>
+                  {roleDetails.title} •{" "}
+                  <span className="text-gray-300 font-normal">{roleDetails.department}</span>
                 </p>
 
                 <p className="text-xs text-gray-400 max-w-xl leading-relaxed pt-1">
-                  Active member of the M-Pesa Sunday League official leadership council. Authorized for role-specific operations in accordance with league regulations.
+                  Active member of the M-Pesa Sunday League official leadership council. Authorized
+                  for role-specific operations in accordance with league regulations.
                 </p>
               </div>
             </div>
@@ -120,7 +138,7 @@ export function UserProfileView() {
               <div className="h-10 w-px bg-[#2e2554]" />
               <div className="text-center">
                 <span className="text-2xl sm:text-3xl font-black text-amber-400 block">
-                  {roleTier === 0 ? 'ALL' : `Tier ${roleTier}`}
+                  {roleTier === 0 ? "ALL" : `Tier ${roleTier}`}
                 </span>
                 <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">
                   Council Rank
@@ -133,76 +151,98 @@ export function UserProfileView() {
         {/* PROFILE NAVIGATION TABS */}
         <div className="flex items-center gap-2 border-b border-[#2e2554] pb-2 overflow-x-auto">
           <button
-            onClick={() => setActiveTab('authorized')}
+            onClick={() => setActiveTab("authorized")}
             className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap ${
-              activeTab === 'authorized'
-                ? 'bg-[#00f0ff] text-black font-extrabold shadow-md'
-                : 'text-gray-300 hover:bg-[#141029] hover:text-white'
+              activeTab === "authorized"
+                ? "bg-[#00f0ff] text-black font-extrabold shadow-md"
+                : "text-gray-300 hover:bg-[#141029] hover:text-white"
             }`}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
             </svg>
             <span>Authorized Actions ({authorizedActions.length})</span>
           </button>
 
           <button
-            onClick={() => setActiveTab('hierarchy')}
+            onClick={() => setActiveTab("hierarchy")}
             className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap ${
-              activeTab === 'hierarchy'
-                ? 'bg-[#00f0ff] text-black font-extrabold shadow-md'
-                : 'text-gray-300 hover:bg-[#141029] hover:text-white'
+              activeTab === "hierarchy"
+                ? "bg-[#00f0ff] text-black font-extrabold shadow-md"
+                : "text-gray-300 hover:bg-[#141029] hover:text-white"
             }`}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+              />
             </svg>
             <span>7-Tier Hierarchy Structure</span>
           </button>
 
           <button
-            onClick={() => setActiveTab('restricted')}
+            onClick={() => setActiveTab("restricted")}
             className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap ${
-              activeTab === 'restricted'
-                ? 'bg-[#00f0ff] text-black font-extrabold shadow-md'
-                : 'text-gray-300 hover:bg-[#141029] hover:text-white'
+              activeTab === "restricted"
+                ? "bg-[#00f0ff] text-black font-extrabold shadow-md"
+                : "text-gray-300 hover:bg-[#141029] hover:text-white"
             }`}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+              />
             </svg>
             <span>Restricted Actions ({restrictedActions.length})</span>
           </button>
 
           <button
-            onClick={() => setActiveTab('switch')}
+            onClick={() => setActiveTab("switch")}
             className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap ${
-              activeTab === 'switch'
-                ? 'bg-[#00f0ff] text-black font-extrabold shadow-md'
-                : 'text-gray-300 hover:bg-[#141029] hover:text-white'
+              activeTab === "switch"
+                ? "bg-[#00f0ff] text-black font-extrabold shadow-md"
+                : "text-gray-300 hover:bg-[#141029] hover:text-white"
             }`}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+              />
             </svg>
             <span>Role Switcher (Audit & Testing)</span>
           </button>
         </div>
 
         {/* TAB 1: AUTHORIZED ACTIONS */}
-        {activeTab === 'authorized' && (
+        {activeTab === "authorized" && (
           <div className="space-y-4">
             {/* Category Filter Pills */}
             <div className="flex items-center gap-2 overflow-x-auto pb-2">
-              <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mr-1">Filter:</span>
+              <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mr-1">
+                Filter:
+              </span>
               {categories.map((cat) => (
                 <button
                   key={cat}
                   onClick={() => setFilterCategory(cat)}
                   className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
                     filterCategory === cat
-                      ? 'bg-emerald-400 text-black font-black'
-                      : 'bg-[#141029] text-gray-300 hover:bg-[#1f193d]'
+                      ? "bg-emerald-400 text-black font-black"
+                      : "bg-[#141029] text-gray-300 hover:bg-[#1f193d]"
                   }`}
                 >
                   {cat}
@@ -222,8 +262,18 @@ export function UserProfileView() {
                       {item.category}
                     </span>
                     <span className="flex items-center gap-1 text-[10px] font-black text-[#00ff85]">
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                      <svg
+                        className="w-3.5 h-3.5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2.5"
+                          d="M5 13l4 4L19 7"
+                        />
                       </svg>
                       Authorized
                     </span>
@@ -233,32 +283,36 @@ export function UserProfileView() {
                     {item.action}
                   </h3>
 
-                  <p className="text-xs text-gray-400 leading-relaxed">
-                    {item.description}
-                  </p>
+                  <p className="text-xs text-gray-400 leading-relaxed">{item.description}</p>
                 </div>
               ))}
             </div>
 
             {filteredAuthorized.length === 0 && (
               <div className="text-center py-12 text-gray-400">
-                <p className="text-sm">No authorized actions found in this category for {roleDetails.title}.</p>
+                <p className="text-sm">
+                  No authorized actions found in this category for {roleDetails.title}.
+                </p>
               </div>
             )}
           </div>
         )}
 
         {/* TAB 2: 7-TIER HIERARCHY STRUCTURE */}
-        {activeTab === 'hierarchy' && (
+        {activeTab === "hierarchy" && (
           <div className="space-y-4">
             <div className="p-4 rounded-2xl bg-[#141029] border border-[#2e2554] text-xs text-gray-300 leading-relaxed">
-              <p className="font-bold text-white mb-1">Official 7-Tier Council Governance Structure</p>
-              The M-Pesa Sunday League executive authority is structured across seven appointed management portfolios. Higher tiers provide overarching direction and dispute adjudication, while department managers hold exclusive domain rights.
+              <p className="font-bold text-white mb-1">
+                Official 7-Tier Council Governance Structure
+              </p>
+              The M-Pesa Sunday League executive authority is structured across seven appointed
+              management portfolios. Higher tiers provide overarching direction and dispute
+              adjudication, while department managers hold exclusive domain rights.
             </div>
 
             <div className="space-y-3">
               {(Object.keys(ROLE_HIERARCHY_DATA) as LeagueRole[])
-                .filter((r) => r !== 'GUEST')
+                .filter((r) => r !== "GUEST")
                 .sort((a, b) => ROLE_HIERARCHY_DATA[a].tier - ROLE_HIERARCHY_DATA[b].tier)
                 .map((rKey) => {
                   const meta = ROLE_HIERARCHY_DATA[rKey];
@@ -268,13 +322,15 @@ export function UserProfileView() {
                       key={rKey}
                       className={`rounded-2xl border p-4.5 transition flex flex-col md:flex-row md:items-center justify-between gap-4 ${
                         isCurrent
-                          ? 'border-[#00f0ff] bg-gradient-to-r from-[#141029] via-[#1f193d] to-[#141029] shadow-lg shadow-cyan-500/10'
-                          : 'border-[#2e2554] bg-[#141029]/60 hover:border-gray-500'
+                          ? "border-[#00f0ff] bg-gradient-to-r from-[#141029] via-[#1f193d] to-[#141029] shadow-lg shadow-cyan-500/10"
+                          : "border-[#2e2554] bg-[#141029]/60 hover:border-gray-500"
                       }`}
                     >
                       <div className="flex items-start gap-3.5">
-                        <div className={`w-10 h-10 rounded-xl bg-gradient-to-tr ${meta.badgeColor} text-black font-black flex items-center justify-center shrink-0 shadow`}>
-                          {meta.tier === 0 ? '👑' : `T${meta.tier}`}
+                        <div
+                          className={`w-10 h-10 rounded-xl bg-gradient-to-tr ${meta.badgeColor} text-black font-black flex items-center justify-center shrink-0 shadow`}
+                        >
+                          {meta.tier === 0 ? "👑" : `T${meta.tier}`}
                         </div>
 
                         <div className="space-y-1">
@@ -311,11 +367,11 @@ export function UserProfileView() {
                           onClick={() => switchRole(rKey)}
                           className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
                             isCurrent
-                              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                              : 'bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white'
+                              ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                              : "bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white"
                           }`}
                         >
-                          {isCurrent ? 'Current' : 'Select Role'}
+                          {isCurrent ? "Current" : "Select Role"}
                         </button>
                       </div>
                     </div>
@@ -326,18 +382,23 @@ export function UserProfileView() {
         )}
 
         {/* TAB 3: RESTRICTED ACTIONS */}
-        {activeTab === 'restricted' && (
+        {activeTab === "restricted" && (
           <div className="space-y-4">
             <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-xs text-rose-300 leading-relaxed">
-              <p className="font-bold text-rose-200 mb-1">Protected Actions Beyond Current Clearance</p>
-              Actions listed below are restricted for your current role ({roleDetails.title}) to preserve separation of executive powers, match impartiality, and regulatory integrity.
+              <p className="font-bold text-rose-200 mb-1">
+                Protected Actions Beyond Current Clearance
+              </p>
+              Actions listed below are restricted for your current role ({roleDetails.title}) to
+              preserve separation of executive powers, match impartiality, and regulatory integrity.
             </div>
 
             {isSuperAdmin ? (
               <div className="text-center py-12 text-gray-400">
                 <span className="text-3xl block mb-2">👑</span>
                 <p className="text-sm font-bold text-white">Super Administrator Clearance</p>
-                <p className="text-xs text-gray-400">You hold unrestricted authority across all 7 management tiers.</p>
+                <p className="text-xs text-gray-400">
+                  You hold unrestricted authority across all 7 management tiers.
+                </p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -351,20 +412,26 @@ export function UserProfileView() {
                         {item.category}
                       </span>
                       <span className="flex items-center gap-1 text-[10px] font-bold text-rose-400">
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        <svg
+                          className="w-3.5 h-3.5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                          />
                         </svg>
                         Restricted
                       </span>
                     </div>
 
-                    <h3 className="font-bold text-gray-200 text-sm">
-                      {item.action}
-                    </h3>
+                    <h3 className="font-bold text-gray-200 text-sm">{item.action}</h3>
 
-                    <p className="text-xs text-gray-400 leading-relaxed">
-                      {item.description}
-                    </p>
+                    <p className="text-xs text-gray-400 leading-relaxed">{item.description}</p>
                   </div>
                 ))}
               </div>
@@ -373,12 +440,15 @@ export function UserProfileView() {
         )}
 
         {/* TAB 4: ROLE SWITCHER (FOR TESTING & DEMO) */}
-        {activeTab === 'switch' && (
+        {activeTab === "switch" && (
           <div className="rounded-3xl border border-[#2e2554] bg-[#141029] p-6 space-y-4">
             <div>
-              <h3 className="text-lg font-bold text-white">Role Access Testing & Verification Desk</h3>
+              <h3 className="text-lg font-bold text-white">
+                Role Access Testing & Verification Desk
+              </h3>
               <p className="text-xs text-gray-400">
-                Select any of the 7 executive management tiers, Master Super Admin, or Public Fan to instantly inspect the authorized permissions and UI visibility rules.
+                Select any of the 7 executive management tiers, Master Super Admin, or Public Fan to
+                instantly inspect the authorized permissions and UI visibility rules.
               </p>
             </div>
 
@@ -392,12 +462,14 @@ export function UserProfileView() {
                     onClick={() => switchRole(rKey)}
                     className={`p-4 rounded-2xl border text-left transition flex items-start gap-3 ${
                       isActive
-                        ? 'border-[#00f0ff] bg-gradient-to-r from-[#1f193d] to-[#141029] shadow-lg shadow-cyan-500/20 scale-102'
-                        : 'border-[#2e2554] bg-[#070512] hover:bg-[#141029]'
+                        ? "border-[#00f0ff] bg-gradient-to-r from-[#1f193d] to-[#141029] shadow-lg shadow-cyan-500/20 scale-102"
+                        : "border-[#2e2554] bg-[#070512] hover:bg-[#141029]"
                     }`}
                   >
-                    <div className={`w-8 h-8 rounded-lg bg-gradient-to-tr ${meta.badgeColor} text-black font-black flex items-center justify-center shrink-0 text-xs`}>
-                      {meta.tier === 0 ? '👑' : `T${meta.tier}`}
+                    <div
+                      className={`w-8 h-8 rounded-lg bg-gradient-to-tr ${meta.badgeColor} text-black font-black flex items-center justify-center shrink-0 text-xs`}
+                    >
+                      {meta.tier === 0 ? "👑" : `T${meta.tier}`}
                     </div>
                     <div>
                       <span className="font-bold text-sm text-white block">{meta.title}</span>
@@ -412,7 +484,6 @@ export function UserProfileView() {
             </div>
           </div>
         )}
-
       </div>
     </div>
   );

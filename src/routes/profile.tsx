@@ -1,14 +1,14 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { UserProfileView } from '../components/UserProfileView';
+import { createFileRoute } from "@tanstack/react-router";
+import { UserProfileView } from "../components/UserProfileView";
 
-export const Route = createFileRoute('/profile')({
+export const Route = createFileRoute("/profile")({
   head: () => ({
     meta: [
-      { title: 'User Profile & Role Access | M-Pesa Sunday League' },
+      { title: "User Profile & Role Access | M-Pesa Sunday League" },
       {
-        name: 'description',
+        name: "description",
         content:
-          'View your assigned league role, council tier, and list of authorized management actions in the M-Pesa Sunday League.',
+          "View your assigned league role, council tier, and list of authorized management actions in the M-Pesa Sunday League.",
       },
     ],
   }),

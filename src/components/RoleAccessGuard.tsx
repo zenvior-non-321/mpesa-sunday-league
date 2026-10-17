@@ -1,5 +1,5 @@
-import React, { type ReactNode } from 'react';
-import { useRoleAccess, type LeagueRole, type PermissionKey } from '../hooks/useRoleAccess';
+import React, { type ReactNode } from "react";
+import { useRoleAccess, type LeagueRole, type PermissionKey } from "../hooks/useRoleAccess";
 
 interface RoleAccessGuardProps {
   children: ReactNode;
@@ -51,12 +51,19 @@ export function RoleAccessGuard({
       <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4 text-xs text-rose-300">
         <div className="flex items-center gap-2 font-bold uppercase tracking-wider text-rose-400">
           <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m0 0v2m0-2h2m-2 0H10m2-6V9a4 4 0 00-8 0v2" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M12 15v2m0 0v2m0-2h2m-2 0H10m2-6V9a4 4 0 00-8 0v2"
+            />
           </svg>
           Access Restricted by Executive Role Hierarchy
         </div>
         <p className="mt-1 text-gray-300">
-          Your current assigned role (<span className="font-semibold text-white">{roleDetails.title}</span>, Tier {roleDetails.tier}) does not have permission to view or execute this action.
+          Your current assigned role (
+          <span className="font-semibold text-white">{roleDetails.title}</span>, Tier{" "}
+          {roleDetails.tier}) does not have permission to view or execute this action.
         </p>
       </div>
     );

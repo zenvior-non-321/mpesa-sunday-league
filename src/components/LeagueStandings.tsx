@@ -1,0 +1,1503 @@
+import React, { useState, useEffect, useMemo } from "react";
+
+export interface PiaCoach {
+  name: string;
+  role: string;
+  email?: string;
+  photoUrl?: string;
+}
+
+export interface StadiumInfo {
+  name: string;
+  capacity: string;
+  surface: string;
+  dimensions?: string;
+  record?: string;
+  notes?: string;
+}
+
+export interface CoachTactics {
+  formation: string;
+  philosophy: string;
+  winRate: string;
+  tenure: string;
+  assistantCoach?: string;
+}
+
+export interface HistoricalSummary {
+  founded: string;
+  honors: string[];
+  allTimeRecord: string;
+  highestWin: string;
+  derbyRival: string;
+  historicWinRate: string;
+  seasons: { season: string; finish: string; points: number; note: string }[];
+}
+
+export interface SquadMember {
+  name: string;
+  number: number;
+  position: string;
+  photoUrl?: string;
+}
+
+export interface TeamStanding {
+  id: number;
+  name: string;
+  shortCode: string;
+  color: string;
+  homePitch: string;
+  coach?: PiaCoach;
+  stadium?: StadiumInfo;
+  coachDetails?: CoachTactics;
+  history?: HistoricalSummary;
+  squad?: SquadMember[];
+  logoUrl?: string;
+  mp: number; // Matches Played
+  w: number; // Wins
+  d: number; // Draws
+  l: number; // Losses
+  gf: number; // Goals For
+  ga: number; // Goals Against
+  gd: number; // Goal Difference
+  pts: number; // Points
+  form: string[]; // ['W', 'D', 'L', ...]
+}
+
+const DEFAULT_STANDINGS: TeamStanding[] = [
+  {
+    id: 1,
+    name: "Samba Boys",
+    shortCode: "SMB",
+    color: "#00ff85",
+    homePitch: "Samba Arena (School Lower Pitch)",
+    coach: {
+      name: "Coach Kennedy Juma",
+      role: "Pia Head Coach",
+      email: "kjuma@mpesaleague.org",
+      photoUrl:
+        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+    },
+    stadium: {
+      name: "Samba Arena (School Lower Pitch Ground)",
+      capacity: "1,200 Student Spectators",
+      surface: "Hybrid Bermuda Turf & FIFA Quality AstroTurf",
+      dimensions: "105m × 68m (Standard Pitch)",
+      record: "85% Home Win Rate • 0 Defeats at Home (2026/27)",
+      notes: "Known as the 'Samba Cauldron' due to energetic student drums and brass section during Sunday games.",
+    },
+    coachDetails: {
+      formation: "4-3-3 Attacking Gegenpress",
+      philosophy: "Fluid attacking soccer with aggressive counter-pressing and rapid wing overloads.",
+      winRate: "78.4% All-Time (29W - 5D - 3L)",
+      tenure: "3 Seasons (Appointed Sep 2024)",
+      assistantCoach: "Coach Peter Kimani (Tactical Analyst)",
+    },
+    history: {
+      founded: "2023 at M-Pesa Foundation Academy",
+      honors: [
+        "🏆 Sunday League Champions (2024/2025)",
+        "🥇 Academy Inter-House Super Cup (2025)",
+        "🥈 M-Pesa Youth Shield Finalist (2024)",
+      ],
+      allTimeRecord: "48 Matches: 34 Wins, 8 Draws, 6 Losses",
+      highestWin: "5 - 0 vs DP 2 B (Matchweek 4, 2025)",
+      derbyRival: "The Academy Clásico vs Grade 10 A",
+      historicWinRate: "70.8%",
+      seasons: [
+        { season: "2024/25", finish: "1st Place (Champions)", points: 28, note: "Undefeated home record" },
+        { season: "2025/26", finish: "2nd Place (Runners-Up)", points: 25, note: "Highest goals scored (34)" },
+        { season: "2026/27", finish: "1st Place (Current)", points: 13, note: "Active matchweek 5 leader" },
+      ],
+    },
+    squad: [
+      { name: "Kevin Omondi", number: 10, position: "FWD", photoUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80" },
+      { name: "Brian Mwangi", number: 7, position: "MID", photoUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80" },
+      { name: "Dan Kiprop", number: 1, position: "GK", photoUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80" },
+      { name: "Samuel Otieno", number: 4, position: "DEF" },
+      { name: "Faith Chemutai", number: 8, position: "MID" },
+      { name: "Victor Maina", number: 11, position: "FWD" },
+    ],
+    mp: 5,
+    w: 4,
+    d: 1,
+    l: 0,
+    gf: 14,
+    ga: 3,
+    gd: 11,
+    pts: 13,
+    form: ["W", "W", "D", "W", "W"],
+  },
+  {
+    id: 2,
+    name: "Grade 10 A",
+    shortCode: "G10A",
+    color: "#00f0ff",
+    homePitch: "Academy Main Stadium",
+    coach: {
+      name: "Coach Patrick Waweru",
+      role: "Pia Head Coach",
+      email: "pwaweru@mpesaleague.org",
+      photoUrl:
+        "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&auto=format&fit=crop&q=80",
+    },
+    stadium: {
+      name: "Academy Main Stadium (Central Pitch)",
+      capacity: "1,500 Spectators & Floodlit Arena",
+      surface: "Natural Kikuyu Grass & Under-drainage",
+      dimensions: "105m × 68m",
+      record: "72% Home Win Rate",
+      notes: "The premier championship stadium featuring broadcast gantries, grandstand seating, and electronic scoreboard.",
+    },
+    coachDetails: {
+      formation: "4-2-3-1 Dynamic Possession",
+      philosophy: "Positional play emphasizing control through the middle with explosive inverted wingers.",
+      winRate: "70.2% All-Time (26W - 6D - 5L)",
+      tenure: "2 Seasons",
+      assistantCoach: "Coach Daniel Ndegwa",
+    },
+    history: {
+      founded: "2023 at M-Pesa Foundation Academy",
+      honors: [
+        "🏆 Sunday League Champions (2025/2026)",
+        "🥇 Founders Day Trophy (2024)",
+        "🥈 Inter-Grade Cup Runner-up (2025)",
+      ],
+      allTimeRecord: "44 Matches: 29 Wins, 9 Draws, 6 Losses",
+      highestWin: "4 - 0 vs Grade 10 B (Matchweek 3, 2025)",
+      derbyRival: "The Clásico vs Samba Boys & Grade 10 B Derby",
+      historicWinRate: "65.9%",
+      seasons: [
+        { season: "2024/25", finish: "3rd Place", points: 21, note: "Semi-final cup run" },
+        { season: "2025/26", finish: "1st Place (Champions)", points: 29, note: "Championship title winners" },
+        { season: "2026/27", finish: "2nd Place (Current)", points: 11, note: "Unbeaten in 5 games" },
+      ],
+    },
+    squad: [
+      { name: "Emmanuel Kip", number: 9, position: "FWD", photoUrl: "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=150&auto=format&fit=crop&q=80" },
+      { name: "John Doe", number: 1, position: "GK", photoUrl: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80" },
+      { name: "Bradley Barasa", number: 6, position: "DEF" },
+      { name: "George Ochieng", number: 8, position: "MID" },
+      { name: "Ryan Gitonga", number: 11, position: "FWD" },
+    ],
+    mp: 5,
+    w: 3,
+    d: 2,
+    l: 0,
+    gf: 11,
+    ga: 4,
+    gd: 7,
+    pts: 11,
+    form: ["W", "D", "W", "W", "D"],
+  },
+  {
+    id: 3,
+    name: "Grade 10 B",
+    shortCode: "G10B",
+    color: "#ffe600",
+    homePitch: "Yellow Fortress Pitch B",
+    coach: {
+      name: "Coach Samuel Karanja",
+      role: "Pia Head Coach",
+      email: "skaranja@mpesaleague.org",
+      photoUrl:
+        "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=150&auto=format&fit=crop&q=80",
+    },
+    stadium: {
+      name: "Yellow Fortress Pitch B",
+      capacity: "800 Spectators",
+      surface: "All-Weather AstroTurf Field",
+      dimensions: "100m × 64m",
+      record: "60% Home Win Rate",
+      notes: "Famous for compact, intense tactical encounters and high pressing under warm afternoon sunshine.",
+    },
+    coachDetails: {
+      formation: "3-5-2 Wing-Back Overload",
+      philosophy: "Disciplined mid-block transition with high work-rate wing-backs stretching the pitch.",
+      winRate: "54.5% All-Time (18W - 7D - 8L)",
+      tenure: "2 Seasons",
+      assistantCoach: "Coach Evans Mutiso",
+    },
+    history: {
+      founded: "2023 at M-Pesa Foundation Academy",
+      honors: [
+        "🥇 Junior Division Cup (2024)",
+        "🥉 Sunday League Bronze Medalists (2024/25)",
+      ],
+      allTimeRecord: "40 Matches: 20 Wins, 8 Draws, 12 Losses",
+      highestWin: "4 - 1 vs DP 2 B (MW 2, 2026)",
+      derbyRival: "Grade 10 Derby vs Grade 10 A",
+      historicWinRate: "50.0%",
+      seasons: [
+        { season: "2024/25", finish: "3rd Place", points: 19, note: "Podium finish" },
+        { season: "2025/26", finish: "4th Place", points: 17, note: "Cup quarter-finalists" },
+        { season: "2026/27", finish: "3rd Place (Current)", points: 7, note: "Holding podium spot" },
+      ],
+    },
+    squad: [
+      { name: "Joshua Mutua", number: 5, position: "DEF" },
+      { name: "Ian Mercer", number: 10, position: "MID" },
+      { name: "Peter Kariuki", number: 1, position: "GK" },
+      { name: "Kelvin Njoroge", number: 7, position: "FWD" },
+    ],
+    mp: 5,
+    w: 2,
+    d: 1,
+    l: 2,
+    gf: 8,
+    ga: 7,
+    gd: 1,
+    pts: 7,
+    form: ["L", "W", "D", "W", "L"],
+  },
+  {
+    id: 4,
+    name: "DP 2 A",
+    shortCode: "DP2A",
+    color: "#ff0077",
+    homePitch: "Senior DP Complex",
+    coach: {
+      name: "Coach Alex Kilonzo",
+      role: "Pia Head Coach",
+      email: "akilonzo@mpesaleague.org",
+      photoUrl:
+        "https://images.unsplash.com/photo-1528892952291-009c663ce843?w=150&auto=format&fit=crop&q=80",
+    },
+    stadium: {
+      name: "Senior DP Sports Complex",
+      capacity: "950 Spectators",
+      surface: "Hybrid Turf with High Performance Sprinklers",
+      dimensions: "105m × 66m",
+      record: "55% Home Win Rate",
+      notes: "Senior academy hub with enthusiastic senior class cheering section.",
+    },
+    coachDetails: {
+      formation: "4-4-2 Diamond",
+      philosophy: "Physical direct attacks, strong aerial set-pieces, and clinical long-range finishing.",
+      winRate: "52.0% All-Time (17W - 6D - 10L)",
+      tenure: "2 Seasons",
+      assistantCoach: "Coach Lucas Omwamba",
+    },
+    history: {
+      founded: "2023 at M-Pesa Foundation Academy",
+      honors: [
+        "🥈 Senior Academy Trophy Finalists (2025)",
+        "🥇 Fair Play Award (2024)",
+      ],
+      allTimeRecord: "38 Matches: 18 Wins, 7 Draws, 13 Losses",
+      highestWin: "3 - 0 vs DP 2 B (MW 5, 2025)",
+      derbyRival: "Senior DP Derby vs DP 2 B",
+      historicWinRate: "47.4%",
+      seasons: [
+        { season: "2024/25", finish: "4th Place", points: 16, note: "Solid inaugural year" },
+        { season: "2025/26", finish: "3rd Place", points: 20, note: "Podium finish" },
+        { season: "2026/27", finish: "4th Place (Current)", points: 4, note: "Fighting for podium" },
+      ],
+    },
+    squad: [
+      { name: "Collins Wekesa", number: 8, position: "MID" },
+      { name: "Alex Rono", number: 11, position: "FWD", photoUrl: "https://images.unsplash.com/photo-1528892952291-009c663ce843?w=150&auto=format&fit=crop&q=80" },
+      { name: "Timothy Cheruiyot", number: 1, position: "GK" },
+      { name: "Kelvin Korir", number: 9, position: "FWD" },
+    ],
+    mp: 5,
+    w: 1,
+    d: 1,
+    l: 3,
+    gf: 5,
+    ga: 9,
+    gd: -4,
+    pts: 4,
+    form: ["L", "L", "W", "D", "L"],
+  },
+  {
+    id: 5,
+    name: "DP 2 B",
+    shortCode: "DP2B",
+    color: "#a855f7",
+    homePitch: "Purple Pitch Arena",
+    coach: {
+      name: "Coach Victor Wanyama",
+      role: "Pia Head Coach",
+      email: "vwanyama@mpesaleague.org",
+      photoUrl:
+        "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=150&auto=format&fit=crop&q=80",
+    },
+    stadium: {
+      name: "Purple Pitch Arena (South Pavilion Ground)",
+      capacity: "750 Spectators",
+      surface: "Natural Manicured Turf",
+      dimensions: "102m × 65m",
+      record: "45% Home Win Rate",
+      notes: "Known for quick counter-attacking conditions and passionate purple banner displays.",
+    },
+    coachDetails: {
+      formation: "5-3-2 Low-Block Counter",
+      philosophy: "Resilient deep defensive block seeking fast breakaway transitions behind the opposition line.",
+      winRate: "38.5% All-Time (10W - 6D - 10L)",
+      tenure: "1 Season",
+      assistantCoach: "Coach Morris K.",
+    },
+    history: {
+      founded: "2023 at M-Pesa Foundation Academy",
+      honors: [
+        "🥇 Sportsmanship Shield (2025)",
+        "🥉 Academy Spirit Award (2024)",
+      ],
+      allTimeRecord: "32 Matches: 11 Wins, 5 Draws, 16 Losses",
+      highestWin: "2 - 0 vs Grade 10 B (MW 6, 2025)",
+      derbyRival: "Senior DP Derby vs DP 2 A",
+      historicWinRate: "34.4%",
+      seasons: [
+        { season: "2024/25", finish: "5th Place", points: 12, note: "Rebuilding squad" },
+        { season: "2025/26", finish: "5th Place", points: 14, note: "Improved defense" },
+        { season: "2026/27", finish: "5th Place (Current)", points: 1, note: "Looking for first victory" },
+      ],
+    },
+    squad: [
+      { name: "Hassan Ali", number: 10, position: "MID" },
+      { name: "Rashid Mohamed", number: 6, position: "DEF" },
+      { name: "Brian Koech", number: 1, position: "GK" },
+      { name: "Caleb Kibet", number: 9, position: "FWD" },
+    ],
+    mp: 5,
+    w: 0,
+    d: 1,
+    l: 4,
+    gf: 2,
+    ga: 17,
+    gd: -15,
+    pts: 1,
+    form: ["L", "L", "L", "D", "L"],
+  },
+];
+
+type SortColumn = "rank" | "name" | "mp" | "w" | "d" | "l" | "gf" | "ga" | "gd" | "pts";
+type SortDirection = "asc" | "desc";
+type ClubModalTab = "overview" | "stadium" | "coach" | "history" | "squad";
+
+export function LeagueStandings() {
+  const [standings, setStandings] = useState<TeamStanding[]>(DEFAULT_STANDINGS);
+  const [sortColumn, setSortColumn] = useState<SortColumn>("pts");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [selectedTeam, setSelectedTeam] = useState<TeamStanding | null>(null);
+  const [clubModalTab, setClubModalTab] = useState<ClubModalTab>("overview");
+
+  // Sync with localStorage if available
+  useEffect(() => {
+    try {
+      const storedTeams = localStorage.getItem("mpesa_pes_teams_v6");
+      if (storedTeams) {
+        const parsed = JSON.parse(storedTeams);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // Normalize teams with fallback stats
+          const enriched: TeamStanding[] = parsed.map((t, idx) => ({
+            id: t.id ?? idx + 1,
+            name: t.name || `Club #${idx + 1}`,
+            shortCode: t.shortCode || `C${idx + 1}`,
+            color: t.color || "#00f0ff",
+            homePitch: t.homePitch || "School Main Arena",
+            coach: t.coach,
+            logoUrl: t.logoUrl,
+            mp: typeof t.mp === "number" ? t.mp : 5,
+            w: typeof t.w === "number" ? t.w : 0,
+            d: typeof t.d === "number" ? t.d : 0,
+            l: typeof t.l === "number" ? t.l : 0,
+            gf: typeof t.gf === "number" ? t.gf : 0,
+            ga: typeof t.ga === "number" ? t.ga : 0,
+            gd: typeof t.gd === "number" ? t.gd : (t.gf || 0) - (t.ga || 0),
+            pts: typeof t.pts === "number" ? t.pts : (t.w || 0) * 3 + (t.d || 0),
+            form: Array.isArray(t.form) ? t.form : ["W", "D", "W", "L", "W"],
+          }));
+          setStandings(enriched);
+        }
+      }
+    } catch {
+      setStandings(DEFAULT_STANDINGS);
+    }
+  }, []);
+
+  const handleSort = (col: SortColumn) => {
+    if (sortColumn === col) {
+      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortColumn(col);
+      // Sensible defaults: alphabetical starts asc, numbers start desc
+      setSortDirection(
+        col === "name" || col === "rank" || col === "l" || col === "ga" ? "asc" : "desc",
+      );
+    }
+  };
+
+  // Sorted and filtered list
+  const sortedStandings = useMemo(() => {
+    let list = [...standings];
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      list = list.filter(
+        (t) =>
+          t.name.toLowerCase().includes(q) ||
+          t.shortCode.toLowerCase().includes(q) ||
+          t.homePitch.toLowerCase().includes(q),
+      );
+    }
+
+    const dir = sortDirection === "asc" ? 1 : -1;
+
+    return list.sort((a, b) => {
+      switch (sortColumn) {
+        case "name":
+          return dir * a.name.localeCompare(b.name);
+        case "pts":
+          if (b.pts !== a.pts) return dir * (a.pts - b.pts);
+          if (b.gd !== a.gd) return dir * (a.gd - b.gd);
+          return dir * (a.gf - b.gf);
+        case "gd":
+          if (b.gd !== a.gd) return dir * (a.gd - b.gd);
+          return dir * (a.pts - b.pts);
+        case "mp":
+          return dir * (a.mp - b.mp);
+        case "w":
+          return dir * (a.w - b.w);
+        case "d":
+          return dir * (a.d - b.d);
+        case "l":
+          return dir * (a.l - b.l);
+        case "gf":
+          return dir * (a.gf - b.gf);
+        case "ga":
+          return dir * (a.ga - b.ga);
+        case "rank":
+        default:
+          if (b.pts !== a.pts) return dir * (a.pts - b.pts);
+          if (b.gd !== a.gd) return dir * (a.gd - b.gd);
+          return dir * (a.gf - b.gf);
+      }
+    });
+  }, [standings, sortColumn, sortDirection, searchQuery]);
+
+  // Key KPI stats
+  const leaderTeam = useMemo(() => {
+    return [...standings].sort((a, b) => b.pts - a.pts || b.gd - a.gd)[0] || standings[0];
+  }, [standings]);
+
+  const bestAttack = useMemo(() => {
+    return [...standings].sort((a, b) => b.gf - a.gf)[0] || standings[0];
+  }, [standings]);
+
+  const bestDefense = useMemo(() => {
+    return [...standings].sort((a, b) => a.ga - b.ga)[0] || standings[0];
+  }, [standings]);
+
+  const totalMatches = useMemo(() => {
+    return Math.floor(standings.reduce((sum, t) => sum + t.mp, 0) / 2);
+  }, [standings]);
+
+  return (
+    <div className="space-y-6">
+      {/* Header & Controls */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#2e2554] pb-5">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="px-3 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#00f0ff]/20 text-[#00f0ff] border border-[#00f0ff]/40">
+              Official eFootball Championship
+            </span>
+            <span className="text-xs text-gray-400 font-mono">Season 2026/2027</span>
+          </div>
+          <h2 className="font-header text-3xl sm:text-4xl font-black text-white uppercase tracking-wider mt-1 flex items-center gap-3">
+            <span>League Standings</span>
+          </h2>
+          <p className="text-xs sm:text-sm text-gray-300">
+            Sortable table featuring team rankings, match performance, points, and goal difference.
+            Click any header to sort.
+          </p>
+        </div>
+
+        {/* Search & Reset */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search club or pitch..."
+              className="bg-[#141029] border border-[#2e2554] rounded-2xl px-3.5 py-2 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-[#00f0ff] w-48 sm:w-60 shadow-inner"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-2.5 text-gray-400 hover:text-white text-xs font-bold"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-1 bg-[#141029] border border-[#2e2554] p-1 rounded-2xl text-xs">
+            <span className="text-[10px] text-gray-400 font-bold px-2 uppercase">Quick:</span>
+            <button
+              onClick={() => handleSort("pts")}
+              className={`px-2.5 py-1 rounded-xl text-xs font-bold transition ${
+                sortColumn === "pts"
+                  ? "bg-gradient-to-r from-[#00f0ff] to-emerald-400 text-black font-black shadow-md"
+                  : "text-gray-300 hover:text-white"
+              }`}
+            >
+              Points
+            </button>
+            <button
+              onClick={() => handleSort("gd")}
+              className={`px-2.5 py-1 rounded-xl text-xs font-bold transition ${
+                sortColumn === "gd"
+                  ? "bg-gradient-to-r from-[#00f0ff] to-emerald-400 text-black font-black shadow-md"
+                  : "text-gray-300 hover:text-white"
+              }`}
+            >
+              GD
+            </button>
+            <button
+              onClick={() => handleSort("mp")}
+              className={`px-2.5 py-1 rounded-xl text-xs font-bold transition ${
+                sortColumn === "mp"
+                  ? "bg-gradient-to-r from-[#00f0ff] to-emerald-400 text-black font-black shadow-md"
+                  : "text-gray-300 hover:text-white"
+              }`}
+            >
+              Played
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* KPI Cards Strip */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {/* Leader */}
+        <div className="bg-[#0e0a26]/90 border border-amber-500/30 rounded-3xl p-4 shadow-xl flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-2xl bg-amber-400/20 text-amber-300 border border-amber-400/40 flex items-center justify-center font-black text-xl shrink-0">
+            👑
+          </div>
+          <div className="min-w-0">
+            <span className="text-[10px] uppercase font-bold text-amber-300 block tracking-wider">
+              1st Place Leader
+            </span>
+            <h4 className="text-sm font-black text-white truncate">{leaderTeam.name}</h4>
+            <span className="text-xs text-emerald-400 font-mono font-bold">
+              {leaderTeam.pts} PTS • GD +{leaderTeam.gd}
+            </span>
+          </div>
+        </div>
+
+        {/* Best Attack */}
+        <div className="bg-[#0e0a26]/90 border border-[#2e2554] rounded-3xl p-4 shadow-xl flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-2xl bg-[#00f0ff]/10 text-[#00f0ff] border border-[#00f0ff]/30 flex items-center justify-center font-black text-sm shrink-0">
+            ⚽
+          </div>
+          <div className="min-w-0">
+            <span className="text-[10px] uppercase font-bold text-gray-400 block tracking-wider">
+              Top Scoring Club
+            </span>
+            <h4 className="text-sm font-black text-white truncate">{bestAttack.name}</h4>
+            <span className="text-xs text-[#00f0ff] font-mono font-bold">
+              {bestAttack.gf} Goals ({(bestAttack.gf / (bestAttack.mp || 1)).toFixed(1)} / match)
+            </span>
+          </div>
+        </div>
+
+        {/* Best Defense */}
+        <div className="bg-[#0e0a26]/90 border border-[#2e2554] rounded-3xl p-4 shadow-xl flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-black text-sm shrink-0">
+            🛡️
+          </div>
+          <div className="min-w-0">
+            <span className="text-[10px] uppercase font-bold text-gray-400 block tracking-wider">
+              Best Defense
+            </span>
+            <h4 className="text-sm font-black text-white truncate">{bestDefense.name}</h4>
+            <span className="text-xs text-emerald-400 font-mono font-bold">
+              {bestDefense.ga} Conceded ({(bestDefense.ga / (bestDefense.mp || 1)).toFixed(1)} /
+              match)
+            </span>
+          </div>
+        </div>
+
+        {/* Matchweeks */}
+        <div className="bg-[#0e0a26]/90 border border-[#2e2554] rounded-3xl p-4 shadow-xl flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-2xl bg-purple-500/10 text-purple-300 border border-purple-500/30 flex items-center justify-center font-black text-sm shrink-0">
+            📅
+          </div>
+          <div className="min-w-0">
+            <span className="text-[10px] uppercase font-bold text-gray-400 block tracking-wider">
+              Championship Status
+            </span>
+            <h4 className="text-sm font-black text-white truncate">Matchweek 5 Concluded</h4>
+            <span className="text-xs text-purple-300 font-mono font-bold">
+              {totalMatches} Matches Logged
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Standings Table Card */}
+      <div className="bg-[#0e0a26]/95 border border-[#2e2554] rounded-3xl overflow-hidden shadow-2xl">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse select-none">
+            <thead>
+              <tr className="bg-[#070512]/95 text-xs font-black text-gray-400 uppercase border-b border-[#2e2554]">
+                {/* Pos */}
+                <th
+                  onClick={() => handleSort("rank")}
+                  className="py-4 px-4 text-center w-14 cursor-pointer hover:text-white transition group"
+                >
+                  <div className="flex items-center justify-center gap-1">
+                    <span>Pos</span>
+                    {sortColumn === "rank" && (
+                      <span className="text-[#00f0ff] text-xs">
+                        {sortDirection === "asc" ? "▲" : "▼"}
+                      </span>
+                    )}
+                  </div>
+                </th>
+
+                {/* Team */}
+                <th
+                  onClick={() => handleSort("name")}
+                  className="py-4 px-6 cursor-pointer hover:text-white transition"
+                >
+                  <div
+                    className={`flex items-center gap-1.5 ${
+                      sortColumn === "name" ? "text-[#00f0ff] font-black" : ""
+                    }`}
+                  >
+                    <span>Club & Home Pitch</span>
+                    {sortColumn === "name" && (
+                      <span className="text-[#00f0ff] text-xs">
+                        {sortDirection === "asc" ? "▲" : "▼"}
+                      </span>
+                    )}
+                  </div>
+                </th>
+
+                {/* Pia Coach */}
+                <th className="py-4 px-4 hidden sm:table-cell">Pia Coach</th>
+
+                {/* MP */}
+                <th
+                  onClick={() => handleSort("mp")}
+                  className="py-4 px-3 text-center cursor-pointer hover:text-white transition"
+                >
+                  <div
+                    className={`flex items-center justify-center gap-1 ${
+                      sortColumn === "mp" ? "text-[#00f0ff] font-black" : ""
+                    }`}
+                  >
+                    <span>MP</span>
+                    {sortColumn === "mp" && (
+                      <span className="text-[#00f0ff] text-xs">
+                        {sortDirection === "asc" ? "▲" : "▼"}
+                      </span>
+                    )}
+                  </div>
+                </th>
+
+                {/* W */}
+                <th
+                  onClick={() => handleSort("w")}
+                  className="py-4 px-3 text-center cursor-pointer hover:text-white transition"
+                >
+                  <div
+                    className={`flex items-center justify-center gap-1 ${
+                      sortColumn === "w" ? "text-[#00f0ff] font-black" : ""
+                    }`}
+                  >
+                    <span>W</span>
+                    {sortColumn === "w" && (
+                      <span className="text-[#00f0ff] text-xs">
+                        {sortDirection === "asc" ? "▲" : "▼"}
+                      </span>
+                    )}
+                  </div>
+                </th>
+
+                {/* D */}
+                <th
+                  onClick={() => handleSort("d")}
+                  className="py-4 px-3 text-center cursor-pointer hover:text-white transition"
+                >
+                  <div
+                    className={`flex items-center justify-center gap-1 ${
+                      sortColumn === "d" ? "text-[#00f0ff] font-black" : ""
+                    }`}
+                  >
+                    <span>D</span>
+                    {sortColumn === "d" && (
+                      <span className="text-[#00f0ff] text-xs">
+                        {sortDirection === "asc" ? "▲" : "▼"}
+                      </span>
+                    )}
+                  </div>
+                </th>
+
+                {/* L */}
+                <th
+                  onClick={() => handleSort("l")}
+                  className="py-4 px-3 text-center cursor-pointer hover:text-white transition"
+                >
+                  <div
+                    className={`flex items-center justify-center gap-1 ${
+                      sortColumn === "l" ? "text-[#00f0ff] font-black" : ""
+                    }`}
+                  >
+                    <span>L</span>
+                    {sortColumn === "l" && (
+                      <span className="text-[#00f0ff] text-xs">
+                        {sortDirection === "asc" ? "▲" : "▼"}
+                      </span>
+                    )}
+                  </div>
+                </th>
+
+                {/* GF */}
+                <th
+                  onClick={() => handleSort("gf")}
+                  className="py-4 px-3 text-center hidden md:table-cell cursor-pointer hover:text-white transition"
+                >
+                  <div
+                    className={`flex items-center justify-center gap-1 ${
+                      sortColumn === "gf" ? "text-[#00f0ff] font-black" : ""
+                    }`}
+                  >
+                    <span>GF</span>
+                    {sortColumn === "gf" && (
+                      <span className="text-[#00f0ff] text-xs">
+                        {sortDirection === "asc" ? "▲" : "▼"}
+                      </span>
+                    )}
+                  </div>
+                </th>
+
+                {/* GA */}
+                <th
+                  onClick={() => handleSort("ga")}
+                  className="py-4 px-3 text-center hidden md:table-cell cursor-pointer hover:text-white transition"
+                >
+                  <div
+                    className={`flex items-center justify-center gap-1 ${
+                      sortColumn === "ga" ? "text-[#00f0ff] font-black" : ""
+                    }`}
+                  >
+                    <span>GA</span>
+                    {sortColumn === "ga" && (
+                      <span className="text-[#00f0ff] text-xs">
+                        {sortDirection === "asc" ? "▲" : "▼"}
+                      </span>
+                    )}
+                  </div>
+                </th>
+
+                {/* GD */}
+                <th
+                  onClick={() => handleSort("gd")}
+                  className="py-4 px-3 text-center cursor-pointer hover:text-white transition"
+                >
+                  <div
+                    className={`flex items-center justify-center gap-1 ${
+                      sortColumn === "gd" ? "text-[#00f0ff] font-black" : ""
+                    }`}
+                  >
+                    <span>GD</span>
+                    {sortColumn === "gd" && (
+                      <span className="text-[#00f0ff] text-xs">
+                        {sortDirection === "asc" ? "▲" : "▼"}
+                      </span>
+                    )}
+                  </div>
+                </th>
+
+                {/* PTS */}
+                <th
+                  onClick={() => handleSort("pts")}
+                  className="py-4 px-4 text-center cursor-pointer hover:text-white transition font-black text-[#00f0ff]"
+                >
+                  <div className="flex items-center justify-center gap-1">
+                    <span>Pts</span>
+                    {sortColumn === "pts" && (
+                      <span className="text-[#00f0ff] text-xs">
+                        {sortDirection === "asc" ? "▲" : "▼"}
+                      </span>
+                    )}
+                  </div>
+                </th>
+
+                {/* Form */}
+                <th className="py-4 px-4 text-center hidden lg:table-cell">Form</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#2e2554]/60 text-sm font-semibold">
+              {sortedStandings.map((team, index) => {
+                const isLeader = index === 0 && sortColumn === "pts" && sortDirection === "desc";
+
+                return (
+                  <tr
+                    key={team.id}
+                    onClick={() => setSelectedTeam(team)}
+                    className="hover:bg-[#1a1438]/80 transition-colors group cursor-pointer"
+                  >
+                    {/* Pos */}
+                    <td className="py-4 px-4 text-center font-black">
+                      <div className="flex items-center justify-center">
+                        <span
+                          className={`w-7 h-7 rounded-xl flex items-center justify-center text-xs font-black ${
+                            index === 0
+                              ? "bg-amber-400 text-black shadow-md shadow-amber-400/20"
+                              : index === 1
+                                ? "bg-cyan-400/20 text-[#00f0ff] border border-cyan-400/30"
+                                : index === 2
+                                  ? "bg-emerald-400/20 text-emerald-400 border border-emerald-400/30"
+                                  : "text-gray-400"
+                          }`}
+                        >
+                          {index + 1}
+                        </span>
+                      </div>
+                    </td>
+
+                    {/* Team */}
+                    <td className="py-4 px-6">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="w-10 h-10 rounded-2xl flex items-center justify-center font-black text-xs text-white shadow-lg border border-white/20 relative overflow-hidden shrink-0"
+                          style={{ backgroundColor: team.color }}
+                        >
+                          {team.logoUrl ? (
+                            <img
+                              src={team.logoUrl}
+                              alt={team.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <span>{team.shortCode}</span>
+                          )}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-extrabold text-white group-hover:text-[#00f0ff] transition-colors">
+                              {team.name}
+                            </span>
+                            {isLeader && (
+                              <span className="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.2 rounded-full font-black">
+                                1ST PLACE
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
+                            <svg
+                              className="w-3 h-3 text-[#00f0ff]"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                              />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                              />
+                            </svg>
+                            <span>{team.homePitch}</span>
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* Pia Coach */}
+                    <td className="py-4 px-4 hidden sm:table-cell">
+                      <div className="flex items-center gap-2">
+                        {team.coach?.photoUrl ? (
+                          <img
+                            src={team.coach.photoUrl}
+                            alt={team.coach.name}
+                            className="w-7 h-7 rounded-full object-cover border border-[#00f0ff]/40"
+                          />
+                        ) : (
+                          <div className="w-7 h-7 rounded-full bg-[#1e1744] flex items-center justify-center text-[10px] font-bold text-[#00f0ff]">
+                            PC
+                          </div>
+                        )}
+                        <div>
+                          <span className="text-xs font-bold text-gray-200 block truncate max-w-[130px]">
+                            {team.coach?.name || "Pia Coach Assigned"}
+                          </span>
+                          <span className="text-[10px] text-[#00f0ff] font-semibold block">
+                            {team.coach?.role || "Head Coach"}
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* MP */}
+                    <td className="py-4 px-3 text-center font-bold text-gray-300 font-mono">
+                      {team.mp}
+                    </td>
+
+                    {/* W */}
+                    <td className="py-4 px-3 text-center text-emerald-400 font-bold font-mono">
+                      {team.w}
+                    </td>
+
+                    {/* D */}
+                    <td className="py-4 px-3 text-center text-amber-400 font-bold font-mono">
+                      {team.d}
+                    </td>
+
+                    {/* L */}
+                    <td className="py-4 px-3 text-center text-rose-400 font-bold font-mono">
+                      {team.l}
+                    </td>
+
+                    {/* GF */}
+                    <td className="py-4 px-3 text-center text-gray-400 font-mono hidden md:table-cell">
+                      {team.gf}
+                    </td>
+
+                    {/* GA */}
+                    <td className="py-4 px-3 text-center text-gray-400 font-mono hidden md:table-cell">
+                      {team.ga}
+                    </td>
+
+                    {/* GD */}
+                    <td
+                      className={`py-4 px-3 text-center font-black font-mono ${
+                        team.gd > 0
+                          ? "text-emerald-400"
+                          : team.gd < 0
+                            ? "text-rose-400"
+                            : "text-gray-400"
+                      }`}
+                    >
+                      {team.gd > 0 ? `+${team.gd}` : team.gd}
+                    </td>
+
+                    {/* PTS */}
+                    <td className="py-4 px-4 text-center font-black text-base text-[#00f0ff] bg-[#00f0ff]/10 font-mono">
+                      {team.pts}
+                    </td>
+
+                    {/* Form */}
+                    <td className="py-4 px-4 text-center hidden lg:table-cell">
+                      <div className="flex items-center justify-center gap-1">
+                        {team.form.map((res, i) => (
+                          <span
+                            key={i}
+                            className={`w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-black text-white uppercase ${
+                              res === "W"
+                                ? "bg-emerald-500 shadow-sm shadow-emerald-500/20"
+                                : res === "D"
+                                  ? "bg-amber-500 shadow-sm shadow-amber-500/20"
+                                  : res === "L"
+                                    ? "bg-rose-500 shadow-sm shadow-rose-500/20"
+                                    : "bg-gray-800 text-gray-400"
+                            }`}
+                          >
+                            {res}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Footer info note */}
+        <div className="p-4 bg-[#070512]/90 border-t border-[#2e2554] flex flex-col sm:flex-row items-center justify-between text-xs text-gray-400 gap-2">
+          <div className="flex items-center gap-4">
+            <span className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+              <span>1st Place Champion Zone</span>
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+              <span>Top 3 Podium Spots</span>
+            </span>
+          </div>
+          <span className="font-mono text-[11px] text-gray-500">
+            Rules: 3 pts for Win • 1 pt for Draw • 0 pts for Loss
+          </span>
+        </div>
+      </div>
+
+      {/* Detailed Club Profile Modal */}
+      {selectedTeam && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md overflow-y-auto">
+          <div className="bg-[#0b0821] border-2 border-cyan-400/40 rounded-3xl max-w-2xl w-full p-5 sm:p-7 shadow-2xl space-y-5 animate-in fade-in zoom-in duration-200 my-auto max-h-[92vh] overflow-y-auto">
+            {/* Modal Top Header */}
+            <div className="flex items-center justify-between border-b border-[#2e2554] pb-4">
+              <div className="flex items-center gap-3.5">
+                <div
+                  className="w-14 h-14 rounded-2xl flex items-center justify-center font-black text-white shadow-xl text-lg border-2 border-white/20 shrink-0"
+                  style={{ backgroundColor: selectedTeam.color }}
+                >
+                  {selectedTeam.shortCode}
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-header text-2xl sm:text-3xl font-black text-white uppercase leading-none">
+                      {selectedTeam.name}
+                    </h3>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/10 text-cyan-300 font-bold border border-white/20">
+                      {selectedTeam.shortCode}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-300 font-semibold mt-1 flex items-center gap-1.5">
+                    <span className="text-emerald-400">🏟️</span>
+                    <span>{selectedTeam.stadium?.name || selectedTeam.homePitch}</span>
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setSelectedTeam(null);
+                  setClubModalTab("overview");
+                }}
+                className="text-gray-400 hover:text-white p-2 rounded-xl hover:bg-white/10 transition text-lg font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Profile Navigation Tabs */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-[#2e2554]/70">
+              {[
+                { id: "overview", label: "Overview", icon: "📊" },
+                { id: "stadium", label: "Home Stadium", icon: "🏟️" },
+                { id: "coach", label: "Coach & Tactics", icon: "👔" },
+                { id: "history", label: "Historical Summary", icon: "📜" },
+                { id: "squad", label: "Squad & Photos", icon: "👥" },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setClubModalTab(tab.id as ClubModalTab)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition flex items-center gap-1.5 ${
+                    clubModalTab === tab.id
+                      ? "bg-gradient-to-r from-[#00f0ff] to-emerald-400 text-black font-black shadow-md"
+                      : "bg-[#141029] text-gray-400 hover:text-white border border-[#2e2554]"
+                  }`}
+                >
+                  <span>{tab.icon}</span>
+                  <span>{tab.label}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* TAB 1: OVERVIEW */}
+            {clubModalTab === "overview" && (
+              <div className="space-y-4 text-xs">
+                {/* 4 Key Metrics */}
+                <div className="grid grid-cols-4 gap-2.5 text-center">
+                  <div className="bg-[#141029] p-3 rounded-2xl border border-[#2e2554]">
+                    <span className="text-[10px] text-gray-400 font-bold block uppercase">Points</span>
+                    <span className="text-2xl font-black text-[#00f0ff] font-mono">
+                      {selectedTeam.pts}
+                    </span>
+                  </div>
+                  <div className="bg-[#141029] p-3 rounded-2xl border border-[#2e2554]">
+                    <span className="text-[10px] text-gray-400 font-bold block uppercase">Played</span>
+                    <span className="text-2xl font-black text-white font-mono">{selectedTeam.mp}</span>
+                  </div>
+                  <div className="bg-[#141029] p-3 rounded-2xl border border-[#2e2554]">
+                    <span className="text-[10px] text-gray-400 font-bold block uppercase">Record</span>
+                    <span className="text-sm font-black text-emerald-400 font-mono mt-1 block">
+                      {selectedTeam.w}W - {selectedTeam.d}D - {selectedTeam.l}L
+                    </span>
+                  </div>
+                  <div className="bg-[#141029] p-3 rounded-2xl border border-[#2e2554]">
+                    <span className="text-[10px] text-gray-400 font-bold block uppercase">GD</span>
+                    <span
+                      className={`text-2xl font-black font-mono ${
+                        selectedTeam.gd > 0
+                          ? "text-emerald-400"
+                          : selectedTeam.gd < 0
+                            ? "text-rose-400"
+                            : "text-gray-300"
+                      }`}
+                    >
+                      {selectedTeam.gd > 0 ? `+${selectedTeam.gd}` : selectedTeam.gd}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Goals & Form Strip */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="bg-[#141029] p-4 rounded-2xl border border-[#2e2554] space-y-2">
+                    <span className="text-[10px] text-gray-400 uppercase font-black tracking-wider block">
+                      Scoring Metrics
+                    </span>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-gray-300">Goals Scored (GF):</span>
+                      <span className="font-mono font-bold text-emerald-400">{selectedTeam.gf}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-gray-300">Goals Conceded (GA):</span>
+                      <span className="font-mono font-bold text-rose-400">{selectedTeam.ga}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-gray-300">Goal Ratio:</span>
+                      <span className="font-mono font-bold text-cyan-300">
+                        {((selectedTeam.gf / (selectedTeam.ga || 1))).toFixed(2)}x
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="bg-[#141029] p-4 rounded-2xl border border-[#2e2554] space-y-2">
+                    <span className="text-[10px] text-gray-400 uppercase font-black tracking-wider block">
+                      Current Form Guide
+                    </span>
+                    <div className="flex items-center gap-1.5 pt-1">
+                      {selectedTeam.form.map((res, i) => (
+                        <span
+                          key={i}
+                          className={`w-7 h-7 rounded-xl flex items-center justify-center text-xs font-black text-white uppercase ${
+                            res === "W"
+                              ? "bg-emerald-500 shadow-md shadow-emerald-500/20"
+                              : res === "D"
+                                ? "bg-amber-500 shadow-md shadow-amber-500/20"
+                                : "bg-rose-500 shadow-md shadow-rose-500/20"
+                          }`}
+                        >
+                          {res}
+                        </span>
+                      ))}
+                    </div>
+                    <p className="text-[10px] text-gray-400 pt-1">
+                      Last 5 championship matches • Most recent on right
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 2: HOME STADIUM */}
+            {clubModalTab === "stadium" && (
+              <div className="space-y-4 text-xs">
+                <div className="bg-[#141029] p-5 rounded-2xl border border-[#2e2554] space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">🏟️</span>
+                      <div>
+                        <h4 className="font-black text-white text-base">
+                          {selectedTeam.stadium?.name || selectedTeam.homePitch}
+                        </h4>
+                        <span className="text-[10px] text-[#00f0ff] uppercase font-bold">
+                          Official Home Ground
+                        </span>
+                      </div>
+                    </div>
+                    <span className="px-2.5 py-1 rounded-xl bg-emerald-500/15 text-emerald-400 font-bold border border-emerald-500/30 text-[10px]">
+                      Fortress Ground
+                    </span>
+                  </div>
+
+                  <p className="text-gray-300 text-xs leading-relaxed">
+                    {selectedTeam.stadium?.notes ||
+                      "The official grounds for home league matches, featuring matchday spectator zones, technical benches, and full regulation marking."}
+                  </p>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-2">
+                    <div className="bg-[#09061c] p-3 rounded-xl border border-[#2e2554]">
+                      <span className="text-[9px] uppercase font-bold text-gray-400 block">Capacity</span>
+                      <span className="font-bold text-white text-xs">
+                        {selectedTeam.stadium?.capacity || "1,200 Spectators"}
+                      </span>
+                    </div>
+
+                    <div className="bg-[#09061c] p-3 rounded-xl border border-[#2e2554]">
+                      <span className="text-[9px] uppercase font-bold text-gray-400 block">Pitch Surface</span>
+                      <span className="font-bold text-emerald-400 text-xs">
+                        {selectedTeam.stadium?.surface || "Hybrid Bermuda & AstroTurf"}
+                      </span>
+                    </div>
+
+                    <div className="bg-[#09061c] p-3 rounded-xl border border-[#2e2554] col-span-2 sm:col-span-1">
+                      <span className="text-[9px] uppercase font-bold text-gray-400 block">Pitch Dimensions</span>
+                      <span className="font-mono font-bold text-cyan-300 text-xs">
+                        {selectedTeam.stadium?.dimensions || "105m × 68m (FIFA Standard)"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-emerald-300">
+                      Home Fortress Record:
+                    </span>
+                    <span className="font-mono font-black text-white text-xs">
+                      {selectedTeam.stadium?.record || "85% Win Rate at Home"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 3: COACH & TACTICS */}
+            {clubModalTab === "coach" && (
+              <div className="space-y-4 text-xs">
+                {/* Coach Profile Card */}
+                {selectedTeam.coach && (
+                  <div className="p-4 bg-[#141029] border border-[#2e2554] rounded-2xl flex items-center justify-between">
+                    <div className="flex items-center gap-3.5">
+                      {selectedTeam.coach.photoUrl ? (
+                        <img
+                          src={selectedTeam.coach.photoUrl}
+                          alt={selectedTeam.coach.name}
+                          className="w-14 h-14 rounded-2xl object-cover border-2 border-[#00f0ff]/50 shadow-md"
+                        />
+                      ) : (
+                        <div className="w-14 h-14 rounded-2xl bg-[#1e1744] flex items-center justify-center font-black text-[#00f0ff] text-base border border-[#00f0ff]/40">
+                          PC
+                        </div>
+                      )}
+                      <div>
+                        <span className="text-[10px] text-gray-400 uppercase font-black tracking-wider block">
+                          {selectedTeam.coach.role}
+                        </span>
+                        <h4 className="text-base font-black text-white">{selectedTeam.coach.name}</h4>
+                        {selectedTeam.coach.email && (
+                          <span className="text-xs text-[#00f0ff] font-mono">
+                            {selectedTeam.coach.email}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <span className="px-3 py-1 rounded-xl bg-purple-500/20 text-purple-300 border border-purple-500/30 font-bold text-[10px]">
+                      Licensed Pia
+                    </span>
+                  </div>
+                )}
+
+                {/* Tactical Setup */}
+                <div className="bg-[#141029] p-5 rounded-2xl border border-[#2e2554] space-y-3">
+                  <div className="flex items-center justify-between border-b border-[#2e2554] pb-2">
+                    <span className="font-extrabold text-white text-xs uppercase flex items-center gap-1.5">
+                      <span>⚡</span> Tactical Blueprint & Managerial Philosophy
+                    </span>
+                    <span className="font-mono text-xs font-black text-emerald-400">
+                      {selectedTeam.coachDetails?.formation || "4-3-3 Attacking"}
+                    </span>
+                  </div>
+
+                  <p className="text-gray-300 text-xs leading-relaxed">
+                    {selectedTeam.coachDetails?.philosophy ||
+                      "Direct vertical transitions, fluid attacking football with high defensive line and relentless counter-pressing."}
+                  </p>
+
+                  <div className="grid grid-cols-2 gap-3 pt-1">
+                    <div className="p-3 bg-[#09061c] rounded-xl border border-[#2e2554]">
+                      <span className="text-[9px] uppercase font-bold text-gray-400 block">
+                        Managerial Win Rate
+                      </span>
+                      <span className="font-mono font-bold text-emerald-400 text-xs">
+                        {selectedTeam.coachDetails?.winRate || "78.4% All-Time"}
+                      </span>
+                    </div>
+
+                    <div className="p-3 bg-[#09061c] rounded-xl border border-[#2e2554]">
+                      <span className="text-[9px] uppercase font-bold text-gray-400 block">
+                        Tenure & Staff
+                      </span>
+                      <span className="font-bold text-white text-xs">
+                        {selectedTeam.coachDetails?.tenure || "3 Seasons in Charge"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {selectedTeam.coachDetails?.assistantCoach && (
+                    <div className="text-[11px] text-gray-400 flex items-center gap-1.5 pt-1">
+                      <span className="text-cyan-300">Assistant Coach:</span>
+                      <span className="text-white font-bold">{selectedTeam.coachDetails.assistantCoach}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* TAB 4: HISTORICAL PERFORMANCE SUMMARY */}
+            {clubModalTab === "history" && (
+              <div className="space-y-4 text-xs">
+                {/* Honors & Cups */}
+                <div className="bg-[#141029] p-5 rounded-2xl border border-amber-400/30 space-y-3">
+                  <div className="flex items-center gap-2 border-b border-[#2e2554] pb-2">
+                    <span className="text-base">🏆</span>
+                    <h5 className="font-extrabold text-amber-300 uppercase text-xs">
+                      Championship Honors & Silverware
+                    </h5>
+                  </div>
+                  <div className="space-y-1.5">
+                    {(selectedTeam.history?.honors || [
+                      "🏆 Sunday League Champions (2024/2025)",
+                      "🥇 Academy Super Cup Winners",
+                    ]).map((h, idx) => (
+                      <div
+                        key={idx}
+                        className="p-2.5 rounded-xl bg-[#09061c] border border-amber-400/20 text-white font-bold flex items-center justify-between"
+                      >
+                        <span>{h}</span>
+                        <span className="text-[10px] text-amber-400 font-mono">Official</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* All-time stats grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                  <div className="bg-[#141029] p-3 rounded-xl border border-[#2e2554]">
+                    <span className="text-[9px] uppercase font-bold text-gray-400 block">
+                      All-Time League Record
+                    </span>
+                    <span className="font-mono font-bold text-white text-xs">
+                      {selectedTeam.history?.allTimeRecord || "48 Matches: 34W-8D-6L"}
+                    </span>
+                  </div>
+
+                  <div className="bg-[#141029] p-3 rounded-xl border border-[#2e2554]">
+                    <span className="text-[9px] uppercase font-bold text-gray-400 block">
+                      Historical Win %
+                    </span>
+                    <span className="font-mono font-bold text-emerald-400 text-xs">
+                      {selectedTeam.history?.historicWinRate || "70.8%"}
+                    </span>
+                  </div>
+
+                  <div className="bg-[#141029] p-3 rounded-xl border border-[#2e2554] col-span-2 sm:col-span-1">
+                    <span className="text-[9px] uppercase font-bold text-gray-400 block">
+                      Biggest Historic Win
+                    </span>
+                    <span className="font-bold text-cyan-300 text-xs">
+                      {selectedTeam.history?.highestWin || "5 - 0 vs Rivals"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Derby Rivalry */}
+                {selectedTeam.history?.derbyRival && (
+                  <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl flex items-center justify-between">
+                    <span className="text-gray-300">Marquee Derby Rival:</span>
+                    <span className="font-bold text-rose-300">{selectedTeam.history.derbyRival}</span>
+                  </div>
+                )}
+
+                {/* Season Log */}
+                {selectedTeam.history?.seasons && (
+                  <div className="bg-[#141029] p-4 rounded-2xl border border-[#2e2554] space-y-2">
+                    <span className="text-[10px] uppercase font-bold text-gray-400 block tracking-wider">
+                      Season-by-Season Performance Log
+                    </span>
+                    <div className="divide-y divide-[#2e2554]">
+                      {selectedTeam.history.seasons.map((s, idx) => (
+                        <div key={idx} className="py-2 flex items-center justify-between">
+                          <div>
+                            <span className="font-bold text-white block">Season {s.season}</span>
+                            <span className="text-[10px] text-gray-400">{s.note}</span>
+                          </div>
+                          <div className="text-right">
+                            <span className="font-black text-cyan-300 block">{s.finish}</span>
+                            <span className="text-[10px] font-mono text-emerald-400">{s.points} PTS</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* TAB 5: SQUAD & PLAYER PORTRAITS */}
+            {clubModalTab === "squad" && (
+              <div className="space-y-4 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="font-extrabold text-white text-xs uppercase flex items-center gap-1.5">
+                    <span>👥</span> Official Squad Roster & Portraits
+                  </span>
+                  <a
+                    href="/upload-photo"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1 rounded-xl bg-gradient-to-r from-[#00f0ff] to-emerald-400 text-black font-black text-[11px] shadow hover:scale-105 transition"
+                  >
+                    + Upload Player Photo
+                  </a>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {(selectedTeam.squad || []).map((player, idx) => (
+                    <div
+                      key={idx}
+                      className="p-3 bg-[#141029] rounded-2xl border border-[#2e2554] flex items-center gap-3"
+                    >
+                      <div className="relative shrink-0">
+                        {player.photoUrl ? (
+                          <img
+                            src={player.photoUrl}
+                            alt={player.name}
+                            className="w-11 h-11 rounded-xl object-cover border-2 border-emerald-400 shadow"
+                          />
+                        ) : (
+                          <div
+                            className="w-11 h-11 rounded-xl flex items-center justify-center font-black text-white text-xs shadow"
+                            style={{ backgroundColor: selectedTeam.color }}
+                          >
+                            #{player.number}
+                          </div>
+                        )}
+                        {player.photoUrl && (
+                          <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full border border-black" />
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <span className="font-extrabold text-white block truncate">{player.name}</span>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-white/10 text-cyan-300">
+                            {player.position}
+                          </span>
+                          <span className="text-[10px] font-mono text-gray-400">#{player.number}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <p className="text-[10px] text-gray-400 italic">
+                  💡 Athletes: Click "+ Upload Player Photo" above to upload your official headshot and update your profile across the portal.
+                </p>
+              </div>
+            )}
+
+            {/* Modal Bottom Close Button */}
+            <div className="pt-2 border-t border-[#2e2554] flex items-center justify-between">
+              <span className="text-[11px] text-gray-400 font-mono">
+                M-Pesa Sunday League • Official Dossier
+              </span>
+              <button
+                onClick={() => {
+                  setSelectedTeam(null);
+                  setClubModalTab("overview");
+                }}
+                className="bg-[#141029] hover:bg-[#1f1744] text-white px-5 py-2 rounded-xl text-xs font-bold border border-[#2e2554] transition"
+              >
+                Close Profile
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
