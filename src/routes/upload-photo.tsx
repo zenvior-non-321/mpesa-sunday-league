@@ -1,14 +1,14 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { PlayerPhotoUploadPortal } from '../components/PlayerPhotoUploadPortal';
+import { createFileRoute } from "@tanstack/react-router";
+import { PlayerPhotoUploadPortal } from "../components/PlayerPhotoUploadPortal";
 
-export const Route = createFileRoute('/upload-photo')({
+export const Route = createFileRoute("/upload-photo")({
   head: () => ({
     meta: [
-      { title: 'Player Photo Upload Portal | M-Pesa Sunday League' },
+      { title: "Player Photo Upload Portal | M-Pesa Sunday League" },
       {
-        name: 'description',
+        name: "description",
         content:
-          'Official portal for student athletes to upload and publish their profile pictures for the M-Pesa Sunday League.',
+          "Official portal for student athletes to upload and publish their profile pictures for the M-Pesa Sunday League.",
       },
     ],
   }),

@@ -1,5 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { Upload, Camera, CheckCircle2, UserCheck, Shield, Sparkles, Copy, ExternalLink } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from "react";
+import {
+  Upload,
+  Camera,
+  CheckCircle2,
+  UserCheck,
+  Shield,
+  Sparkles,
+  Copy,
+  ExternalLink,
+} from "lucide-react";
 
 interface PlayerInfo {
   name: string;
@@ -22,9 +31,9 @@ interface TeamData {
 
 export function PlayerPhotoUploadPortal() {
   const [teams, setTeams] = useState<TeamData[]>([]);
-  const [selectedTeamId, setSelectedTeamId] = useState<number | ''>('');
-  const [selectedPlayerName, setSelectedPlayerName] = useState<string>('');
-  const [previewPhoto, setPreviewPhoto] = useState<string>('');
+  const [selectedTeamId, setSelectedTeamId] = useState<number | "">("");
+  const [selectedPlayerName, setSelectedPlayerName] = useState<string>("");
+  const [previewPhoto, setPreviewPhoto] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [uploadSuccess, setUploadSuccess] = useState<boolean>(false);
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
@@ -32,7 +41,7 @@ export function PlayerPhotoUploadPortal() {
   // Load teams & squads from localStorage or defaults
   useEffect(() => {
     try {
-      const stored = localStorage.getItem('mpesa_pes_teams_v6');
+      const stored = localStorage.getItem("mpesa_pes_teams_v6");
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
@@ -42,77 +51,225 @@ export function PlayerPhotoUploadPortal() {
         }
       }
     } catch (e) {
-      console.warn('Could not load teams:', e);
+      console.warn("Could not load teams:", e);
     }
 
     // Default fallback squads
     const defaultTeams: TeamData[] = [
       {
         id: 1,
-        name: 'Samba Boys',
-        shortCode: 'SMB',
-        color: '#00ff85',
-        homePitch: 'Samba Arena (School Lower Pitch)',
+        name: "Samba Boys",
+        shortCode: "SMB",
+        color: "#00ff85",
+        homePitch: "Samba Arena (School Lower Pitch)",
         squad: [
-          { name: 'Kevin Omondi', number: 10, position: 'FWD', foot: 'Right', admissionNumber: 'ADM-2024-0101', photoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80' },
-          { name: 'Brian Mwangi', number: 7, position: 'MID', foot: 'Right', admissionNumber: 'ADM-2024-0102', photoUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80' },
-          { name: 'Dan Kiprop', number: 1, position: 'GK', foot: 'Both', admissionNumber: 'ADM-2024-0103', photoUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80' },
-          { name: 'Samuel Otieno', number: 4, position: 'DEF', foot: 'Right', admissionNumber: 'ADM-2024-0104' },
-          { name: 'Faith Chemutai', number: 8, position: 'MID', foot: 'Left', admissionNumber: 'ADM-2024-0105' },
-          { name: 'Victor Maina', number: 11, position: 'FWD', foot: 'Right', admissionNumber: 'ADM-2024-0106' },
+          {
+            name: "Kevin Omondi",
+            number: 10,
+            position: "FWD",
+            foot: "Right",
+            admissionNumber: "ADM-2024-0101",
+            photoUrl:
+              "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
+          },
+          {
+            name: "Brian Mwangi",
+            number: 7,
+            position: "MID",
+            foot: "Right",
+            admissionNumber: "ADM-2024-0102",
+            photoUrl:
+              "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80",
+          },
+          {
+            name: "Dan Kiprop",
+            number: 1,
+            position: "GK",
+            foot: "Both",
+            admissionNumber: "ADM-2024-0103",
+            photoUrl:
+              "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80",
+          },
+          {
+            name: "Samuel Otieno",
+            number: 4,
+            position: "DEF",
+            foot: "Right",
+            admissionNumber: "ADM-2024-0104",
+          },
+          {
+            name: "Faith Chemutai",
+            number: 8,
+            position: "MID",
+            foot: "Left",
+            admissionNumber: "ADM-2024-0105",
+          },
+          {
+            name: "Victor Maina",
+            number: 11,
+            position: "FWD",
+            foot: "Right",
+            admissionNumber: "ADM-2024-0106",
+          },
         ],
       },
       {
         id: 2,
-        name: 'Grade 10 A',
-        shortCode: 'G10A',
-        color: '#00f0ff',
-        homePitch: 'Academy Main Stadium',
+        name: "Grade 10 A",
+        shortCode: "G10A",
+        color: "#00f0ff",
+        homePitch: "Academy Main Stadium",
         squad: [
-          { name: 'Emmanuel Kip', number: 9, position: 'FWD', foot: 'Left', admissionNumber: 'ADM-2024-0201', photoUrl: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=150&auto=format&fit=crop&q=80' },
-          { name: 'John Doe', number: 1, position: 'GK', foot: 'Right', admissionNumber: 'ADM-2024-0202', photoUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80' },
-          { name: 'Bradley Barasa', number: 6, position: 'DEF', foot: 'Right', admissionNumber: 'ADM-2024-0203' },
-          { name: 'George Ochieng', number: 8, position: 'MID', foot: 'Both', admissionNumber: 'ADM-2024-0204' },
-          { name: 'Ryan Gitonga', number: 11, position: 'FWD', foot: 'Left', admissionNumber: 'ADM-2024-0205' },
+          {
+            name: "Emmanuel Kip",
+            number: 9,
+            position: "FWD",
+            foot: "Left",
+            admissionNumber: "ADM-2024-0201",
+            photoUrl:
+              "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=150&auto=format&fit=crop&q=80",
+          },
+          {
+            name: "John Doe",
+            number: 1,
+            position: "GK",
+            foot: "Right",
+            admissionNumber: "ADM-2024-0202",
+            photoUrl:
+              "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80",
+          },
+          {
+            name: "Bradley Barasa",
+            number: 6,
+            position: "DEF",
+            foot: "Right",
+            admissionNumber: "ADM-2024-0203",
+          },
+          {
+            name: "George Ochieng",
+            number: 8,
+            position: "MID",
+            foot: "Both",
+            admissionNumber: "ADM-2024-0204",
+          },
+          {
+            name: "Ryan Gitonga",
+            number: 11,
+            position: "FWD",
+            foot: "Left",
+            admissionNumber: "ADM-2024-0205",
+          },
         ],
       },
       {
         id: 3,
-        name: 'Grade 10 B',
-        shortCode: 'G10B',
-        color: '#ffe600',
-        homePitch: 'Yellow Fortress Pitch B',
+        name: "Grade 10 B",
+        shortCode: "G10B",
+        color: "#ffe600",
+        homePitch: "Yellow Fortress Pitch B",
         squad: [
-          { name: 'Joshua Mutua', number: 5, position: 'DEF', foot: 'Right', admissionNumber: 'ADM-2024-0301' },
-          { name: 'Ian Mercer', number: 10, position: 'MID', foot: 'Both', admissionNumber: 'ADM-2024-0303' },
-          { name: 'Peter Kariuki', number: 1, position: 'GK', foot: 'Right', admissionNumber: 'ADM-2024-0304' },
-          { name: 'Kelvin Njoroge', number: 7, position: 'FWD', foot: 'Right', admissionNumber: 'ADM-2024-0305' },
+          {
+            name: "Joshua Mutua",
+            number: 5,
+            position: "DEF",
+            foot: "Right",
+            admissionNumber: "ADM-2024-0301",
+          },
+          {
+            name: "Ian Mercer",
+            number: 10,
+            position: "MID",
+            foot: "Both",
+            admissionNumber: "ADM-2024-0303",
+          },
+          {
+            name: "Peter Kariuki",
+            number: 1,
+            position: "GK",
+            foot: "Right",
+            admissionNumber: "ADM-2024-0304",
+          },
+          {
+            name: "Kelvin Njoroge",
+            number: 7,
+            position: "FWD",
+            foot: "Right",
+            admissionNumber: "ADM-2024-0305",
+          },
         ],
       },
       {
         id: 4,
-        name: 'DP 2 A',
-        shortCode: 'DP2A',
-        color: '#ff0077',
-        homePitch: 'Senior DP Complex',
+        name: "DP 2 A",
+        shortCode: "DP2A",
+        color: "#ff0077",
+        homePitch: "Senior DP Complex",
         squad: [
-          { name: 'Collins Wekesa', number: 8, position: 'MID', foot: 'Right', admissionNumber: 'ADM-2023-0401' },
-          { name: 'Alex Rono', number: 11, position: 'FWD', foot: 'Left', admissionNumber: 'ADM-2023-0403' },
-          { name: 'Timothy Cheruiyot', number: 1, position: 'GK', foot: 'Both', admissionNumber: 'ADM-2023-0404' },
-          { name: 'Kelvin Korir', number: 9, position: 'FWD', foot: 'Right', admissionNumber: 'ADM-2023-0406' },
+          {
+            name: "Collins Wekesa",
+            number: 8,
+            position: "MID",
+            foot: "Right",
+            admissionNumber: "ADM-2023-0401",
+          },
+          {
+            name: "Alex Rono",
+            number: 11,
+            position: "FWD",
+            foot: "Left",
+            admissionNumber: "ADM-2023-0403",
+          },
+          {
+            name: "Timothy Cheruiyot",
+            number: 1,
+            position: "GK",
+            foot: "Both",
+            admissionNumber: "ADM-2023-0404",
+          },
+          {
+            name: "Kelvin Korir",
+            number: 9,
+            position: "FWD",
+            foot: "Right",
+            admissionNumber: "ADM-2023-0406",
+          },
         ],
       },
       {
         id: 5,
-        name: 'DP 2 B',
-        shortCode: 'DP2B',
-        color: '#a855f7',
-        homePitch: 'Purple Pitch Arena',
+        name: "DP 2 B",
+        shortCode: "DP2B",
+        color: "#a855f7",
+        homePitch: "Purple Pitch Arena",
         squad: [
-          { name: 'Hassan Ali', number: 10, position: 'MID', foot: 'Both', admissionNumber: 'ADM-2023-0501' },
-          { name: 'Rashid Mohamed', number: 6, position: 'DEF', foot: 'Right', admissionNumber: 'ADM-2023-0503' },
-          { name: 'Brian Koech', number: 1, position: 'GK', foot: 'Right', admissionNumber: 'ADM-2023-0504' },
-          { name: 'Caleb Kibet', number: 9, position: 'FWD', foot: 'Right', admissionNumber: 'ADM-2023-0505' },
+          {
+            name: "Hassan Ali",
+            number: 10,
+            position: "MID",
+            foot: "Both",
+            admissionNumber: "ADM-2023-0501",
+          },
+          {
+            name: "Rashid Mohamed",
+            number: 6,
+            position: "DEF",
+            foot: "Right",
+            admissionNumber: "ADM-2023-0503",
+          },
+          {
+            name: "Brian Koech",
+            number: 1,
+            position: "GK",
+            foot: "Right",
+            admissionNumber: "ADM-2023-0504",
+          },
+          {
+            name: "Caleb Kibet",
+            number: 9,
+            position: "FWD",
+            foot: "Right",
+            admissionNumber: "ADM-2023-0505",
+          },
         ],
       },
     ];
@@ -122,7 +279,7 @@ export function PlayerPhotoUploadPortal() {
   }, []);
 
   const currentTeam = teams.find((t) => t.id === Number(selectedTeamId));
-  const currentSquad = currentTeam?.squad || [];
+  const currentSquad = useMemo(() => currentTeam?.squad || [], [currentTeam]);
 
   const currentPlayer = currentSquad.find((p) => p.name === selectedPlayerName) || null;
 
@@ -130,14 +287,14 @@ export function PlayerPhotoUploadPortal() {
   useEffect(() => {
     if (currentSquad.length > 0 && !selectedPlayerName) {
       setSelectedPlayerName(currentSquad[0].name);
-      setPreviewPhoto(currentSquad[0].photoUrl || '');
+      setPreviewPhoto(currentSquad[0].photoUrl || "");
     }
   }, [currentSquad, selectedPlayerName]);
 
   const handlePlayerChange = (name: string) => {
     setSelectedPlayerName(name);
     const p = currentSquad.find((item) => item.name === name);
-    setPreviewPhoto(p?.photoUrl || '');
+    setPreviewPhoto(p?.photoUrl || "");
     setUploadSuccess(false);
   };
 
@@ -145,8 +302,8 @@ export function PlayerPhotoUploadPortal() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
-      alert('Please select a valid image file (PNG, JPG, WebP).');
+    if (!file.type.startsWith("image/")) {
+      alert("Please select a valid image file (PNG, JPG, WebP).");
       return;
     }
 
@@ -163,7 +320,7 @@ export function PlayerPhotoUploadPortal() {
 
   const handleSavePhoto = () => {
     if (!selectedTeamId || !selectedPlayerName || !previewPhoto) {
-      alert('Please select your club, player profile, and upload an image.');
+      alert("Please select your club, player profile, and upload an image.");
       return;
     }
 
@@ -185,10 +342,10 @@ export function PlayerPhotoUploadPortal() {
       });
 
       setTeams(updatedTeams);
-      localStorage.setItem('mpesa_pes_teams_v6', JSON.stringify(updatedTeams));
+      localStorage.setItem("mpesa_pes_teams_v6", JSON.stringify(updatedTeams));
 
       // Also update playerStatsList if present
-      const storedStats = localStorage.getItem('mpesa_pes_stats_v6');
+      const storedStats = localStorage.getItem("mpesa_pes_stats_v6");
       if (storedStats) {
         try {
           const stats = JSON.parse(storedStats);
@@ -199,22 +356,22 @@ export function PlayerPhotoUploadPortal() {
               }
               return s;
             });
-            localStorage.setItem('mpesa_pes_stats_v6', JSON.stringify(updatedStats));
+            localStorage.setItem("mpesa_pes_stats_v6", JSON.stringify(updatedStats));
           }
         } catch (e) {
-          console.warn('Stats sync warning:', e);
+          console.warn("Stats sync warning:", e);
         }
       }
 
       // Notify window listeners
-      window.dispatchEvent(new Event('storage'));
+      window.dispatchEvent(new Event("storage"));
 
       setIsSubmitting(false);
       setUploadSuccess(true);
     } catch (e) {
-      console.error('Error saving player photo:', e);
+      console.error("Error saving player photo:", e);
       setIsSubmitting(false);
-      alert('Failed to save photo. Please try again.');
+      alert("Failed to save photo. Please try again.");
     }
   };
 
@@ -243,7 +400,9 @@ export function PlayerPhotoUploadPortal() {
               Player Profile Photo Upload
             </h1>
             <p className="text-xs sm:text-sm text-gray-300 max-w-xl">
-              Student athletes: Select your club and name, then upload your official headshot. Once saved, your portrait immediately reflects across the Admin Personnel Module, Matchday Lineups, and Player Leaderboard!
+              Student athletes: Select your club and name, then upload your official headshot. Once
+              saved, your portrait immediately reflects across the Admin Personnel Module, Matchday
+              Lineups, and Player Leaderboard!
             </p>
           </div>
 
@@ -254,7 +413,7 @@ export function PlayerPhotoUploadPortal() {
               title="Copy link to share with players"
             >
               <Copy className="w-4 h-4 text-[#00f0ff]" />
-              <span>{copiedLink ? 'Link Copied!' : 'Copy Share Link'}</span>
+              <span>{copiedLink ? "Link Copied!" : "Copy Share Link"}</span>
             </button>
             <a
               href="/league.html"
@@ -283,10 +442,10 @@ export function PlayerPhotoUploadPortal() {
                 const t = teams.find((item) => item.id === newId);
                 if (t && t.squad && t.squad.length > 0) {
                   setSelectedPlayerName(t.squad[0].name);
-                  setPreviewPhoto(t.squad[0].photoUrl || '');
+                  setPreviewPhoto(t.squad[0].photoUrl || "");
                 } else {
-                  setSelectedPlayerName('');
-                  setPreviewPhoto('');
+                  setSelectedPlayerName("");
+                  setPreviewPhoto("");
                 }
                 setUploadSuccess(false);
               }}
@@ -311,7 +470,7 @@ export function PlayerPhotoUploadPortal() {
             >
               {currentSquad.map((player, idx) => (
                 <option key={idx} value={player.name}>
-                  #{player.number || (idx + 1)} • {player.name} ({player.position || 'Player'})
+                  #{player.number || idx + 1} • {player.name} ({player.position || "Player"})
                 </option>
               ))}
             </select>
@@ -324,7 +483,7 @@ export function PlayerPhotoUploadPortal() {
             <div className="flex items-center gap-3">
               <div
                 className="w-12 h-12 rounded-2xl flex items-center justify-center font-black text-white text-base shadow-md border border-white/20 shrink-0"
-                style={{ backgroundColor: currentTeam?.color || '#00f0ff' }}
+                style={{ backgroundColor: currentTeam?.color || "#00f0ff" }}
               >
                 #{currentPlayer.number || 10}
               </div>
@@ -332,11 +491,14 @@ export function PlayerPhotoUploadPortal() {
                 <div className="flex items-center gap-2">
                   <h3 className="font-extrabold text-base text-white">{currentPlayer.name}</h3>
                   <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">
-                    {currentPlayer.position || 'FWD'}
+                    {currentPlayer.position || "FWD"}
                   </span>
                 </div>
                 <span className="text-xs text-gray-400 font-mono">
-                  {currentPlayer.admissionNumber ? `ADM: ${currentPlayer.admissionNumber}` : 'Student Athlete'} • Foot: {currentPlayer.foot || 'Right'}
+                  {currentPlayer.admissionNumber
+                    ? `ADM: ${currentPlayer.admissionNumber}`
+                    : "Student Athlete"}{" "}
+                  • Foot: {currentPlayer.foot || "Right"}
                 </span>
               </div>
             </div>
@@ -363,7 +525,11 @@ export function PlayerPhotoUploadPortal() {
 
               <div className="relative w-36 h-36 rounded-3xl overflow-hidden border-2 border-[#00f0ff] shadow-xl shadow-cyan-500/20 bg-[#120d29] flex items-center justify-center">
                 {previewPhoto ? (
-                  <img src={previewPhoto} alt="Player Preview" className="w-full h-full object-cover" />
+                  <img
+                    src={previewPhoto}
+                    alt="Player Preview"
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
                   <div className="flex flex-col items-center text-gray-500 gap-1">
                     <UserCheck className="w-10 h-10 text-gray-600" />
@@ -410,7 +576,7 @@ export function PlayerPhotoUploadPortal() {
                 </label>
                 <input
                   type="text"
-                  value={previewPhoto.startsWith('data:') ? '' : previewPhoto}
+                  value={previewPhoto.startsWith("data:") ? "" : previewPhoto}
                   onChange={(e) => {
                     setPreviewPhoto(e.target.value);
                     setUploadSuccess(false);
@@ -428,8 +594,11 @@ export function PlayerPhotoUploadPortal() {
           <div className="p-4 bg-emerald-500/10 border border-emerald-500/40 rounded-2xl flex items-center gap-3 text-emerald-300 text-xs font-bold animate-in fade-in duration-200">
             <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
             <div>
-              <span className="block font-black text-white text-sm">Profile Photo Updated Live!</span>
-              Your new picture has been synchronized across the admin personnel directory, player stats leaderboard, and club roster.
+              <span className="block font-black text-white text-sm">
+                Profile Photo Updated Live!
+              </span>
+              Your new picture has been synchronized across the admin personnel directory, player
+              stats leaderboard, and club roster.
             </div>
           </div>
         )}
@@ -445,12 +614,12 @@ export function PlayerPhotoUploadPortal() {
             disabled={isSubmitting || !previewPhoto}
             className={`w-full sm:w-auto px-8 py-3.5 rounded-2xl text-xs font-black transition flex items-center justify-center gap-2 shadow-xl ${
               !previewPhoto
-                ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
-                : 'bg-gradient-to-r from-[#00f0ff] via-emerald-400 to-[#00ff85] text-black hover:shadow-neon-cyan hover:scale-[1.02] active:scale-[0.98]'
+                ? "bg-gray-800 text-gray-500 cursor-not-allowed"
+                : "bg-gradient-to-r from-[#00f0ff] via-emerald-400 to-[#00ff85] text-black hover:shadow-neon-cyan hover:scale-[1.02] active:scale-[0.98]"
             }`}
           >
             <CheckCircle2 className="w-4 h-4" />
-            <span>{isSubmitting ? 'Saving Photo...' : 'Publish Official Profile Picture'}</span>
+            <span>{isSubmitting ? "Saving Photo..." : "Publish Official Profile Picture"}</span>
           </button>
         </div>
       </div>

@@ -72,9 +72,9 @@ const DEFAULT_STANDINGS: TeamStanding[] = [
     color: "#00ff85",
     homePitch: "Samba Arena (School Lower Pitch)",
     coach: {
-      name: "Coach Kennedy Juma",
-      role: "Pia Head Coach",
-      email: "kjuma@mpesaleague.org",
+      name: "Aron Charito",
+      role: "Head Coach",
+      email: "aron.charito@mpesafoundationacademy.ac.ke",
       photoUrl:
         "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
     },
@@ -84,14 +84,16 @@ const DEFAULT_STANDINGS: TeamStanding[] = [
       surface: "Hybrid Bermuda Turf & FIFA Quality AstroTurf",
       dimensions: "105m × 68m (Standard Pitch)",
       record: "85% Home Win Rate • 0 Defeats at Home (2026/27)",
-      notes: "Known as the 'Samba Cauldron' due to energetic student drums and brass section during Sunday games.",
+      notes:
+        "Known as the 'Samba Cauldron' due to energetic student drums and brass section during Sunday games.",
     },
     coachDetails: {
       formation: "4-3-3 Attacking Gegenpress",
-      philosophy: "Fluid attacking soccer with aggressive counter-pressing and rapid wing overloads.",
+      philosophy:
+        "Fluid attacking soccer with aggressive counter-pressing and rapid wing overloads.",
       winRate: "78.4% All-Time (29W - 5D - 3L)",
       tenure: "3 Seasons (Appointed Sep 2024)",
-      assistantCoach: "Coach Peter Kimani (Tactical Analyst)",
+      assistantCoach: "George Victor (george.kibet@mpesafoundationacademy.ac.ke)",
     },
     history: {
       founded: "2023 at M-Pesa Foundation Academy",
@@ -105,18 +107,169 @@ const DEFAULT_STANDINGS: TeamStanding[] = [
       derbyRival: "The Academy Clásico vs Grade 10 A",
       historicWinRate: "70.8%",
       seasons: [
-        { season: "2024/25", finish: "1st Place (Champions)", points: 28, note: "Undefeated home record" },
-        { season: "2025/26", finish: "2nd Place (Runners-Up)", points: 25, note: "Highest goals scored (34)" },
-        { season: "2026/27", finish: "1st Place (Current)", points: 13, note: "Active matchweek 5 leader" },
+        {
+          season: "2024/25",
+          finish: "1st Place (Champions)",
+          points: 28,
+          note: "Undefeated home record",
+        },
+        {
+          season: "2025/26",
+          finish: "2nd Place (Runners-Up)",
+          points: 25,
+          note: "Highest goals scored (34)",
+        },
+        {
+          season: "2026/27",
+          finish: "1st Place (Current)",
+          points: 13,
+          note: "Active matchweek 5 leader",
+        },
       ],
     },
     squad: [
-      { name: "Kevin Omondi", number: 10, position: "FWD", photoUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80" },
-      { name: "Brian Mwangi", number: 7, position: "MID", photoUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80" },
-      { name: "Dan Kiprop", number: 1, position: "GK", photoUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80" },
-      { name: "Samuel Otieno", number: 4, position: "DEF" },
-      { name: "Faith Chemutai", number: 8, position: "MID" },
-      { name: "Victor Maina", number: 11, position: "FWD" },
+      {
+        name: "Levis Wanyama",
+        number: 10,
+        position: "MID",
+        role: "Owner & Captain",
+        email: "levis.wanyama@mpesafoundationacademy.ac.ke",
+        photoUrl:
+          "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
+      },
+      {
+        name: "Tonny Odundo",
+        number: 7,
+        position: "MID",
+        role: "Member",
+        email: "tonny.odundo@mpesafoundationacademy.ac.ke",
+      },
+      {
+        name: "Ali Guyo",
+        number: 2,
+        position: "DEF",
+        role: "Member",
+        email: "ali.diba@mpesafoundationacademy.ac.ke",
+      },
+      {
+        name: "Chris Koome",
+        number: 8,
+        position: "MID",
+        role: "Member",
+        email: "chris.koome@mpesafoundationacademy.ac.ke",
+      },
+      {
+        name: "Dennis Thoya",
+        number: 3,
+        position: "DEF",
+        role: "Member",
+        email: "dennis.thoya@mpesafoundationacademy.ac.ke",
+      },
+      {
+        name: "Elvis Kingoo",
+        number: 9,
+        position: "FWD",
+        role: "Member",
+        email: "elvis.kingoo@mpesafoundationacademy.ac.ke",
+      },
+      {
+        name: "Gabriel Ekitui",
+        number: 4,
+        position: "DEF",
+        role: "Member",
+        email: "gabriel.alukwar@mpesafoundationacademy.ac.ke",
+      },
+      {
+        name: "George Victor",
+        number: 6,
+        position: "MID",
+        role: "Assistant Coach & Member",
+        email: "george.kibet@mpesafoundationacademy.ac.ke",
+      },
+      {
+        name: "Grout Olal",
+        number: 11,
+        position: "FWD",
+        role: "Member",
+        email: "grout.olal@mpesafoundationacademy.ac.ke",
+      },
+      {
+        name: "Idi Sebantu",
+        number: 1,
+        position: "GK",
+        role: "Member",
+        email: "idi.sebantu@mpesafoundationacademy.ac.ke",
+      },
+      {
+        name: "Ken Neepe",
+        number: 5,
+        position: "DEF",
+        role: "Member",
+        email: "ken.leneepa@mpesafoundationacademy.ac.ke",
+      },
+      {
+        name: "King David",
+        number: 14,
+        position: "MID",
+        role: "Member",
+        email: "king.amani@mpesafoundationacademy.ac.ke",
+      },
+      {
+        name: "Lewis Trady",
+        number: 17,
+        position: "FWD",
+        role: "Member",
+        email: "trady.lewis@mpesafoundationacademy.ac.ke",
+      },
+      {
+        name: "Mahad Abdi",
+        number: 12,
+        position: "MID",
+        role: "Member",
+        email: "mahad.sihal@mpesafoundationacademy.ac.ke",
+      },
+      {
+        name: "Mark Tonny",
+        number: 15,
+        position: "MID",
+        role: "Member",
+        email: "tonny.odundo@mpesafoundationacademy.ac.ke",
+      },
+      {
+        name: "Nimrod Khayumbi",
+        number: 16,
+        position: "DEF",
+        role: "Member",
+        email: "nimrod.khayumbi@mpesafoundationacademy.ac.ke",
+      },
+      {
+        name: "Reagan Ogora",
+        number: 18,
+        position: "DEF",
+        role: "Member",
+        email: "reagan.onsongo@mpesafoundationacademy.ac.ke",
+      },
+      {
+        name: "Ryan Kiarago",
+        number: 20,
+        position: "MID",
+        role: "Member",
+        email: "ryan.kiarago@mpesafoundationacademy.ac.ke",
+      },
+      {
+        name: "Ryan Odiwuor",
+        number: 21,
+        position: "GK",
+        role: "Member",
+        email: "ryan.odiwuor@mpesafoundationacademy.ac.ke",
+      },
+      {
+        name: "Wayne Kiptoo",
+        number: 22,
+        position: "MID",
+        role: "Member",
+        email: "wayne.kiptoo@mpesafoundationacademy.ac.ke",
+      },
     ],
     mp: 5,
     w: 4,
@@ -147,11 +300,13 @@ const DEFAULT_STANDINGS: TeamStanding[] = [
       surface: "Natural Kikuyu Grass & Under-drainage",
       dimensions: "105m × 68m",
       record: "72% Home Win Rate",
-      notes: "The premier championship stadium featuring broadcast gantries, grandstand seating, and electronic scoreboard.",
+      notes:
+        "The premier championship stadium featuring broadcast gantries, grandstand seating, and electronic scoreboard.",
     },
     coachDetails: {
       formation: "4-2-3-1 Dynamic Possession",
-      philosophy: "Positional play emphasizing control through the middle with explosive inverted wingers.",
+      philosophy:
+        "Positional play emphasizing control through the middle with explosive inverted wingers.",
       winRate: "70.2% All-Time (26W - 6D - 5L)",
       tenure: "2 Seasons",
       assistantCoach: "Coach Daniel Ndegwa",
@@ -169,13 +324,35 @@ const DEFAULT_STANDINGS: TeamStanding[] = [
       historicWinRate: "65.9%",
       seasons: [
         { season: "2024/25", finish: "3rd Place", points: 21, note: "Semi-final cup run" },
-        { season: "2025/26", finish: "1st Place (Champions)", points: 29, note: "Championship title winners" },
-        { season: "2026/27", finish: "2nd Place (Current)", points: 11, note: "Unbeaten in 5 games" },
+        {
+          season: "2025/26",
+          finish: "1st Place (Champions)",
+          points: 29,
+          note: "Championship title winners",
+        },
+        {
+          season: "2026/27",
+          finish: "2nd Place (Current)",
+          points: 11,
+          note: "Unbeaten in 5 games",
+        },
       ],
     },
     squad: [
-      { name: "Emmanuel Kip", number: 9, position: "FWD", photoUrl: "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=150&auto=format&fit=crop&q=80" },
-      { name: "John Doe", number: 1, position: "GK", photoUrl: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80" },
+      {
+        name: "Emmanuel Kip",
+        number: 9,
+        position: "FWD",
+        photoUrl:
+          "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=150&auto=format&fit=crop&q=80",
+      },
+      {
+        name: "John Doe",
+        number: 1,
+        position: "GK",
+        photoUrl:
+          "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80",
+      },
       { name: "Bradley Barasa", number: 6, position: "DEF" },
       { name: "George Ochieng", number: 8, position: "MID" },
       { name: "Ryan Gitonga", number: 11, position: "FWD" },
@@ -209,21 +386,20 @@ const DEFAULT_STANDINGS: TeamStanding[] = [
       surface: "All-Weather AstroTurf Field",
       dimensions: "100m × 64m",
       record: "60% Home Win Rate",
-      notes: "Famous for compact, intense tactical encounters and high pressing under warm afternoon sunshine.",
+      notes:
+        "Famous for compact, intense tactical encounters and high pressing under warm afternoon sunshine.",
     },
     coachDetails: {
       formation: "3-5-2 Wing-Back Overload",
-      philosophy: "Disciplined mid-block transition with high work-rate wing-backs stretching the pitch.",
+      philosophy:
+        "Disciplined mid-block transition with high work-rate wing-backs stretching the pitch.",
       winRate: "54.5% All-Time (18W - 7D - 8L)",
       tenure: "2 Seasons",
       assistantCoach: "Coach Evans Mutiso",
     },
     history: {
       founded: "2023 at M-Pesa Foundation Academy",
-      honors: [
-        "🥇 Junior Division Cup (2024)",
-        "🥉 Sunday League Bronze Medalists (2024/25)",
-      ],
+      honors: ["🥇 Junior Division Cup (2024)", "🥉 Sunday League Bronze Medalists (2024/25)"],
       allTimeRecord: "40 Matches: 20 Wins, 8 Draws, 12 Losses",
       highestWin: "4 - 1 vs DP 2 B (MW 2, 2026)",
       derbyRival: "Grade 10 Derby vs Grade 10 A",
@@ -231,7 +407,12 @@ const DEFAULT_STANDINGS: TeamStanding[] = [
       seasons: [
         { season: "2024/25", finish: "3rd Place", points: 19, note: "Podium finish" },
         { season: "2025/26", finish: "4th Place", points: 17, note: "Cup quarter-finalists" },
-        { season: "2026/27", finish: "3rd Place (Current)", points: 7, note: "Holding podium spot" },
+        {
+          season: "2026/27",
+          finish: "3rd Place (Current)",
+          points: 7,
+          note: "Holding podium spot",
+        },
       ],
     },
     squad: [
@@ -273,17 +454,15 @@ const DEFAULT_STANDINGS: TeamStanding[] = [
     },
     coachDetails: {
       formation: "4-4-2 Diamond",
-      philosophy: "Physical direct attacks, strong aerial set-pieces, and clinical long-range finishing.",
+      philosophy:
+        "Physical direct attacks, strong aerial set-pieces, and clinical long-range finishing.",
       winRate: "52.0% All-Time (17W - 6D - 10L)",
       tenure: "2 Seasons",
       assistantCoach: "Coach Lucas Omwamba",
     },
     history: {
       founded: "2023 at M-Pesa Foundation Academy",
-      honors: [
-        "🥈 Senior Academy Trophy Finalists (2025)",
-        "🥇 Fair Play Award (2024)",
-      ],
+      honors: ["🥈 Senior Academy Trophy Finalists (2025)", "🥇 Fair Play Award (2024)"],
       allTimeRecord: "38 Matches: 18 Wins, 7 Draws, 13 Losses",
       highestWin: "3 - 0 vs DP 2 B (MW 5, 2025)",
       derbyRival: "Senior DP Derby vs DP 2 B",
@@ -291,12 +470,23 @@ const DEFAULT_STANDINGS: TeamStanding[] = [
       seasons: [
         { season: "2024/25", finish: "4th Place", points: 16, note: "Solid inaugural year" },
         { season: "2025/26", finish: "3rd Place", points: 20, note: "Podium finish" },
-        { season: "2026/27", finish: "4th Place (Current)", points: 4, note: "Fighting for podium" },
+        {
+          season: "2026/27",
+          finish: "4th Place (Current)",
+          points: 4,
+          note: "Fighting for podium",
+        },
       ],
     },
     squad: [
       { name: "Collins Wekesa", number: 8, position: "MID" },
-      { name: "Alex Rono", number: 11, position: "FWD", photoUrl: "https://images.unsplash.com/photo-1528892952291-009c663ce843?w=150&auto=format&fit=crop&q=80" },
+      {
+        name: "Alex Rono",
+        number: 11,
+        position: "FWD",
+        photoUrl:
+          "https://images.unsplash.com/photo-1528892952291-009c663ce843?w=150&auto=format&fit=crop&q=80",
+      },
       { name: "Timothy Cheruiyot", number: 1, position: "GK" },
       { name: "Kelvin Korir", number: 9, position: "FWD" },
     ],
@@ -333,17 +523,15 @@ const DEFAULT_STANDINGS: TeamStanding[] = [
     },
     coachDetails: {
       formation: "5-3-2 Low-Block Counter",
-      philosophy: "Resilient deep defensive block seeking fast breakaway transitions behind the opposition line.",
+      philosophy:
+        "Resilient deep defensive block seeking fast breakaway transitions behind the opposition line.",
       winRate: "38.5% All-Time (10W - 6D - 10L)",
       tenure: "1 Season",
       assistantCoach: "Coach Morris K.",
     },
     history: {
       founded: "2023 at M-Pesa Foundation Academy",
-      honors: [
-        "🥇 Sportsmanship Shield (2025)",
-        "🥉 Academy Spirit Award (2024)",
-      ],
+      honors: ["🥇 Sportsmanship Shield (2025)", "🥉 Academy Spirit Award (2024)"],
       allTimeRecord: "32 Matches: 11 Wins, 5 Draws, 16 Losses",
       highestWin: "2 - 0 vs Grade 10 B (MW 6, 2025)",
       derbyRival: "Senior DP Derby vs DP 2 A",
@@ -351,7 +539,12 @@ const DEFAULT_STANDINGS: TeamStanding[] = [
       seasons: [
         { season: "2024/25", finish: "5th Place", points: 12, note: "Rebuilding squad" },
         { season: "2025/26", finish: "5th Place", points: 14, note: "Improved defense" },
-        { season: "2026/27", finish: "5th Place (Current)", points: 1, note: "Looking for first victory" },
+        {
+          season: "2026/27",
+          finish: "5th Place (Current)",
+          points: 1,
+          note: "Looking for first victory",
+        },
       ],
     },
     squad: [
@@ -369,6 +562,215 @@ const DEFAULT_STANDINGS: TeamStanding[] = [
     gd: -15,
     pts: 1,
     form: ["L", "L", "L", "D", "L"],
+  },
+  {
+    id: 6,
+    name: "Royal Rangers",
+    shortCode: "RR",
+    color: "#3b82f6",
+    homePitch: "Ranger Fortress Field (Academy East)",
+    coach: {
+      name: "Amirah Bramuel",
+      role: "Team Manager & Head of Operations",
+      email: "amirah.bramuel@mpesafoundationacademy.ac.ke",
+      photoUrl:
+        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+    },
+    stadium: {
+      name: "Ranger Fortress Field (Academy East)",
+      capacity: "1,100 Spectators",
+      surface: "All-Weather Hybrid Turf",
+      dimensions: "105m × 68m",
+      record: "80% Home Win Rate",
+      notes: "The Royal Rangers stronghold known for blue banners and disciplined defending.",
+    },
+    coachDetails: {
+      formation: "4-3-3 Balanced Attack",
+      philosophy: "High defensive discipline, quick midfield switches, and clinical winger pace.",
+      winRate: "68.0% All-Time",
+      tenure: "Inaugural Season",
+      assistantCoach: "Captain Haron & Captain Jaycrack",
+    },
+    history: {
+      founded: "2024 at M-Pesa Foundation Academy",
+      honors: ["🥇 Regional Shield Winners (2025)", "🥈 Inter-Class Cup Finalist (2025)"],
+      allTimeRecord: "28 Matches: 18 Wins, 5 Draws, 5 Losses",
+      highestWin: "4 - 0 vs DP 2 B",
+      derbyRival: "Academy Derby vs Young Stars City",
+      historicWinRate: "64.3%",
+      seasons: [
+        { season: "2025/26", finish: "2nd Place", points: 24, note: "Strong debut run" },
+        { season: "2026/27", finish: "3rd Place (Current)", points: 10, note: "Top 3 race" },
+      ],
+    },
+    squad: [
+      { name: "Brian", number: 1, position: "GK", role: "Goalkeeper" },
+      { name: "Gregory", number: 13, position: "GK", role: "Goalkeeper" },
+      { name: "Jattan", number: 2, position: "DEF", role: "Defender" },
+      { name: "Atibu", number: 3, position: "DEF", role: "Defender" },
+      { name: "Haron", number: 4, position: "DEF", role: "Team Captain & Defender" },
+      { name: "Edgar", number: 5, position: "DEF", role: "Defender" },
+      { name: "Mutwiri", number: 6, position: "DEF", role: "Defender" },
+      { name: "Kichuma", number: 12, position: "DEF", role: "Defender" },
+      { name: "Abdiaziz", number: 15, position: "DEF", role: "Defender" },
+      { name: "Eugene", number: 7, position: "MID", role: "Midfielder" },
+      { name: "Shawn", number: 8, position: "MID", role: "Midfielder" },
+      { name: "Jaycrack", number: 10, position: "MID", role: "Team Captain & Playmaker" },
+      { name: "Phisael", number: 14, position: "MID", role: "Midfielder" },
+      { name: "Opiyo", number: 16, position: "MID", role: "Midfielder" },
+      { name: "Abdirashid", number: 17, position: "MID", role: "Midfielder" },
+      { name: "Stafford", number: 18, position: "MID", role: "Midfielder" },
+      { name: "Vincent", number: 20, position: "MID", role: "Midfielder" },
+      { name: "Wokabi", number: 9, position: "FWD", role: "Forward" },
+      { name: "Edwin", number: 11, position: "FWD", role: "Forward" },
+      { name: "Carson", number: 19, position: "FWD", role: "Forward" },
+    ],
+    mp: 5,
+    w: 3,
+    d: 1,
+    l: 1,
+    gf: 10,
+    ga: 5,
+    gd: 5,
+    pts: 10,
+    form: ["W", "W", "D", "W", "L"],
+  },
+  {
+    id: 7,
+    name: "Young Stars City",
+    shortCode: "YSC",
+    color: "#f97316",
+    homePitch: "Young Stars City Arena (North Pavilion)",
+    coach: {
+      name: "Samwel Reagan Wanyama",
+      role: "Head Coach",
+      email: "samwel.wanyama@mpesafoundationacademy.ac.ke",
+      photoUrl:
+        "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&auto=format&fit=crop&q=80",
+    },
+    stadium: {
+      name: "Young Stars City Arena (North Pavilion)",
+      capacity: "1,350 Spectators",
+      surface: "Fine Bermuda Grass & Modern Drainage",
+      dimensions: "105m × 68m",
+      record: "75% Home Win Rate",
+      notes:
+        "Dynamic youth academy arena renowned for rapid passing interchanges and high-octane tempo.",
+    },
+    coachDetails: {
+      formation: "4-2-3-1 Explosive Pressing",
+      philosophy:
+        "High energy vertical transitions, fast diagonal through-balls, and total academy football.",
+      winRate: "65.0% All-Time",
+      tenure: "Inaugural Season",
+      assistantCoach: "Adams Technical Bench",
+    },
+    history: {
+      founded: "2024 at M-Pesa Foundation Academy",
+      honors: ["🏆 Academy Youth Cup (2025)", "🥇 Rising Stars Shield (2025)"],
+      allTimeRecord: "26 Matches: 16 Wins, 4 Draws, 6 Losses",
+      highestWin: "5 - 1 vs Grade 10 B",
+      derbyRival: "The Young Derby vs Royal Rangers & Samba Boys",
+      historicWinRate: "61.5%",
+      seasons: [
+        { season: "2025/26", finish: "3rd Place", points: 22, note: "Youth Cup Champions" },
+        { season: "2026/27", finish: "4th Place (Current)", points: 9, note: "Aggressive attack" },
+      ],
+    },
+    squad: [
+      { name: "Elly Adams Otieno", number: 10, position: "FWD", role: "Team Captain (C)" },
+      { name: "Hassan Siad", number: 2, position: "DEF", role: "Defender" },
+      { name: "Ibrahim Salat", number: 8, position: "MID", role: "Midfielder" },
+      { name: "Bidan Mwaura", number: 3, position: "DEF", role: "Defender" },
+      { name: "Raila Junior", number: 7, position: "FWD", role: "Forward" },
+      { name: "Washington Murithi", number: 6, position: "MID", role: "Midfielder" },
+      { name: "Ebeneza Moses", number: 1, position: "GK", role: "Goalkeeper" },
+      { name: "John Owino", number: 4, position: "DEF", role: "Defender" },
+      { name: "Gabriel Maluki", number: 11, position: "MID", role: "Midfielder" },
+      { name: "Moffat Osoro", number: 9, position: "FWD", role: "Forward" },
+      { name: "Mark Kwemoi", number: 5, position: "DEF", role: "Defender" },
+      { name: "Abdifatah", number: 12, position: "MID", role: "Midfielder" },
+      { name: "Dennis Macharia", number: 13, position: "DEF", role: "Defender" },
+      { name: "Lucas Nawakan", number: 14, position: "FWD", role: "Forward" },
+      { name: "Emmanuel Kariuki", number: 16, position: "GK", role: "Goalkeeper" },
+    ],
+    mp: 5,
+    w: 3,
+    d: 0,
+    l: 2,
+    gf: 11,
+    ga: 8,
+    gd: 3,
+    pts: 9,
+    form: ["L", "W", "W", "L", "W"],
+  },
+  {
+    id: 8,
+    name: "Mzinga Boyz",
+    shortCode: "MZB",
+    color: "#eab308",
+    homePitch: "The Hive Stadium (West Campus Ground)",
+    coach: {
+      name: "Saidi Bakari",
+      role: "Head Coach",
+      email: "saidi.bakari@mpesafoundationacademy.ac.ke",
+      photoUrl:
+        "https://images.unsplash.com/photo-1528892952291-009c663ce843?w=150&auto=format&fit=crop&q=80",
+    },
+    stadium: {
+      name: "The Hive Stadium (West Campus Grounds)",
+      capacity: "1,000 Spectators",
+      surface: "Natural Kikuyu Grass",
+      dimensions: "104m × 66m",
+      record: "70% Home Win Rate",
+      notes:
+        "The stinging home ground of the Mzinga Boyz with relentless pressing and energetic swarm tactics.",
+    },
+    coachDetails: {
+      formation: "3-4-3 Swarm Attack",
+      philosophy: "High-tempo collective pressing, relentless wing runs, and quick counter-surges.",
+      winRate: "62.5% All-Time",
+      tenure: "Inaugural Season",
+      assistantCoach: "Meshach Wanjala",
+    },
+    history: {
+      founded: "2024 at M-Pesa Foundation Academy",
+      honors: ["🥇 West Campus Shield (2025)", "🥈 Academy Trophy Runner-up (2025)"],
+      allTimeRecord: "24 Matches: 14 Wins, 5 Draws, 5 Losses",
+      highestWin: "3 - 0 vs DP 2 A",
+      derbyRival: "The Swarm Clásico vs Royal Rangers",
+      historicWinRate: "58.3%",
+      seasons: [
+        { season: "2025/26", finish: "4th Place", points: 20, note: "Debut season" },
+        { season: "2026/27", finish: "5th Place (Current)", points: 8, note: "Hard to break down" },
+      ],
+    },
+    squad: [
+      { name: "Hamard Adan", number: 10, position: "FWD", role: "Team Captain" },
+      { name: "Jeff Njoroge", number: 7, position: "MID", role: "Midfielder" },
+      { name: "Bavian Kipkorir", number: 8, position: "MID", role: "Midfielder" },
+      { name: "Brandon Wandera", number: 11, position: "FWD", role: "Forward" },
+      { name: "Collins Kiptum", number: 4, position: "DEF", role: "Defender" },
+      { name: "Eliud Mwaiza", number: 2, position: "DEF", role: "Defender" },
+      { name: "Enock Kiptoo", number: 3, position: "DEF", role: "Defender" },
+      { name: "Felix Okoth", number: 5, position: "DEF", role: "Defender" },
+      { name: "Bill Kipkoech", number: 1, position: "GK", role: "Goalkeeper" },
+      { name: "Said Bakari", number: 6, position: "MID", role: "Midfielder" },
+      { name: "Samuel Ekuwam", number: 12, position: "DEF", role: "Defender" },
+      { name: "Samuel Wanyama", number: 9, position: "FWD", role: "Forward" },
+      { name: "Simon Omondi Obara", number: 14, position: "MID", role: "Midfielder" },
+      { name: "Stephen Kipsang", number: 15, position: "MID", role: "Midfielder" },
+      { name: "Haron Lemmy", number: 13, position: "GK", role: "Goalkeeper" },
+    ],
+    mp: 5,
+    w: 2,
+    d: 2,
+    l: 1,
+    gf: 8,
+    ga: 6,
+    gd: 2,
+    pts: 8,
+    form: ["D", "W", "L", "W", "D"],
   },
 ];
 
@@ -1105,17 +1507,25 @@ export function LeagueStandings() {
                 {/* 4 Key Metrics */}
                 <div className="grid grid-cols-4 gap-2.5 text-center">
                   <div className="bg-[#141029] p-3 rounded-2xl border border-[#2e2554]">
-                    <span className="text-[10px] text-gray-400 font-bold block uppercase">Points</span>
+                    <span className="text-[10px] text-gray-400 font-bold block uppercase">
+                      Points
+                    </span>
                     <span className="text-2xl font-black text-[#00f0ff] font-mono">
                       {selectedTeam.pts}
                     </span>
                   </div>
                   <div className="bg-[#141029] p-3 rounded-2xl border border-[#2e2554]">
-                    <span className="text-[10px] text-gray-400 font-bold block uppercase">Played</span>
-                    <span className="text-2xl font-black text-white font-mono">{selectedTeam.mp}</span>
+                    <span className="text-[10px] text-gray-400 font-bold block uppercase">
+                      Played
+                    </span>
+                    <span className="text-2xl font-black text-white font-mono">
+                      {selectedTeam.mp}
+                    </span>
                   </div>
                   <div className="bg-[#141029] p-3 rounded-2xl border border-[#2e2554]">
-                    <span className="text-[10px] text-gray-400 font-bold block uppercase">Record</span>
+                    <span className="text-[10px] text-gray-400 font-bold block uppercase">
+                      Record
+                    </span>
                     <span className="text-sm font-black text-emerald-400 font-mono mt-1 block">
                       {selectedTeam.w}W - {selectedTeam.d}D - {selectedTeam.l}L
                     </span>
@@ -1144,7 +1554,9 @@ export function LeagueStandings() {
                     </span>
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-gray-300">Goals Scored (GF):</span>
-                      <span className="font-mono font-bold text-emerald-400">{selectedTeam.gf}</span>
+                      <span className="font-mono font-bold text-emerald-400">
+                        {selectedTeam.gf}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-gray-300">Goals Conceded (GA):</span>
@@ -1153,7 +1565,7 @@ export function LeagueStandings() {
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-gray-300">Goal Ratio:</span>
                       <span className="font-mono font-bold text-cyan-300">
-                        {((selectedTeam.gf / (selectedTeam.ga || 1))).toFixed(2)}x
+                        {(selectedTeam.gf / (selectedTeam.ga || 1)).toFixed(2)}x
                       </span>
                     </div>
                   </div>
@@ -1214,21 +1626,27 @@ export function LeagueStandings() {
 
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-2">
                     <div className="bg-[#09061c] p-3 rounded-xl border border-[#2e2554]">
-                      <span className="text-[9px] uppercase font-bold text-gray-400 block">Capacity</span>
+                      <span className="text-[9px] uppercase font-bold text-gray-400 block">
+                        Capacity
+                      </span>
                       <span className="font-bold text-white text-xs">
                         {selectedTeam.stadium?.capacity || "1,200 Spectators"}
                       </span>
                     </div>
 
                     <div className="bg-[#09061c] p-3 rounded-xl border border-[#2e2554]">
-                      <span className="text-[9px] uppercase font-bold text-gray-400 block">Pitch Surface</span>
+                      <span className="text-[9px] uppercase font-bold text-gray-400 block">
+                        Pitch Surface
+                      </span>
                       <span className="font-bold text-emerald-400 text-xs">
                         {selectedTeam.stadium?.surface || "Hybrid Bermuda & AstroTurf"}
                       </span>
                     </div>
 
                     <div className="bg-[#09061c] p-3 rounded-xl border border-[#2e2554] col-span-2 sm:col-span-1">
-                      <span className="text-[9px] uppercase font-bold text-gray-400 block">Pitch Dimensions</span>
+                      <span className="text-[9px] uppercase font-bold text-gray-400 block">
+                        Pitch Dimensions
+                      </span>
                       <span className="font-mono font-bold text-cyan-300 text-xs">
                         {selectedTeam.stadium?.dimensions || "105m × 68m (FIFA Standard)"}
                       </span>
@@ -1269,7 +1687,9 @@ export function LeagueStandings() {
                         <span className="text-[10px] text-gray-400 uppercase font-black tracking-wider block">
                           {selectedTeam.coach.role}
                         </span>
-                        <h4 className="text-base font-black text-white">{selectedTeam.coach.name}</h4>
+                        <h4 className="text-base font-black text-white">
+                          {selectedTeam.coach.name}
+                        </h4>
                         {selectedTeam.coach.email && (
                           <span className="text-xs text-[#00f0ff] font-mono">
                             {selectedTeam.coach.email}
@@ -1322,7 +1742,9 @@ export function LeagueStandings() {
                   {selectedTeam.coachDetails?.assistantCoach && (
                     <div className="text-[11px] text-gray-400 flex items-center gap-1.5 pt-1">
                       <span className="text-cyan-300">Assistant Coach:</span>
-                      <span className="text-white font-bold">{selectedTeam.coachDetails.assistantCoach}</span>
+                      <span className="text-white font-bold">
+                        {selectedTeam.coachDetails.assistantCoach}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -1341,10 +1763,12 @@ export function LeagueStandings() {
                     </h5>
                   </div>
                   <div className="space-y-1.5">
-                    {(selectedTeam.history?.honors || [
-                      "🏆 Sunday League Champions (2024/2025)",
-                      "🥇 Academy Super Cup Winners",
-                    ]).map((h, idx) => (
+                    {(
+                      selectedTeam.history?.honors || [
+                        "🏆 Sunday League Champions (2024/2025)",
+                        "🥇 Academy Super Cup Winners",
+                      ]
+                    ).map((h, idx) => (
                       <div
                         key={idx}
                         className="p-2.5 rounded-xl bg-[#09061c] border border-amber-400/20 text-white font-bold flex items-center justify-between"
@@ -1390,7 +1814,9 @@ export function LeagueStandings() {
                 {selectedTeam.history?.derbyRival && (
                   <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl flex items-center justify-between">
                     <span className="text-gray-300">Marquee Derby Rival:</span>
-                    <span className="font-bold text-rose-300">{selectedTeam.history.derbyRival}</span>
+                    <span className="font-bold text-rose-300">
+                      {selectedTeam.history.derbyRival}
+                    </span>
                   </div>
                 )}
 
@@ -1409,7 +1835,9 @@ export function LeagueStandings() {
                           </div>
                           <div className="text-right">
                             <span className="font-black text-cyan-300 block">{s.finish}</span>
-                            <span className="text-[10px] font-mono text-emerald-400">{s.points} PTS</span>
+                            <span className="text-[10px] font-mono text-emerald-400">
+                              {s.points} PTS
+                            </span>
                           </div>
                         </div>
                       ))}
@@ -1462,12 +1890,16 @@ export function LeagueStandings() {
                         )}
                       </div>
                       <div className="min-w-0">
-                        <span className="font-extrabold text-white block truncate">{player.name}</span>
+                        <span className="font-extrabold text-white block truncate">
+                          {player.name}
+                        </span>
                         <div className="flex items-center gap-1 mt-0.5">
                           <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-white/10 text-cyan-300">
                             {player.position}
                           </span>
-                          <span className="text-[10px] font-mono text-gray-400">#{player.number}</span>
+                          <span className="text-[10px] font-mono text-gray-400">
+                            #{player.number}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -1475,7 +1907,8 @@ export function LeagueStandings() {
                 </div>
 
                 <p className="text-[10px] text-gray-400 italic">
-                  💡 Athletes: Click "+ Upload Player Photo" above to upload your official headshot and update your profile across the portal.
+                  💡 Athletes: Click "+ Upload Player Photo" above to upload your official headshot
+                  and update your profile across the portal.
                 </p>
               </div>
             )}

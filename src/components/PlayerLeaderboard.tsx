@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useRoleAccess } from "../hooks/useRoleAccess";
 
 export interface PlayerStat {
@@ -244,16 +244,19 @@ export function PlayerLeaderboard() {
     }
   };
 
-  const getTeam = (teamId: number): Team => {
-    return (
-      teams.find((t) => t.id === teamId) || {
-        id: teamId,
-        name: `Club #${teamId}`,
-        shortCode: `C${teamId}`,
-        color: "#00f0ff",
-      }
-    );
-  };
+  const getTeam = useCallback(
+    (teamId: number): Team => {
+      return (
+        teams.find((t) => t.id === teamId) || {
+          id: teamId,
+          name: `Club #${teamId}`,
+          shortCode: `C${teamId}`,
+          color: "#00f0ff",
+        }
+      );
+    },
+    [teams],
+  );
 
   // Performance Rating formula: (G * 4) + (A * 3) + (CS * 4) + (M * 1) - (YC * 1) - (RC * 3)
   const calcPerformance = (s: PlayerStat): number => {
@@ -359,7 +362,7 @@ export function PlayerLeaderboard() {
     });
 
     return result;
-  }, [stats, searchQuery, selectedTeamFilter, selectedPositionFilter, sortKey, sortOrder]);
+  }, [stats, searchQuery, selectedTeamFilter, selectedPositionFilter, sortKey, sortOrder, getTeam]);
 
   // Open modal to add new stat
   const handleOpenAddModal = () => {

@@ -1,5 +1,27 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRoleAccess, ROLE_HIERARCHY_DATA, type LeagueRole } from "../hooks/useRoleAccess";
+
+interface AdminSquadPlayer {
+  name: string;
+  number?: number;
+  position?: string;
+  photoUrl?: string;
+}
+
+interface AdminTeam {
+  id: number;
+  name: string;
+  color?: string;
+  shortCode?: string;
+  homePitch?: string;
+  squad?: AdminSquadPlayer[];
+}
+
+interface AdminPlayerStat {
+  name: string;
+  photoUrl?: string;
+  [key: string]: unknown;
+}
 
 export function BoardWorkspaces() {
   const { currentRole, isSuperAdmin, roleDetails, roleTier, switchRole } = useRoleAccess();
@@ -25,7 +47,7 @@ export function BoardWorkspaces() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Player Photo Management State
-  const [adminTeams, setAdminTeams] = useState<any[]>([]);
+  const [adminTeams, setAdminTeams] = useState<AdminTeam[]>([]);
   const [selectedTeamIdForPhoto, setSelectedTeamIdForPhoto] = useState<number>(1);
   const [selectedPlayerForPhoto, setSelectedPlayerForPhoto] = useState<string>("Kevin Omondi");
   const [adminPhotoPreview, setAdminPhotoPreview] = useState<string>("");
@@ -69,7 +91,7 @@ export function BoardWorkspaces() {
   );
   const [standbyActive, setStandbyActive] = useState(false);
 
-  const loadAdminTeams = () => {
+  const loadAdminTeams = useCallback(() => {
     try {
       const storedTeams = localStorage.getItem("mpesa_pes_teams_v6");
       if (storedTeams) {
@@ -86,7 +108,7 @@ export function BoardWorkspaces() {
     } catch {
       // Ignore
     }
-  };
+  }, [selectedTeamIdForPhoto]);
 
   useEffect(() => {
     loadAdminTeams();
@@ -108,7 +130,7 @@ export function BoardWorkspaces() {
     };
     window.addEventListener("storage", handleStorageChange);
     return () => window.removeEventListener("storage", handleStorageChange);
-  }, []);
+  }, [loadAdminTeams]);
 
   const copyPlayerShareLink = () => {
     const origin = typeof window !== "undefined" ? window.location.origin : "";
@@ -144,7 +166,7 @@ export function BoardWorkspaces() {
     try {
       const updated = adminTeams.map((t) => {
         if (t.id === Number(selectedTeamIdForPhoto)) {
-          const updatedSquad = (t.squad || []).map((p: any) => {
+          const updatedSquad = (t.squad || []).map((p: AdminSquadPlayer) => {
             if (p.name === selectedPlayerForPhoto) {
               return { ...p, photoUrl: adminPhotoPreview };
             }
@@ -164,7 +186,7 @@ export function BoardWorkspaces() {
         try {
           const stats = JSON.parse(storedStats);
           if (Array.isArray(stats)) {
-            const updatedStats = stats.map((s: any) => {
+            const updatedStats = stats.map((s: AdminPlayerStat) => {
               if (s.name === selectedPlayerForPhoto) {
                 return { ...s, photoUrl: adminPhotoPreview };
               }
@@ -178,7 +200,9 @@ export function BoardWorkspaces() {
       }
 
       window.dispatchEvent(new Event("storage"));
-      showToast(`✓ Photo for ${selectedPlayerForPhoto} updated successfully! Reflects across portal.`);
+      showToast(
+        `✓ Photo for ${selectedPlayerForPhoto} updated successfully! Reflects across portal.`,
+      );
       setAdminPhotoPreview("");
     } catch {
       showToast("Failed to save player photo. Please try again.");
@@ -325,7 +349,9 @@ export function BoardWorkspaces() {
               <span>📸</span> Player Profile Photo Upload & Shareable Link
             </h3>
             <p className="text-xs sm:text-sm text-gray-300">
-              Share the official self-service upload link with student players, or upload athlete photos directly from this admin terminal. All uploaded portraits reflect in real-time across the Leaderboard, Matchday Lineups, and Roster Cards.
+              Share the official self-service upload link with student players, or upload athlete
+              photos directly from this admin terminal. All uploaded portraits reflect in real-time
+              across the Leaderboard, Matchday Lineups, and Roster Cards.
             </p>
           </div>
 
@@ -357,7 +383,9 @@ export function BoardWorkspaces() {
               Shareable Athlete Self-Service Link:
             </span>
             <span className="font-mono text-xs sm:text-sm text-emerald-300 truncate block font-bold">
-              {typeof window !== "undefined" ? `${window.location.origin}/upload-photo` : "/upload-photo"}
+              {typeof window !== "undefined"
+                ? `${window.location.origin}/upload-photo`
+                : "/upload-photo"}
             </span>
           </div>
           <button
@@ -415,12 +443,14 @@ export function BoardWorkspaces() {
                     const pName = e.target.value;
                     setSelectedPlayerForPhoto(pName);
                     const t = adminTeams.find((item) => item.id === Number(selectedTeamIdForPhoto));
-                    const p = t?.squad?.find((item: any) => item.name === pName);
+                    const p = t?.squad?.find((item: AdminSquadPlayer) => item.name === pName);
                     setAdminPhotoPreview(p?.photoUrl || "");
                   }}
                   className="w-full bg-[#0a071d] border border-[#2e2554] rounded-xl px-3 py-2 text-white font-bold"
                 >
-                  {((adminTeams.find((t) => t.id === Number(selectedTeamIdForPhoto))?.squad) || []).map((p: any, idx: number) => (
+                  {(
+                    adminTeams.find((t) => t.id === Number(selectedTeamIdForPhoto))?.squad || []
+                  ).map((p: AdminSquadPlayer, idx: number) => (
                     <option key={idx} value={p.name}>
                       #{p.number || idx + 1} • {p.name} ({p.position || "Player"})
                     </option>
@@ -448,7 +478,9 @@ export function BoardWorkspaces() {
                     className="w-12 h-12 rounded-xl object-cover border-2 border-emerald-400 shrink-0"
                   />
                   <div className="min-w-0 text-xs">
-                    <span className="font-bold text-white block truncate">{selectedPlayerForPhoto}</span>
+                    <span className="font-bold text-white block truncate">
+                      {selectedPlayerForPhoto}
+                    </span>
                     <span className="text-[10px] text-emerald-400">Portrait Ready for Save</span>
                   </div>
                 </div>
@@ -471,57 +503,65 @@ export function BoardWorkspaces() {
                 <span>👥</span> Live Club Roster & Profile Portraits
               </h5>
               <span className="text-[11px] text-[#00f0ff] font-bold">
-                {adminTeams.find((t) => t.id === Number(selectedTeamIdForPhoto))?.name || "Selected Club"}
+                {adminTeams.find((t) => t.id === Number(selectedTeamIdForPhoto))?.name ||
+                  "Selected Club"}
               </span>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-72 overflow-y-auto pr-1">
-              {((adminTeams.find((t) => t.id === Number(selectedTeamIdForPhoto))?.squad) || []).map((player: any, idx: number) => {
-                const isSelected = player.name === selectedPlayerForPhoto;
-                return (
-                  <div
-                    key={idx}
-                    onClick={() => {
-                      setSelectedPlayerForPhoto(player.name);
-                      setAdminPhotoPreview(player.photoUrl || "");
-                    }}
-                    className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center gap-3 ${
-                      isSelected
-                        ? "bg-[#1f1744] border-[#00f0ff] shadow-md shadow-cyan-500/10"
-                        : "bg-[#0a071d] border-[#2e2554] hover:border-gray-500"
-                    }`}
-                  >
-                    <div className="relative shrink-0">
-                      {player.photoUrl ? (
-                        <img
-                          src={player.photoUrl}
-                          alt={player.name}
-                          className="w-10 h-10 rounded-xl object-cover border border-[#00f0ff]/50"
-                        />
-                      ) : (
-                        <div className="w-10 h-10 rounded-xl bg-purple-900/60 text-purple-300 border border-purple-500/40 flex items-center justify-center font-black text-xs">
-                          #{player.number || idx + 1}
-                        </div>
-                      )}
-                      {player.photoUrl && (
-                        <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full border border-black" />
-                      )}
-                    </div>
-                    <div className="min-w-0">
-                      <span className="font-bold text-xs text-white block truncate">{player.name}</span>
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-white/10 text-gray-300">
-                          {player.position || "FWD"}
+              {(adminTeams.find((t) => t.id === Number(selectedTeamIdForPhoto))?.squad || []).map(
+                (player: AdminSquadPlayer, idx: number) => {
+                  const isSelected = player.name === selectedPlayerForPhoto;
+                  return (
+                    <div
+                      key={idx}
+                      onClick={() => {
+                        setSelectedPlayerForPhoto(player.name);
+                        setAdminPhotoPreview(player.photoUrl || "");
+                      }}
+                      className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center gap-3 ${
+                        isSelected
+                          ? "bg-[#1f1744] border-[#00f0ff] shadow-md shadow-cyan-500/10"
+                          : "bg-[#0a071d] border-[#2e2554] hover:border-gray-500"
+                      }`}
+                    >
+                      <div className="relative shrink-0">
+                        {player.photoUrl ? (
+                          <img
+                            src={player.photoUrl}
+                            alt={player.name}
+                            className="w-10 h-10 rounded-xl object-cover border border-[#00f0ff]/50"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-xl bg-purple-900/60 text-purple-300 border border-purple-500/40 flex items-center justify-center font-black text-xs">
+                            #{player.number || idx + 1}
+                          </div>
+                        )}
+                        {player.photoUrl && (
+                          <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full border border-black" />
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <span className="font-bold text-xs text-white block truncate">
+                          {player.name}
                         </span>
-                        <span className="text-[10px] font-mono text-gray-400">#{player.number || idx + 1}</span>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-white/10 text-gray-300">
+                            {player.position || "FWD"}
+                          </span>
+                          <span className="text-[10px] font-mono text-gray-400">
+                            #{player.number || idx + 1}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                },
+              )}
             </div>
             <p className="text-[10px] text-gray-400 italic">
-              💡 Tip: Click any player above to load their profile directly into the editor. Green dot indicates uploaded photo.
+              💡 Tip: Click any player above to load their profile directly into the editor. Green
+              dot indicates uploaded photo.
             </p>
           </div>
         </div>
