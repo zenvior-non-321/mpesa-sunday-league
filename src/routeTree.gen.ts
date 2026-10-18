@@ -10,7 +10,13 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CalendarRouteImport } from './routes/calendar'
+import { Route as FixturesRouteImport } from './routes/fixtures'
+import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as StandingsRouteImport } from './routes/standings'
+import { Route as UploadPhotoRouteImport } from './routes/upload-photo'
+import { Route as WorkspacesRouteImport } from './routes/workspaces'
 import { Route as ApiPublicSongRouteImport } from './routes/api/public/song'
 
 const IndexRoute = IndexRouteImport.update({
@@ -18,9 +24,39 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CalendarRoute = CalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FixturesRoute = FixturesRouteImport.update({
+  id: '/fixtures',
+  path: '/fixtures',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LeaderboardRoute = LeaderboardRouteImport.update({
+  id: '/leaderboard',
+  path: '/leaderboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StandingsRoute = StandingsRouteImport.update({
+  id: '/standings',
+  path: '/standings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UploadPhotoRoute = UploadPhotoRouteImport.update({
+  id: '/upload-photo',
+  path: '/upload-photo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WorkspacesRoute = WorkspacesRouteImport.update({
+  id: '/workspaces',
+  path: '/workspaces',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicSongRoute = ApiPublicSongRouteImport.update({
@@ -31,31 +67,83 @@ const ApiPublicSongRoute = ApiPublicSongRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/calendar': typeof CalendarRoute
+  '/fixtures': typeof FixturesRoute
+  '/leaderboard': typeof LeaderboardRoute
   '/profile': typeof ProfileRoute
+  '/standings': typeof StandingsRoute
+  '/upload-photo': typeof UploadPhotoRoute
+  '/workspaces': typeof WorkspacesRoute
   '/api/public/song': typeof ApiPublicSongRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/calendar': typeof CalendarRoute
+  '/fixtures': typeof FixturesRoute
+  '/leaderboard': typeof LeaderboardRoute
   '/profile': typeof ProfileRoute
+  '/standings': typeof StandingsRoute
+  '/upload-photo': typeof UploadPhotoRoute
+  '/workspaces': typeof WorkspacesRoute
   '/api/public/song': typeof ApiPublicSongRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/calendar': typeof CalendarRoute
+  '/fixtures': typeof FixturesRoute
+  '/leaderboard': typeof LeaderboardRoute
   '/profile': typeof ProfileRoute
+  '/standings': typeof StandingsRoute
+  '/upload-photo': typeof UploadPhotoRoute
+  '/workspaces': typeof WorkspacesRoute
   '/api/public/song': typeof ApiPublicSongRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/profile' | '/api/public/song'
+  fullPaths:
+    | '/'
+    | '/calendar'
+    | '/fixtures'
+    | '/leaderboard'
+    | '/profile'
+    | '/standings'
+    | '/upload-photo'
+    | '/workspaces'
+    | '/api/public/song'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/profile' | '/api/public/song'
-  id: '__root__' | '/' | '/profile' | '/api/public/song'
+  to:
+    | '/'
+    | '/calendar'
+    | '/fixtures'
+    | '/leaderboard'
+    | '/profile'
+    | '/standings'
+    | '/upload-photo'
+    | '/workspaces'
+    | '/api/public/song'
+  id:
+    | '__root__'
+    | '/'
+    | '/calendar'
+    | '/fixtures'
+    | '/leaderboard'
+    | '/profile'
+    | '/standings'
+    | '/upload-photo'
+    | '/workspaces'
+    | '/api/public/song'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CalendarRoute: typeof CalendarRoute
+  FixturesRoute: typeof FixturesRoute
+  LeaderboardRoute: typeof LeaderboardRoute
   ProfileRoute: typeof ProfileRoute
+  StandingsRoute: typeof StandingsRoute
+  UploadPhotoRoute: typeof UploadPhotoRoute
+  WorkspacesRoute: typeof WorkspacesRoute
   ApiPublicSongRoute: typeof ApiPublicSongRoute
 }
 
@@ -68,11 +156,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/calendar': {
+      id: '/calendar'
+      path: '/calendar'
+      fullPath: '/calendar'
+      preLoaderRoute: typeof CalendarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/fixtures': {
+      id: '/fixtures'
+      path: '/fixtures'
+      fullPath: '/fixtures'
+      preLoaderRoute: typeof FixturesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/leaderboard': {
+      id: '/leaderboard'
+      path: '/leaderboard'
+      fullPath: '/leaderboard'
+      preLoaderRoute: typeof LeaderboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/profile': {
       id: '/profile'
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/standings': {
+      id: '/standings'
+      path: '/standings'
+      fullPath: '/standings'
+      preLoaderRoute: typeof StandingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/upload-photo': {
+      id: '/upload-photo'
+      path: '/upload-photo'
+      fullPath: '/upload-photo'
+      preLoaderRoute: typeof UploadPhotoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/workspaces': {
+      id: '/workspaces'
+      path: '/workspaces'
+      fullPath: '/workspaces'
+      preLoaderRoute: typeof WorkspacesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/song': {
@@ -87,7 +217,13 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CalendarRoute: CalendarRoute,
+  FixturesRoute: FixturesRoute,
+  LeaderboardRoute: LeaderboardRoute,
   ProfileRoute: ProfileRoute,
+  StandingsRoute: StandingsRoute,
+  UploadPhotoRoute: UploadPhotoRoute,
+  WorkspacesRoute: WorkspacesRoute,
   ApiPublicSongRoute: ApiPublicSongRoute,
 }
 export const routeTree = rootRouteImport

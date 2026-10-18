@@ -39,6 +39,7 @@ export interface SquadMember {
   number: number;
   position: string;
   photoUrl?: string;
+  role?: string;
 }
 
 export interface TeamStanding {
