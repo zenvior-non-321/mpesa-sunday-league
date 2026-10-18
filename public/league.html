@@ -10644,6 +10644,22 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
               );
               return;
             }
+            // Enforce: one player can only be registered in ONE team
+            for (const p of this.editingSquadList) {
+              const pn = (p.name || "").trim().toLowerCase();
+              if (!pn) continue;
+              const conflict = this.teams.find(
+                (t) =>
+                  t.id !== this.editingTeam.id &&
+                  (t.squad || []).some((sp) => (sp.name || "").trim().toLowerCase() === pn),
+              );
+              if (conflict) {
+                this.showToast(
+                  `⛔ "${p.name}" is already registered under ${conflict.name}. League rules allow a player in ONE team only.`,
+                );
+                return;
+              }
+            }
             const idx = this.teams.findIndex((t) => t.id === this.editingTeam.id);
             if (idx !== -1) {
               this.teams[idx].squad = JSON.parse(JSON.stringify(this.editingSquadList));
@@ -12515,6 +12531,12 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
             ];
 
             this.teams = storedTeams ? JSON.parse(storedTeams) : baseDefaultTeams;
+            // Merge in any newly added default clubs missing from previously stored data
+            baseDefaultTeams.forEach((dt) => {
+              if (!this.teams.some((t) => t.id === dt.id)) {
+                this.teams.push(JSON.parse(JSON.stringify(dt)));
+              }
+            });
             // Enrich any loaded teams if squad list is minimal so all team players show up in goal recording
             this.teams.forEach((t) => {
               if (defaultSquads[t.id]) {
