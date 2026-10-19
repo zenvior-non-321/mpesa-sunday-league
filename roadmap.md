@@ -1,5 +1,9 @@
 # Requested update
 
+- [ ] Permanently remove deleted teams across reloads and devices.
+- [ ] Enforce Super Admin, board member, and viewer access; keep board codes private.
+- [ ] Verify deletion and access restrictions; resolve existing preview errors.
+
 - [x] Use the uploaded academy crest throughout the app and as its icon.
 - [x] Add six public league officials and their supplied responsibilities without changing access permissions.
 - [x] Verify the logo and officials view in the app.

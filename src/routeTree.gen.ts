@@ -13,6 +13,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as FixturesRouteImport } from './routes/fixtures'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
+import { Route as MvpVotingRouteImport } from './routes/mvp-voting'
+import { Route as PerformanceRouteImport } from './routes/performance'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as StandingsRouteImport } from './routes/standings'
 import { Route as UploadPhotoRouteImport } from './routes/upload-photo'
@@ -37,6 +39,16 @@ const FixturesRoute = FixturesRouteImport.update({
 const LeaderboardRoute = LeaderboardRouteImport.update({
   id: '/leaderboard',
   path: '/leaderboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MvpVotingRoute = MvpVotingRouteImport.update({
+  id: '/mvp-voting',
+  path: '/mvp-voting',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PerformanceRoute = PerformanceRouteImport.update({
+  id: '/performance',
+  path: '/performance',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfileRoute = ProfileRouteImport.update({
@@ -70,6 +82,8 @@ export interface FileRoutesByFullPath {
   '/calendar': typeof CalendarRoute
   '/fixtures': typeof FixturesRoute
   '/leaderboard': typeof LeaderboardRoute
+  '/mvp-voting': typeof MvpVotingRoute
+  '/performance': typeof PerformanceRoute
   '/profile': typeof ProfileRoute
   '/standings': typeof StandingsRoute
   '/upload-photo': typeof UploadPhotoRoute
@@ -81,6 +95,8 @@ export interface FileRoutesByTo {
   '/calendar': typeof CalendarRoute
   '/fixtures': typeof FixturesRoute
   '/leaderboard': typeof LeaderboardRoute
+  '/mvp-voting': typeof MvpVotingRoute
+  '/performance': typeof PerformanceRoute
   '/profile': typeof ProfileRoute
   '/standings': typeof StandingsRoute
   '/upload-photo': typeof UploadPhotoRoute
@@ -93,6 +109,8 @@ export interface FileRoutesById {
   '/calendar': typeof CalendarRoute
   '/fixtures': typeof FixturesRoute
   '/leaderboard': typeof LeaderboardRoute
+  '/mvp-voting': typeof MvpVotingRoute
+  '/performance': typeof PerformanceRoute
   '/profile': typeof ProfileRoute
   '/standings': typeof StandingsRoute
   '/upload-photo': typeof UploadPhotoRoute
@@ -106,6 +124,8 @@ export interface FileRouteTypes {
     | '/calendar'
     | '/fixtures'
     | '/leaderboard'
+    | '/mvp-voting'
+    | '/performance'
     | '/profile'
     | '/standings'
     | '/upload-photo'
@@ -117,6 +137,8 @@ export interface FileRouteTypes {
     | '/calendar'
     | '/fixtures'
     | '/leaderboard'
+    | '/mvp-voting'
+    | '/performance'
     | '/profile'
     | '/standings'
     | '/upload-photo'
@@ -128,6 +150,8 @@ export interface FileRouteTypes {
     | '/calendar'
     | '/fixtures'
     | '/leaderboard'
+    | '/mvp-voting'
+    | '/performance'
     | '/profile'
     | '/standings'
     | '/upload-photo'
@@ -140,6 +164,8 @@ export interface RootRouteChildren {
   CalendarRoute: typeof CalendarRoute
   FixturesRoute: typeof FixturesRoute
   LeaderboardRoute: typeof LeaderboardRoute
+  MvpVotingRoute: typeof MvpVotingRoute
+  PerformanceRoute: typeof PerformanceRoute
   ProfileRoute: typeof ProfileRoute
   StandingsRoute: typeof StandingsRoute
   UploadPhotoRoute: typeof UploadPhotoRoute
@@ -175,6 +201,20 @@ declare module '@tanstack/react-router' {
       path: '/leaderboard'
       fullPath: '/leaderboard'
       preLoaderRoute: typeof LeaderboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mvp-voting': {
+      id: '/mvp-voting'
+      path: '/mvp-voting'
+      fullPath: '/mvp-voting'
+      preLoaderRoute: typeof MvpVotingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/performance': {
+      id: '/performance'
+      path: '/performance'
+      fullPath: '/performance'
+      preLoaderRoute: typeof PerformanceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profile': {
@@ -220,6 +260,8 @@ const rootRouteChildren: RootRouteChildren = {
   CalendarRoute: CalendarRoute,
   FixturesRoute: FixturesRoute,
   LeaderboardRoute: LeaderboardRoute,
+  MvpVotingRoute: MvpVotingRoute,
+  PerformanceRoute: PerformanceRoute,
   ProfileRoute: ProfileRoute,
   StandingsRoute: StandingsRoute,
   UploadPhotoRoute: UploadPhotoRoute,
