@@ -19,6 +19,7 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as StandingsRouteImport } from './routes/standings'
 import { Route as UploadPhotoRouteImport } from './routes/upload-photo'
 import { Route as WorkspacesRouteImport } from './routes/workspaces'
+import { Route as ApiPublicPortalRouteImport } from './routes/api/public/portal'
 import { Route as ApiPublicSongRouteImport } from './routes/api/public/song'
 
 const IndexRoute = IndexRouteImport.update({
@@ -71,6 +72,11 @@ const WorkspacesRoute = WorkspacesRouteImport.update({
   path: '/workspaces',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPortalRoute = ApiPublicPortalRouteImport.update({
+  id: '/api/public/portal',
+  path: '/api/public/portal',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicSongRoute = ApiPublicSongRouteImport.update({
   id: '/api/public/song',
   path: '/api/public/song',
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/standings': typeof StandingsRoute
   '/upload-photo': typeof UploadPhotoRoute
   '/workspaces': typeof WorkspacesRoute
+  '/api/public/portal': typeof ApiPublicPortalRoute
   '/api/public/song': typeof ApiPublicSongRoute
 }
 export interface FileRoutesByTo {
@@ -101,6 +108,7 @@ export interface FileRoutesByTo {
   '/standings': typeof StandingsRoute
   '/upload-photo': typeof UploadPhotoRoute
   '/workspaces': typeof WorkspacesRoute
+  '/api/public/portal': typeof ApiPublicPortalRoute
   '/api/public/song': typeof ApiPublicSongRoute
 }
 export interface FileRoutesById {
@@ -115,6 +123,7 @@ export interface FileRoutesById {
   '/standings': typeof StandingsRoute
   '/upload-photo': typeof UploadPhotoRoute
   '/workspaces': typeof WorkspacesRoute
+  '/api/public/portal': typeof ApiPublicPortalRoute
   '/api/public/song': typeof ApiPublicSongRoute
 }
 export interface FileRouteTypes {
@@ -130,6 +139,7 @@ export interface FileRouteTypes {
     | '/standings'
     | '/upload-photo'
     | '/workspaces'
+    | '/api/public/portal'
     | '/api/public/song'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -143,6 +153,7 @@ export interface FileRouteTypes {
     | '/standings'
     | '/upload-photo'
     | '/workspaces'
+    | '/api/public/portal'
     | '/api/public/song'
   id:
     | '__root__'
@@ -156,6 +167,7 @@ export interface FileRouteTypes {
     | '/standings'
     | '/upload-photo'
     | '/workspaces'
+    | '/api/public/portal'
     | '/api/public/song'
   fileRoutesById: FileRoutesById
 }
@@ -170,6 +182,7 @@ export interface RootRouteChildren {
   StandingsRoute: typeof StandingsRoute
   UploadPhotoRoute: typeof UploadPhotoRoute
   WorkspacesRoute: typeof WorkspacesRoute
+  ApiPublicPortalRoute: typeof ApiPublicPortalRoute
   ApiPublicSongRoute: typeof ApiPublicSongRoute
 }
 
@@ -245,6 +258,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WorkspacesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/portal': {
+      id: '/api/public/portal'
+      path: '/api/public/portal'
+      fullPath: '/api/public/portal'
+      preLoaderRoute: typeof ApiPublicPortalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/song': {
       id: '/api/public/song'
       path: '/api/public/song'
@@ -266,6 +286,7 @@ const rootRouteChildren: RootRouteChildren = {
   StandingsRoute: StandingsRoute,
   UploadPhotoRoute: UploadPhotoRoute,
   WorkspacesRoute: WorkspacesRoute,
+  ApiPublicPortalRoute: ApiPublicPortalRoute,
   ApiPublicSongRoute: ApiPublicSongRoute,
 }
 export const routeTree = rootRouteImport

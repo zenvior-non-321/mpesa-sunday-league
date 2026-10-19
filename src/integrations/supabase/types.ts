@@ -14,6 +14,92 @@ export type Database = {
   }
   public: {
     Tables: {
+      league_shared_state: {
+        Row: {
+          data: Json
+          deleted_team_ids: Json
+          id: number
+          revision: number
+        }
+        Insert: {
+          data?: Json
+          deleted_team_ids?: Json
+          id?: number
+          revision?: number
+        }
+        Update: {
+          data?: Json
+          deleted_team_ids?: Json
+          id?: number
+          revision?: number
+        }
+        Relationships: []
+      }
+      portal_access: {
+        Row: {
+          credential_id: number
+          profile: Json
+          role_key: string
+        }
+        Insert: {
+          credential_id: number
+          profile?: Json
+          role_key: string
+        }
+        Update: {
+          credential_id?: number
+          profile?: Json
+          role_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portal_access_credential_id_fkey"
+            columns: ["credential_id"]
+            isOneToOne: true
+            referencedRelation: "portal_credentials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      portal_credentials: {
+        Row: {
+          active: boolean
+          code_ciphertext: string
+          code_hash: string
+          id: number
+        }
+        Insert: {
+          active?: boolean
+          code_ciphertext: string
+          code_hash: string
+          id: number
+        }
+        Update: {
+          active?: boolean
+          code_ciphertext?: string
+          code_hash?: string
+          id?: number
+        }
+        Relationships: []
+      }
+      portal_login_limits: {
+        Row: {
+          attempts: number
+          key_hash: string
+          window_start: string
+        }
+        Insert: {
+          attempts?: number
+          key_hash: string
+          window_start?: string
+        }
+        Update: {
+          attempts?: number
+          key_hash?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       site_song: {
         Row: {
           id: number

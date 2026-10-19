@@ -1,0 +1,14 @@
+CREATE TABLE public.portal_credentials (id bigint PRIMARY KEY, code_hash text NOT NULL UNIQUE, code_ciphertext text NOT NULL, active boolean NOT NULL DEFAULT true);
+GRANT ALL ON public.portal_credentials TO service_role;
+ALTER TABLE public.portal_credentials ENABLE ROW LEVEL SECURITY;
+CREATE TABLE public.portal_access (credential_id bigint PRIMARY KEY REFERENCES public.portal_credentials(id) ON DELETE CASCADE, role_key text NOT NULL, profile jsonb NOT NULL DEFAULT '{}');
+GRANT ALL ON public.portal_access TO service_role;
+ALTER TABLE public.portal_access ENABLE ROW LEVEL SECURITY;
+CREATE TABLE public.league_shared_state (id integer PRIMARY KEY DEFAULT 1 CHECK (id=1), data jsonb NOT NULL DEFAULT '{}', deleted_team_ids jsonb NOT NULL DEFAULT '[]', revision integer NOT NULL DEFAULT 1);
+GRANT SELECT ON public.league_shared_state TO anon, authenticated;
+GRANT ALL ON public.league_shared_state TO service_role;
+ALTER TABLE public.league_shared_state ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public league state read" ON public.league_shared_state FOR SELECT TO anon, authenticated USING (true);
+CREATE TABLE public.portal_login_limits (key_hash text PRIMARY KEY, attempts integer NOT NULL DEFAULT 0, window_start timestamptz NOT NULL DEFAULT now());
+GRANT ALL ON public.portal_login_limits TO service_role;
+ALTER TABLE public.portal_login_limits ENABLE ROW LEVEL SECURITY;
