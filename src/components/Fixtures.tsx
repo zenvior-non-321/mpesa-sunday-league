@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useRoleAccess } from "../hooks/useRoleAccess";
 import { LeagueCalendarView } from "./LeagueCalendarView";
+import { MatchMvpVoting } from "./MatchMvpVoting";
+import { MatchNotificationDispatch } from "./MatchNotificationDispatch";
+import { Trophy, Mail, Trash2 } from "lucide-react";
 
 export interface MatchGoalEvent {
   id: number;
@@ -60,362 +63,14 @@ export interface Team {
   logoUrl?: string;
 }
 
-const DEFAULT_TEAMS: Team[] = [
-  {
-    id: 1,
-    name: "Samba Boys",
-    shortCode: "SMB",
-    color: "#00ff85",
-    homePitch: "Samba Arena (School Lower Pitch)",
-  },
-  {
-    id: 2,
-    name: "Grade 10 A",
-    shortCode: "G10A",
-    color: "#00f0ff",
-    homePitch: "Academy Main Stadium",
-  },
-  {
-    id: 3,
-    name: "Grade 10 B",
-    shortCode: "G10B",
-    color: "#ffe600",
-    homePitch: "Yellow Fortress Pitch B",
-  },
-  {
-    id: 4,
-    name: "DP 2 A",
-    shortCode: "DP2A",
-    color: "#ff0055",
-    homePitch: "Senior Arena North Pitch",
-  },
-  {
-    id: 5,
-    name: "DP 2 B",
-    shortCode: "DP2B",
-    color: "#9d00ff",
-    homePitch: "Championship Pavilion Field",
-  },
-  {
-    id: 6,
-    name: "Royal Rangers",
-    shortCode: "RR",
-    color: "#3b82f6",
-    homePitch: "Ranger Fortress Field (Academy East)",
-  },
-  {
-    id: 7,
-    name: "Young Stars City",
-    shortCode: "YSC",
-    color: "#f97316",
-    homePitch: "Young Stars City Arena (North Pavilion)",
-  },
-  {
-    id: 8,
-    name: "Mzinga Boyz",
-    shortCode: "MZB",
-    color: "#eab308",
-    homePitch: "The Hive Stadium (West Campus Ground)",
-  },
-];
+import {
+  DEFAULT_TEAMS,
+  DEFAULT_FIXTURES,
+  isTeamDeleted,
+  sanitizeTeamsList,
+} from "../lib/fixturesData";
 
-const DEFAULT_FIXTURES: MatchFixture[] = [
-  {
-    id: 1,
-    matchweek: 1,
-    time: "2:00 PM",
-    date: "Sunday, Oct 25, 2026",
-    venue: "School Pitch Arena",
-    homeId: 1,
-    awayId: 2,
-    homeScore: 3,
-    awayScore: 1,
-    status: "FINISHED",
-    scorers: "Kevin Omondi 14', 68', Brian Mwangi 44' | Emmanuel Kip 82'",
-    referee: "Center Ref: Ian Muli (FIFA Badge)",
-    goalEvents: [
-      { id: 101, team: "HOME", scorerName: "Kevin Omondi", minute: "14'" },
-      { id: 102, team: "HOME", scorerName: "Brian Mwangi", minute: "44'" },
-      { id: 103, team: "HOME", scorerName: "Kevin Omondi", minute: "68'" },
-      { id: 104, team: "AWAY", scorerName: "Emmanuel Kip", minute: "82'" },
-    ],
-    manOfTheMatch: {
-      playerName: "Kevin Omondi",
-      teamName: "Samba Boys",
-      rating: 9.6,
-      goals: 2,
-      assists: 1,
-      shotsOnTarget: 4,
-      keyPasses: 3,
-      photoUrl:
-        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
-      highlightSummary:
-        "Commanding masterclass: Scored a breathtaking brace (14', 68') and delivered the precision assist for the 44' winner.",
-    },
-    metrics: {
-      homePossession: 57,
-      awayPossession: 43,
-      homeShotsOnTarget: 7,
-      awayShotsOnTarget: 3,
-      goals: [
-        { player: "Kevin Omondi", team: "Samba Boys", count: 2 },
-        { player: "Brian Mwangi", team: "Samba Boys", count: 1 },
-        { player: "Emmanuel Kip", team: "Grade 10 A", count: 1 },
-      ],
-      assists: [
-        { player: "Kevin Omondi", team: "Samba Boys", count: 1 },
-        { player: "Dan Kiprop", team: "Samba Boys", count: 1 },
-        { player: "Bradley Barasa", team: "Grade 10 A", count: 1 },
-      ],
-    },
-  },
-  {
-    id: 2,
-    matchweek: 1,
-    time: "4:00 PM",
-    date: "Sunday, Oct 25, 2026",
-    venue: "Academy Main Stadium",
-    homeId: 3,
-    awayId: 4,
-    homeScore: 2,
-    awayScore: 2,
-    status: "FINISHED",
-    scorers: "Kelvin Njoroge 31', Chrispinus Wafula 77' | Alex Rono 19', Kelvin Korir 89'",
-    referee: "Center Ref: FIFA Badge",
-    goalEvents: [
-      { id: 201, team: "AWAY", scorerName: "Alex Rono", minute: "19'" },
-      { id: 202, team: "HOME", scorerName: "Kelvin Njoroge", minute: "31'" },
-      { id: 203, team: "HOME", scorerName: "Chrispinus Wafula", minute: "77'" },
-      { id: 204, team: "AWAY", scorerName: "Kelvin Korir", minute: "89'" },
-    ],
-    manOfTheMatch: {
-      playerName: "Alex Rono",
-      teamName: "DP 2 A",
-      rating: 9.2,
-      goals: 1,
-      assists: 1,
-      shotsOnTarget: 3,
-      keyPasses: 4,
-      photoUrl:
-        "https://images.unsplash.com/photo-1528892952291-009c663ce843?w=150&auto=format&fit=crop&q=80",
-      highlightSummary:
-        "Crucial talismanic impact: Drilled home an electric opener at 19' and supplied the dramatic 89' equalizer assist.",
-    },
-    metrics: {
-      homePossession: 48,
-      awayPossession: 52,
-      homeShotsOnTarget: 5,
-      awayShotsOnTarget: 6,
-      goals: [
-        { player: "Kelvin Njoroge", team: "Grade 10 B", count: 1 },
-        { player: "Chrispinus Wafula", team: "Grade 10 B", count: 1 },
-        { player: "Alex Rono", team: "DP 2 A", count: 1 },
-        { player: "Kelvin Korir", team: "DP 2 A", count: 1 },
-      ],
-      assists: [
-        { player: "Alex Rono", team: "DP 2 A", count: 1 },
-        { player: "Ian Mercer", team: "Grade 10 B", count: 1 },
-      ],
-    },
-  },
-  {
-    id: 3,
-    matchweek: 2,
-    time: "2:00 PM",
-    date: "Sunday, Nov 1, 2026",
-    venue: "School Pitch Arena",
-    homeId: 5,
-    awayId: 1,
-    homeScore: 0,
-    awayScore: 0,
-    status: "UPCOMING",
-    scorers: "",
-    referee: "Center Ref: FIFA Badge",
-  },
-  {
-    id: 4,
-    matchweek: 2,
-    time: "4:00 PM",
-    date: "Sunday, Nov 1, 2026",
-    venue: "Yellow Fortress Pitch B",
-    homeId: 2,
-    awayId: 3,
-    homeScore: 0,
-    awayScore: 0,
-    status: "UPCOMING",
-    scorers: "",
-    referee: "Center Ref: FIFA Badge",
-  },
-  {
-    id: 5,
-    matchweek: 3,
-    time: "2:00 PM",
-    date: "Sunday, Nov 8, 2026",
-    venue: "Senior Arena North Pitch",
-    homeId: 4,
-    awayId: 5,
-    homeScore: 0,
-    awayScore: 0,
-    status: "UPCOMING",
-    scorers: "",
-    referee: "Center Ref: FIFA Badge",
-  },
-  {
-    id: 6,
-    matchweek: 3,
-    time: "4:00 PM",
-    date: "Sunday, Nov 15, 2026",
-    venue: "Samba Arena (School Lower Pitch)",
-    homeId: 1,
-    awayId: 3,
-    homeScore: 0,
-    awayScore: 0,
-    status: "UPCOMING",
-    scorers: "",
-    referee: "Center Ref: FIFA Badge",
-  },
-  {
-    id: 7,
-    matchweek: 1,
-    time: "4:30 PM",
-    date: "Sunday, Oct 25, 2026",
-    venue: "Ranger Fortress Field (Academy East)",
-    homeId: 6,
-    awayId: 7,
-    homeScore: 2,
-    awayScore: 1,
-    status: "FINISHED",
-    scorers: "Wokabi 23', Carson 65' | Elly Adams Otieno 41'",
-    referee: "Center Ref: Ian Muli (FIFA Badge)",
-    goalEvents: [
-      { id: 701, team: "HOME", scorerName: "Wokabi", minute: "23'" },
-      { id: 702, team: "AWAY", scorerName: "Elly Adams Otieno", minute: "41'" },
-      { id: 703, team: "HOME", scorerName: "Carson", minute: "65'" },
-    ],
-    manOfTheMatch: {
-      playerName: "Jaycrack",
-      teamName: "Royal Rangers",
-      rating: 9.4,
-      goals: 0,
-      assists: 2,
-      shotsOnTarget: 2,
-      keyPasses: 5,
-      highlightSummary:
-        "Captained Royal Rangers with supreme midfield dominance and supplied two precision assists.",
-    },
-    metrics: {
-      homePossession: 54,
-      awayPossession: 46,
-      homeShotsOnTarget: 6,
-      awayShotsOnTarget: 4,
-      goals: [
-        { player: "Wokabi", team: "Royal Rangers", count: 1 },
-        { player: "Carson", team: "Royal Rangers", count: 1 },
-        { player: "Elly Adams Otieno", team: "Young Stars City", count: 1 },
-      ],
-      assists: [
-        { player: "Jaycrack", team: "Royal Rangers", count: 2 },
-        { player: "Ibrahim Salat", team: "Young Stars City", count: 1 },
-      ],
-    },
-  },
-  {
-    id: 8,
-    matchweek: 1,
-    time: "5:30 PM",
-    date: "Sunday, Oct 25, 2026",
-    venue: "The Hive Stadium (West Campus Ground)",
-    homeId: 8,
-    awayId: 5,
-    homeScore: 1,
-    awayScore: 1,
-    status: "FINISHED",
-    scorers: "Hamard Adan 33' | Morris K. 80'",
-    referee: "Center Ref: Staff Official",
-    goalEvents: [
-      { id: 801, team: "HOME", scorerName: "Hamard Adan", minute: "33'" },
-      { id: 802, team: "AWAY", scorerName: "Morris K.", minute: "80'" },
-    ],
-    manOfTheMatch: {
-      playerName: "Hamard Adan",
-      teamName: "Mzinga Boyz",
-      rating: 9.2,
-      goals: 1,
-      assists: 0,
-      shotsOnTarget: 3,
-      keyPasses: 3,
-      highlightSummary:
-        "The Mzinga captain struck a stunning 25-yard curling equalizer and led the relentless high press.",
-    },
-    metrics: {
-      homePossession: 51,
-      awayPossession: 49,
-      homeShotsOnTarget: 5,
-      awayShotsOnTarget: 4,
-      goals: [
-        { player: "Hamard Adan", team: "Mzinga Boyz", count: 1 },
-        { player: "Morris K.", team: "DP 2 B", count: 1 },
-      ],
-      assists: [{ player: "Jeff Njoroge", team: "Mzinga Boyz", count: 1 }],
-    },
-  },
-  {
-    id: 9,
-    matchweek: 2,
-    time: "3:00 PM",
-    date: "Sunday, Nov 1, 2026",
-    venue: "Young Stars City Arena (North Pavilion)",
-    homeId: 7,
-    awayId: 8,
-    homeScore: 0,
-    awayScore: 0,
-    status: "UPCOMING",
-    scorers: "",
-    referee: "Center Ref: FIFA Badge",
-  },
-  {
-    id: 10,
-    matchweek: 2,
-    time: "4:30 PM",
-    date: "Sunday, Nov 1, 2026",
-    venue: "Academy Main Stadium",
-    homeId: 2,
-    awayId: 6,
-    homeScore: 0,
-    awayScore: 0,
-    status: "UPCOMING",
-    scorers: "",
-    referee: "Center Ref: FIFA Badge",
-  },
-  {
-    id: 11,
-    matchweek: 3,
-    time: "2:00 PM",
-    date: "Sunday, Nov 8, 2026",
-    venue: "Samba Arena (School Lower Pitch)",
-    homeId: 1,
-    awayId: 6,
-    homeScore: 0,
-    awayScore: 0,
-    status: "UPCOMING",
-    scorers: "",
-    referee: "Center Ref: FIFA Badge",
-  },
-  {
-    id: 12,
-    matchweek: 3,
-    time: "3:30 PM",
-    date: "Sunday, Nov 8, 2026",
-    venue: "The Hive Stadium (West Campus Ground)",
-    homeId: 8,
-    awayId: 7,
-    homeScore: 0,
-    awayScore: 0,
-    status: "UPCOMING",
-    scorers: "",
-    referee: "Center Ref: FIFA Badge",
-  },
-];
+export { DEFAULT_TEAMS, DEFAULT_FIXTURES };
 
 export function Fixtures() {
   const { currentRole, isSuperAdmin } = useRoleAccess();
@@ -434,7 +89,14 @@ export function Fixtures() {
 
   // Deletion modal state (in-app confirmation, NO window.confirm)
   const [fixtureToDelete, setFixtureToDelete] = useState<MatchFixture | null>(null);
+  const [matchweekToDelete, setMatchweekToDelete] = useState<number | null>(null);
   const [deleteSuccessToast, setDeleteSuccessToast] = useState<string | null>(null);
+
+  // MVP & 24h Alert Modals
+  const [activeMvpMatchId, setActiveMvpMatchId] = useState<number | null>(null);
+  const [activeAlertMatchId, setActiveAlertMatchId] = useState<number | null>(null);
+  const [showMvpPanel, setShowMvpPanel] = useState<boolean>(false);
+  const [showAlertPanel, setShowAlertPanel] = useState<boolean>(false);
 
   // Modals state
   const [openCreateModal, setOpenCreateModal] = useState<boolean>(false);
@@ -466,18 +128,23 @@ export function Fixtures() {
   useEffect(() => {
     try {
       const storedFixtures = localStorage.getItem("mpesa_pes_matches_v6");
+      const storedDeleted = new Set<number>(
+        JSON.parse(localStorage.getItem("mpesa_pes_deleted_fixtures_v6") || "[]"),
+      );
       if (storedFixtures) {
         const parsed = JSON.parse(storedFixtures);
         if (Array.isArray(parsed) && parsed.length > 0) {
           // Merge any newly introduced default fixtures (e.g. Royal Rangers, Young Stars City, Mzinga)
           const existingIds = new Set(parsed.map((f: MatchFixture) => f.id));
-          const missing = DEFAULT_FIXTURES.filter((df) => !existingIds.has(df.id));
+          const missing = DEFAULT_FIXTURES.filter(
+            (df) => !existingIds.has(df.id) && !storedDeleted.has(df.id),
+          );
           setFixtures([...parsed, ...missing]);
         } else {
-          setFixtures(DEFAULT_FIXTURES);
+          setFixtures(DEFAULT_FIXTURES.filter((df) => !storedDeleted.has(df.id)));
         }
       } else {
-        setFixtures(DEFAULT_FIXTURES);
+        setFixtures(DEFAULT_FIXTURES.filter((df) => !storedDeleted.has(df.id)));
       }
 
       const storedTeams = localStorage.getItem("mpesa_pes_teams_v6");
@@ -652,7 +319,8 @@ export function Fixtures() {
     e.preventDefault();
     if (!editingFixture) return;
     if (editingFixture.homeId === editingFixture.awayId) {
-      alert("Home team and Away team must be different!");
+      setDeleteSuccessToast("⚠️ Home team and Away team must be different!");
+      setTimeout(() => setDeleteSuccessToast(null), 4000);
       return;
     }
 
@@ -678,6 +346,18 @@ export function Fixtures() {
     const updated = fixtures.filter((f) => f.id !== targetId);
     persistFixtures(updated);
 
+    try {
+      const storedDeleted: number[] = JSON.parse(
+        localStorage.getItem("mpesa_pes_deleted_fixtures_v6") || "[]",
+      );
+      if (!storedDeleted.includes(targetId)) {
+        storedDeleted.push(targetId);
+        localStorage.setItem("mpesa_pes_deleted_fixtures_v6", JSON.stringify(storedDeleted));
+      }
+    } catch {
+      // Ignore
+    }
+
     setFixtureToDelete(null);
     if (openEditModal && editingFixture?.id === targetId) {
       setOpenEditModal(false);
@@ -685,6 +365,42 @@ export function Fixtures() {
     }
 
     setDeleteSuccessToast(`✓ Fixture MW ${week}: ${homeTeam} vs ${awayTeam} successfully deleted.`);
+    setTimeout(() => {
+      setDeleteSuccessToast(null);
+    }, 4000);
+  };
+
+  // Perform confirmed deletion of an entire Matchweek
+  const confirmDeleteMatchweek = () => {
+    if (matchweekToDelete === null) return;
+    const week = matchweekToDelete;
+    const targetFixtures = fixtures.filter((f) => f.matchweek === week);
+    const targetIds = targetFixtures.map((f) => f.id);
+
+    const updated = fixtures.filter((f) => f.matchweek !== week);
+    persistFixtures(updated);
+
+    try {
+      const storedDeleted: number[] = JSON.parse(
+        localStorage.getItem("mpesa_pes_deleted_fixtures_v6") || "[]",
+      );
+      targetIds.forEach((id) => {
+        if (!storedDeleted.includes(id)) {
+          storedDeleted.push(id);
+        }
+      });
+      localStorage.setItem("mpesa_pes_deleted_fixtures_v6", JSON.stringify(storedDeleted));
+    } catch {
+      // Ignore
+    }
+
+    setMatchweekToDelete(null);
+    if (selectedWeek === String(week)) {
+      setSelectedWeek("ALL");
+    }
+    setDeleteSuccessToast(
+      `✓ Matchweek ${week} and all ${targetFixtures.length} of its fixtures permanently deleted.`,
+    );
     setTimeout(() => {
       setDeleteSuccessToast(null);
     }, 4000);
@@ -768,10 +484,30 @@ export function Fixtures() {
             </button>
           </div>
 
+          {/* Match MVP Balloting Button */}
+          <button
+            onClick={() => setShowMvpPanel(true)}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-amber-400/15 hover:bg-amber-400 text-amber-300 hover:text-black border border-amber-400/30 text-xs font-black transition cursor-pointer shadow"
+          >
+            <Trophy className="w-3.5 h-3.5" />
+            <span>Match MVP Ballots</span>
+          </button>
+
+          {/* 24-Hour Notification Button */}
+          {canManageFixtures && (
+            <button
+              onClick={() => setShowAlertPanel(true)}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-cyan-400/15 hover:bg-cyan-400 text-cyan-300 hover:text-black border border-cyan-400/30 text-xs font-black transition cursor-pointer shadow"
+            >
+              <Mail className="w-3.5 h-3.5" />
+              <span>24h Pre-Match Alerts</span>
+            </button>
+          )}
+
           {canManageFixtures && (
             <button
               onClick={() => setOpenCreateModal(true)}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-[#00f0ff] via-emerald-400 to-[#00ff85] text-black font-black text-xs hover:shadow-lg hover:shadow-cyan-500/25 transition transform active:scale-95 cursor-pointer"
+              className="flex items-center gap-2 px-5 py-2 rounded-2xl bg-gradient-to-r from-[#00f0ff] via-emerald-400 to-[#00ff85] text-black font-black text-xs hover:shadow-lg hover:shadow-cyan-500/25 transition transform active:scale-95 cursor-pointer"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -781,7 +517,7 @@ export function Fixtures() {
                   d="M12 4v16m8-8H4"
                 />
               </svg>
-              <span>+ Schedule New Match</span>
+              <span>+ Schedule Match</span>
             </button>
           )}
         </div>
@@ -831,6 +567,17 @@ export function Fixtures() {
                   MW {week}
                 </button>
               ))}
+
+              {canManageFixtures && selectedWeek !== "ALL" && (
+                <button
+                  onClick={() => setMatchweekToDelete(Number(selectedWeek))}
+                  className="ml-auto px-3 py-1.5 rounded-xl text-xs font-black bg-rose-500/20 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/40 transition flex items-center gap-1.5 shrink-0 shadow cursor-pointer whitespace-nowrap"
+                  title={`Permanently delete all fixtures in Matchweek ${selectedWeek}`}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Delete MW {selectedWeek}</span>
+                </button>
+              )}
             </div>
 
             {/* Status Filter */}
@@ -1199,20 +946,41 @@ export function Fixtures() {
                       );
                     })()}
 
-                  {/* Admin Action Buttons (Edit & Delete) */}
-                  {canManageFixtures && (
-                    <div className="pt-3 border-t border-[#2e2554]/60 flex items-center justify-between">
-                      <span className="text-[10px] text-gray-400 font-mono">ID: #{fixture.id}</span>
-                      <div className="flex items-center gap-2">
+                  {/* Fixture Card Action Bar */}
+                  <div className="pt-3 border-t border-[#2e2554]/60 flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => setActiveMvpMatchId(fixture.id)}
+                        className="px-2.5 py-1 rounded-xl bg-amber-400/15 hover:bg-amber-400 text-amber-300 hover:text-black font-extrabold text-[11px] transition flex items-center gap-1 shadow-sm cursor-pointer"
+                        title="Vote for Match MVP"
+                      >
+                        <Trophy className="w-3 h-3" />
+                        <span>MVP Vote</span>
+                      </button>
+
+                      {fixture.status === "UPCOMING" && (
+                        <button
+                          onClick={() => setActiveAlertMatchId(fixture.id)}
+                          className="px-2.5 py-1 rounded-xl bg-cyan-400/15 hover:bg-cyan-400 text-cyan-300 hover:text-black font-extrabold text-[11px] transition flex items-center gap-1 shadow-sm cursor-pointer"
+                          title="Preview & Send 24h Match Notification Email"
+                        >
+                          <Mail className="w-3 h-3" />
+                          <span>24h Alert</span>
+                        </button>
+                      )}
+                    </div>
+
+                    {canManageFixtures && (
+                      <div className="flex items-center gap-1.5 ml-auto">
                         <button
                           onClick={() => {
                             setEditingFixture({ ...fixture });
                             setOpenEditModal(true);
                           }}
-                          className="px-3 py-1.5 rounded-xl bg-[#00f0ff]/15 hover:bg-[#00f0ff] text-[#00f0ff] hover:text-black font-extrabold text-xs transition flex items-center gap-1.5"
+                          className="px-2.5 py-1 rounded-xl bg-[#00f0ff]/15 hover:bg-[#00f0ff] text-[#00f0ff] hover:text-black font-extrabold text-[11px] transition flex items-center gap-1 cursor-pointer"
                         >
                           <svg
-                            className="w-3.5 h-3.5"
+                            className="w-3 h-3"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -1224,15 +992,15 @@ export function Fixtures() {
                               d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                             />
                           </svg>
-                          <span>Edit Match & Score</span>
+                          <span>Edit</span>
                         </button>
                         <button
                           onClick={() => promptDeleteFixture(fixture)}
-                          className="px-2.5 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500 text-rose-400 hover:text-white font-bold text-xs transition cursor-pointer"
+                          className="px-2 py-1 rounded-xl bg-rose-500/15 hover:bg-rose-500 text-rose-400 hover:text-white font-bold text-[11px] transition cursor-pointer"
                           title="Delete this match fixture"
                         >
                           <svg
-                            className="w-3.5 h-3.5"
+                            className="w-3 h-3"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -1246,8 +1014,8 @@ export function Fixtures() {
                           </svg>
                         </button>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               );
             })}
@@ -1823,6 +1591,114 @@ export function Fixtures() {
                 <span>Permanently Delete</span>
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Entire Matchweek Confirmation Modal */}
+      {matchweekToDelete !== null && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
+          <div className="bg-[#0e0a26] border-2 border-rose-500/50 p-6 rounded-3xl max-w-md w-full shadow-2xl space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-rose-500/20 border border-rose-500/40 text-rose-400 flex items-center justify-center text-xl shrink-0">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-black text-white uppercase leading-tight">
+                  Delete Matchweek {matchweekToDelete}
+                </h3>
+                <span className="text-xs text-rose-400 font-bold">
+                  Bulk Schedule Removal (
+                  {fixtures.filter((f) => f.matchweek === matchweekToDelete).length} matches)
+                </span>
+              </div>
+            </div>
+
+            <div className="p-4 bg-[#141029] rounded-2xl border border-[#2e2554] space-y-2 text-xs">
+              <p className="text-gray-300">
+                You are about to permanently delete <strong>all fixtures</strong> scheduled for{" "}
+                <span className="text-rose-400 font-bold">Matchweek {matchweekToDelete}</span>.
+              </p>
+              <div className="space-y-1 pt-1 text-[11px] text-gray-400 font-mono">
+                {fixtures
+                  .filter((f) => f.matchweek === matchweekToDelete)
+                  .map((f) => (
+                    <div key={f.id} className="flex justify-between">
+                      <span>
+                        • {getTeam(f.homeId).shortCode} vs {getTeam(f.awayId).shortCode}
+                      </span>
+                      <span>{f.time}</span>
+                    </div>
+                  ))}
+              </div>
+            </div>
+
+            <p className="text-xs text-gray-400 leading-relaxed">
+              This action cannot be undone. Standings, calendars, and leaderboards will recompute
+              immediately.
+            </p>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setMatchweekToDelete(null)}
+                className="px-4 py-2 rounded-xl text-gray-400 hover:text-white text-xs font-bold transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteMatchweek}
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-500 hover:brightness-110 text-white font-black text-xs shadow-lg shadow-rose-500/25 transition cursor-pointer flex items-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Delete All MW {matchweekToDelete} Matches</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Match MVP Voting Modal */}
+      {(showMvpPanel || activeMvpMatchId !== null) && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto">
+          <div className="relative max-w-5xl w-full my-8">
+            <button
+              onClick={() => {
+                setShowMvpPanel(false);
+                setActiveMvpMatchId(null);
+              }}
+              className="absolute -top-3 -right-3 z-50 w-9 h-9 rounded-full bg-rose-500 text-white font-black flex items-center justify-center shadow-lg hover:bg-rose-600 transition"
+              title="Close MVP Voting"
+            >
+              ✕
+            </button>
+            <MatchMvpVoting
+              initialMatchId={activeMvpMatchId || 1}
+              onClose={() => {
+                setShowMvpPanel(false);
+                setActiveMvpMatchId(null);
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* 24-Hour Pre-Match Alert Dispatcher Modal */}
+      {(showAlertPanel || activeAlertMatchId !== null) && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto">
+          <div className="relative max-w-5xl w-full my-8">
+            <button
+              onClick={() => {
+                setShowAlertPanel(false);
+                setActiveAlertMatchId(null);
+              }}
+              className="absolute -top-3 -right-3 z-50 w-9 h-9 rounded-full bg-rose-500 text-white font-black flex items-center justify-center shadow-lg hover:bg-rose-600 transition"
+              title="Close Alerts"
+            >
+              ✕
+            </button>
+            <MatchNotificationDispatch />
           </div>
         </div>
       )}

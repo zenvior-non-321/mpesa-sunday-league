@@ -375,13 +375,19 @@
             href="/calendar"
             class="w-full flex items-center gap-3 px-3.5 py-2 rounded-2xl text-gray-300 hover:bg-white/5"
           >
-            <i data-lucide="calendar-days" class="w-4 h-4"></i> Season Calendar
+            <i data-lucide="calendar-days" class="w-4 h-4 text-blue-400"></i> Season Calendar
           </a>
           <a
             href="/leaderboard"
             class="w-full flex items-center gap-3 px-3.5 py-2 rounded-2xl text-gray-300 hover:bg-white/5"
           >
-            <i data-lucide="award" class="w-4 h-4"></i> Golden Boot Board
+            <i data-lucide="award" class="w-4 h-4 text-amber-400"></i> Golden Boot Board
+          </a>
+          <a
+            href="/performance"
+            class="w-full flex items-center gap-3 px-3.5 py-2 rounded-2xl text-gray-300 hover:bg-white/5"
+          >
+            <i data-lucide="activity" class="w-4 h-4 text-pink-400"></i> Radar Analytics
           </a>
           <button
             @click="activeTab = 'teams'; openSuperAdminSidebar = false"
@@ -594,6 +600,30 @@
               x-text="matches.length + ' Matches'"
             ></span>
           </button>
+
+          <!-- Radar Analytics -->
+          <a
+            href="/performance"
+            class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-gray-300 hover:bg-white/5 font-semibold transition"
+          >
+            <div class="flex items-center gap-3">
+              <i data-lucide="activity" class="w-4 h-4 text-pink-400"></i>
+              <span>Radar Analytics</span>
+            </div>
+            <span class="text-[9px] bg-pink-400/20 text-pink-300 px-1.5 py-0.5 rounded font-bold">Charts</span>
+          </a>
+
+          <!-- Season Calendar -->
+          <a
+            href="/calendar"
+            class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-gray-300 hover:bg-white/5 font-semibold transition"
+          >
+            <div class="flex items-center gap-3">
+              <i data-lucide="calendar-days" class="w-4 h-4 text-blue-400"></i>
+              <span>Season Calendar</span>
+            </div>
+            <span class="text-[9px] bg-blue-400/20 text-blue-300 px-1.5 py-0.5 rounded font-bold">Month</span>
+          </a>
 
           <!-- Clubs & Kits -->
           <button
@@ -4780,6 +4810,16 @@
                     class="px-3.5 py-1.5 rounded-2xl text-xs font-bold whitespace-nowrap transition"
                   >
                     <span x-text="'MW ' + week"></span>
+                  </button>
+                </template>
+                <template x-if="canEditFixturesAndScores() && selectedWeekFilter !== 'ALL'">
+                  <button
+                    @click="deleteMatchweek(Number(selectedWeekFilter))"
+                    class="ml-auto px-3.5 py-1.5 rounded-2xl text-xs font-black bg-rose-500/20 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/30 transition flex items-center gap-1.5 shrink-0 shadow"
+                    title="Delete all fixtures in this matchweek"
+                  >
+                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                    <span x-text="'Delete MW ' + selectedWeekFilter"></span>
                   </button>
                 </template>
               </div>
@@ -9714,6 +9754,21 @@
               return;
             }
 
+            if (this.personnelForm.type === "PLAYER") {
+              const pn = this.personnelForm.name.trim().toLowerCase();
+              const conflict = this.teams.find(
+                (t) =>
+                  t.id !== targetTeamId &&
+                  (t.squad || []).some((sp) => (sp.name || "").trim().toLowerCase() === pn),
+              );
+              if (conflict) {
+                this.showToast(
+                  `⛔ "${this.personnelForm.name.trim()}" is already registered under ${conflict.name}. League rules allow a player in ONE team only.`,
+                );
+                return;
+              }
+            }
+
             const isEdit = !!this.personnelForm.uid;
             const origType = this.personnelForm.originalType;
             const origTeamId = Number(this.personnelForm.originalTeamId);
@@ -11331,24 +11386,41 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
             if (!targetMatch) return;
             const homeName = this.getTeamName(targetMatch.homeId);
             const awayName = this.getTeamName(targetMatch.awayId);
-            if (
-              !confirm(
-                `Are you sure you want to permanently delete this fixture:\n${homeName} vs ${awayName} (Matchweek ${targetMatch.matchweek})?\n\nStandings and match schedules will update automatically.`,
-              )
-            ) {
-              return;
-            }
             const idx = this.matches.findIndex((m) => m.id === matchId);
             if (idx !== -1) {
               this.matches.splice(idx, 1);
               this.recalculateStandings();
               this.saveStoredData();
               this.openFixtureModal = false;
-              this.showToast(`✓ Fixture deleted: ${homeName} vs ${awayName}`);
+              this.showToast(`✓ Fixture MW ${targetMatch.matchweek}: ${homeName} vs ${awayName} deleted successfully.`);
               this.$nextTick(() => {
                 if (window.lucide) lucide.createIcons();
               });
             }
+          },
+
+          deleteMatchweek(mwNumber) {
+            if (!this.canEditFixturesAndScores()) {
+              this.showToast(
+                "Access Restricted: Only Records & File Manager, Technological Managers, or Super Admin can delete matchweeks.",
+              );
+              return;
+            }
+            const count = this.matches.filter((m) => m.matchweek === mwNumber).length;
+            if (count === 0) {
+              this.showToast(`No fixtures found in Matchweek ${mwNumber}.`);
+              return;
+            }
+            this.matches = this.matches.filter((m) => m.matchweek !== mwNumber);
+            this.recalculateStandings();
+            this.saveStoredData();
+            if (this.selectedWeekFilter === mwNumber) {
+              this.selectedWeekFilter = "ALL";
+            }
+            this.showToast(`✓ Matchweek ${mwNumber} and all ${count} fixtures deleted successfully.`);
+            this.$nextTick(() => {
+              if (window.lucide) lucide.createIcons();
+            });
           },
 
           recalculateStandings() {

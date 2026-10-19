@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { LeagueCalendarView } from "../components/LeagueCalendarView";
+import { DEFAULT_FIXTURES, DEFAULT_TEAMS } from "../lib/fixturesData";
 import type { MatchFixture, Team } from "../components/Fixtures";
 
 export const Route = createFileRoute("/calendar")({
@@ -18,18 +19,25 @@ export const Route = createFileRoute("/calendar")({
 });
 
 function CalendarPage() {
-  const [fixtures, setFixtures] = useState<MatchFixture[]>([]);
-  const [teams, setTeams] = useState<Team[]>([]);
+  const [fixtures, setFixtures] = useState<MatchFixture[]>(DEFAULT_FIXTURES);
+  const [teams, setTeams] = useState<Team[]>(DEFAULT_TEAMS);
 
   useEffect(() => {
     // Load stored fixtures
     try {
+      const storedDeleted = new Set<number>(
+        JSON.parse(localStorage.getItem("mpesa_pes_deleted_fixtures_v6") || "[]"),
+      );
       const storedFixtures = localStorage.getItem("mpesa_pes_matches_v6");
       if (storedFixtures) {
         const parsed = JSON.parse(storedFixtures);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          setFixtures(parsed);
+          setFixtures(parsed.filter((f: MatchFixture) => !storedDeleted.has(f.id)));
+        } else {
+          setFixtures(DEFAULT_FIXTURES.filter((f) => !storedDeleted.has(f.id)));
         }
+      } else {
+        setFixtures(DEFAULT_FIXTURES.filter((f) => !storedDeleted.has(f.id)));
       }
     } catch {
       // Ignore

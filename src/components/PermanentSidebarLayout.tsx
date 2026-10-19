@@ -12,6 +12,9 @@ import {
   Shield,
   Briefcase,
   Camera,
+  Activity,
+  Vote,
+  CalendarDays,
 } from "lucide-react";
 
 interface PermanentSidebarLayoutProps {
@@ -54,6 +57,13 @@ export function PermanentSidebarLayout({ children }: PermanentSidebarLayoutProps
       badgeColor: "bg-cyan-400/20 text-[#00f0ff] border-cyan-400/30",
     },
     {
+      to: "/performance",
+      label: "Radar Analytics",
+      icon: Activity,
+      badge: "Charts",
+      badgeColor: "bg-pink-400/20 text-pink-300 border-pink-400/30",
+    },
+    {
       to: "/leaderboard",
       label: "Player Stats",
       icon: Award,
@@ -68,11 +78,11 @@ export function PermanentSidebarLayout({ children }: PermanentSidebarLayoutProps
       badgeColor: "bg-emerald-400/20 text-emerald-300 border-emerald-400/30",
     },
     {
-      to: "/upload-photo",
-      label: "Upload Photo",
-      icon: Camera,
-      badge: "Player Portal",
-      badgeColor: "bg-purple-400/20 text-purple-300 border-purple-400/30",
+      to: "/calendar",
+      label: "Season Calendar",
+      icon: CalendarDays,
+      badge: "Month",
+      badgeColor: "bg-blue-400/20 text-blue-300 border-blue-400/30",
     },
     {
       to: "/profile",
