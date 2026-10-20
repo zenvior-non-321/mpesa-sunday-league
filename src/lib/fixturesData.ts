@@ -54,7 +54,12 @@ export function isTeamDeleted(id: number | undefined, name?: string): boolean {
     const stored = JSON.parse(localStorage.getItem("mpesa_pes_deleted_teams_v6") || "[]");
     if (Array.isArray(stored)) {
       if (id && stored.includes(id)) return true;
-      if (name && stored.some((s: string | number) => typeof s === "string" && s.toLowerCase() === name.toLowerCase())) {
+      if (
+        name &&
+        stored.some(
+          (s: string | number) => typeof s === "string" && s.toLowerCase() === name.toLowerCase(),
+        )
+      ) {
         return true;
       }
     }

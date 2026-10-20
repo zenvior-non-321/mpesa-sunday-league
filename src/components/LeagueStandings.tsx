@@ -1,4 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { useRoleAccess } from "../hooks/useRoleAccess";
+import { isTeamDeleted } from "../lib/fixturesData";
+import { Trash2 } from "lucide-react";
 
 export interface PiaCoach {
   name: string;
@@ -284,288 +287,6 @@ const DEFAULT_STANDINGS: TeamStanding[] = [
     form: ["W", "W", "D", "W", "W"],
   },
   {
-    id: 2,
-    name: "Grade 10 A",
-    shortCode: "G10A",
-    color: "#00f0ff",
-    homePitch: "Academy Main Stadium",
-    coach: {
-      name: "Coach Patrick Waweru",
-      role: "Pia Head Coach",
-      email: "pwaweru@mpesaleague.org",
-      photoUrl:
-        "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&auto=format&fit=crop&q=80",
-    },
-    stadium: {
-      name: "Academy Main Stadium (Central Pitch)",
-      capacity: "1,500 Spectators & Floodlit Arena",
-      surface: "Natural Kikuyu Grass & Under-drainage",
-      dimensions: "105m × 68m",
-      record: "72% Home Win Rate",
-      notes:
-        "The premier championship stadium featuring broadcast gantries, grandstand seating, and electronic scoreboard.",
-    },
-    coachDetails: {
-      formation: "4-2-3-1 Dynamic Possession",
-      philosophy:
-        "Positional play emphasizing control through the middle with explosive inverted wingers.",
-      winRate: "70.2% All-Time (26W - 6D - 5L)",
-      tenure: "2 Seasons",
-      assistantCoach: "Coach Daniel Ndegwa",
-    },
-    history: {
-      founded: "2023 at M-Pesa Foundation Academy",
-      honors: [
-        "🏆 Sunday League Champions (2025/2026)",
-        "🥇 Founders Day Trophy (2024)",
-        "🥈 Inter-Grade Cup Runner-up (2025)",
-      ],
-      allTimeRecord: "44 Matches: 29 Wins, 9 Draws, 6 Losses",
-      highestWin: "4 - 0 vs Grade 10 B (Matchweek 3, 2025)",
-      derbyRival: "The Clásico vs Samba Boys & Grade 10 B Derby",
-      historicWinRate: "65.9%",
-      seasons: [
-        { season: "2024/25", finish: "3rd Place", points: 21, note: "Semi-final cup run" },
-        {
-          season: "2025/26",
-          finish: "1st Place (Champions)",
-          points: 29,
-          note: "Championship title winners",
-        },
-        {
-          season: "2026/27",
-          finish: "2nd Place (Current)",
-          points: 11,
-          note: "Unbeaten in 5 games",
-        },
-      ],
-    },
-    squad: [
-      {
-        name: "Emmanuel Kip",
-        number: 9,
-        position: "FWD",
-        photoUrl:
-          "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=150&auto=format&fit=crop&q=80",
-      },
-      {
-        name: "John Doe",
-        number: 1,
-        position: "GK",
-        photoUrl:
-          "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80",
-      },
-      { name: "Bradley Barasa", number: 6, position: "DEF" },
-      { name: "George Ochieng", number: 8, position: "MID" },
-      { name: "Ryan Gitonga", number: 11, position: "FWD" },
-    ],
-    mp: 5,
-    w: 3,
-    d: 2,
-    l: 0,
-    gf: 11,
-    ga: 4,
-    gd: 7,
-    pts: 11,
-    form: ["W", "D", "W", "W", "D"],
-  },
-  {
-    id: 3,
-    name: "Grade 10 B",
-    shortCode: "G10B",
-    color: "#ffe600",
-    homePitch: "Yellow Fortress Pitch B",
-    coach: {
-      name: "Coach Samuel Karanja",
-      role: "Pia Head Coach",
-      email: "skaranja@mpesaleague.org",
-      photoUrl:
-        "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=150&auto=format&fit=crop&q=80",
-    },
-    stadium: {
-      name: "Yellow Fortress Pitch B",
-      capacity: "800 Spectators",
-      surface: "All-Weather AstroTurf Field",
-      dimensions: "100m × 64m",
-      record: "60% Home Win Rate",
-      notes:
-        "Famous for compact, intense tactical encounters and high pressing under warm afternoon sunshine.",
-    },
-    coachDetails: {
-      formation: "3-5-2 Wing-Back Overload",
-      philosophy:
-        "Disciplined mid-block transition with high work-rate wing-backs stretching the pitch.",
-      winRate: "54.5% All-Time (18W - 7D - 8L)",
-      tenure: "2 Seasons",
-      assistantCoach: "Coach Evans Mutiso",
-    },
-    history: {
-      founded: "2023 at M-Pesa Foundation Academy",
-      honors: ["🥇 Junior Division Cup (2024)", "🥉 Sunday League Bronze Medalists (2024/25)"],
-      allTimeRecord: "40 Matches: 20 Wins, 8 Draws, 12 Losses",
-      highestWin: "4 - 1 vs DP 2 B (MW 2, 2026)",
-      derbyRival: "Grade 10 Derby vs Grade 10 A",
-      historicWinRate: "50.0%",
-      seasons: [
-        { season: "2024/25", finish: "3rd Place", points: 19, note: "Podium finish" },
-        { season: "2025/26", finish: "4th Place", points: 17, note: "Cup quarter-finalists" },
-        {
-          season: "2026/27",
-          finish: "3rd Place (Current)",
-          points: 7,
-          note: "Holding podium spot",
-        },
-      ],
-    },
-    squad: [
-      { name: "Joshua Mutua", number: 5, position: "DEF" },
-      { name: "Ian Mercer", number: 10, position: "MID" },
-      { name: "Peter Kariuki", number: 1, position: "GK" },
-      { name: "Kelvin Njoroge", number: 7, position: "FWD" },
-    ],
-    mp: 5,
-    w: 2,
-    d: 1,
-    l: 2,
-    gf: 8,
-    ga: 7,
-    gd: 1,
-    pts: 7,
-    form: ["L", "W", "D", "W", "L"],
-  },
-  {
-    id: 4,
-    name: "DP 2 A",
-    shortCode: "DP2A",
-    color: "#ff0077",
-    homePitch: "Senior DP Complex",
-    coach: {
-      name: "Coach Alex Kilonzo",
-      role: "Pia Head Coach",
-      email: "akilonzo@mpesaleague.org",
-      photoUrl:
-        "https://images.unsplash.com/photo-1528892952291-009c663ce843?w=150&auto=format&fit=crop&q=80",
-    },
-    stadium: {
-      name: "Senior DP Sports Complex",
-      capacity: "950 Spectators",
-      surface: "Hybrid Turf with High Performance Sprinklers",
-      dimensions: "105m × 66m",
-      record: "55% Home Win Rate",
-      notes: "Senior academy hub with enthusiastic senior class cheering section.",
-    },
-    coachDetails: {
-      formation: "4-4-2 Diamond",
-      philosophy:
-        "Physical direct attacks, strong aerial set-pieces, and clinical long-range finishing.",
-      winRate: "52.0% All-Time (17W - 6D - 10L)",
-      tenure: "2 Seasons",
-      assistantCoach: "Coach Lucas Omwamba",
-    },
-    history: {
-      founded: "2023 at M-Pesa Foundation Academy",
-      honors: ["🥈 Senior Academy Trophy Finalists (2025)", "🥇 Fair Play Award (2024)"],
-      allTimeRecord: "38 Matches: 18 Wins, 7 Draws, 13 Losses",
-      highestWin: "3 - 0 vs DP 2 B (MW 5, 2025)",
-      derbyRival: "Senior DP Derby vs DP 2 B",
-      historicWinRate: "47.4%",
-      seasons: [
-        { season: "2024/25", finish: "4th Place", points: 16, note: "Solid inaugural year" },
-        { season: "2025/26", finish: "3rd Place", points: 20, note: "Podium finish" },
-        {
-          season: "2026/27",
-          finish: "4th Place (Current)",
-          points: 4,
-          note: "Fighting for podium",
-        },
-      ],
-    },
-    squad: [
-      { name: "Collins Wekesa", number: 8, position: "MID" },
-      {
-        name: "Alex Rono",
-        number: 11,
-        position: "FWD",
-        photoUrl:
-          "https://images.unsplash.com/photo-1528892952291-009c663ce843?w=150&auto=format&fit=crop&q=80",
-      },
-      { name: "Timothy Cheruiyot", number: 1, position: "GK" },
-      { name: "Kelvin Korir", number: 9, position: "FWD" },
-    ],
-    mp: 5,
-    w: 1,
-    d: 1,
-    l: 3,
-    gf: 5,
-    ga: 9,
-    gd: -4,
-    pts: 4,
-    form: ["L", "L", "W", "D", "L"],
-  },
-  {
-    id: 5,
-    name: "DP 2 B",
-    shortCode: "DP2B",
-    color: "#a855f7",
-    homePitch: "Purple Pitch Arena",
-    coach: {
-      name: "Coach Victor Wanyama",
-      role: "Pia Head Coach",
-      email: "vwanyama@mpesaleague.org",
-      photoUrl:
-        "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=150&auto=format&fit=crop&q=80",
-    },
-    stadium: {
-      name: "Purple Pitch Arena (South Pavilion Ground)",
-      capacity: "750 Spectators",
-      surface: "Natural Manicured Turf",
-      dimensions: "102m × 65m",
-      record: "45% Home Win Rate",
-      notes: "Known for quick counter-attacking conditions and passionate purple banner displays.",
-    },
-    coachDetails: {
-      formation: "5-3-2 Low-Block Counter",
-      philosophy:
-        "Resilient deep defensive block seeking fast breakaway transitions behind the opposition line.",
-      winRate: "38.5% All-Time (10W - 6D - 10L)",
-      tenure: "1 Season",
-      assistantCoach: "Coach Morris K.",
-    },
-    history: {
-      founded: "2023 at M-Pesa Foundation Academy",
-      honors: ["🥇 Sportsmanship Shield (2025)", "🥉 Academy Spirit Award (2024)"],
-      allTimeRecord: "32 Matches: 11 Wins, 5 Draws, 16 Losses",
-      highestWin: "2 - 0 vs Grade 10 B (MW 6, 2025)",
-      derbyRival: "Senior DP Derby vs DP 2 A",
-      historicWinRate: "34.4%",
-      seasons: [
-        { season: "2024/25", finish: "5th Place", points: 12, note: "Rebuilding squad" },
-        { season: "2025/26", finish: "5th Place", points: 14, note: "Improved defense" },
-        {
-          season: "2026/27",
-          finish: "5th Place (Current)",
-          points: 1,
-          note: "Looking for first victory",
-        },
-      ],
-    },
-    squad: [
-      { name: "Hassan Ali", number: 10, position: "MID" },
-      { name: "Rashid Mohamed", number: 6, position: "DEF" },
-      { name: "Brian Koech", number: 1, position: "GK" },
-      { name: "Caleb Kibet", number: 9, position: "FWD" },
-    ],
-    mp: 5,
-    w: 0,
-    d: 1,
-    l: 4,
-    gf: 2,
-    ga: 17,
-    gd: -15,
-    pts: 1,
-    form: ["L", "L", "L", "D", "L"],
-  },
-  {
     id: 6,
     name: "Royal Rangers",
     shortCode: "RR",
@@ -781,46 +502,97 @@ type SortDirection = "asc" | "desc";
 type ClubModalTab = "overview" | "stadium" | "coach" | "history" | "squad";
 
 export function LeagueStandings() {
+  const { isSuperAdmin, currentRole } = useRoleAccess();
+  const canDeleteTeam =
+    isSuperAdmin || currentRole === "TECH_MANAGER" || currentRole === "RECORDS_MANAGER";
+
   const [standings, setStandings] = useState<TeamStanding[]>(DEFAULT_STANDINGS);
   const [sortColumn, setSortColumn] = useState<SortColumn>("pts");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedTeam, setSelectedTeam] = useState<TeamStanding | null>(null);
   const [clubModalTab, setClubModalTab] = useState<ClubModalTab>("overview");
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Sync with localStorage if available
+  // Sync with localStorage and sanitize against deleted teams
   useEffect(() => {
     try {
       const storedTeams = localStorage.getItem("mpesa_pes_teams_v6");
+      let activeList: TeamStanding[] = DEFAULT_STANDINGS;
       if (storedTeams) {
         const parsed = JSON.parse(storedTeams);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          // Normalize teams with fallback stats
-          const enriched: TeamStanding[] = parsed.map((t, idx) => ({
-            id: t.id ?? idx + 1,
-            name: t.name || `Club #${idx + 1}`,
-            shortCode: t.shortCode || `C${idx + 1}`,
-            color: t.color || "#00f0ff",
-            homePitch: t.homePitch || "School Main Arena",
-            coach: t.coach,
-            logoUrl: t.logoUrl,
-            mp: typeof t.mp === "number" ? t.mp : 5,
-            w: typeof t.w === "number" ? t.w : 0,
-            d: typeof t.d === "number" ? t.d : 0,
-            l: typeof t.l === "number" ? t.l : 0,
-            gf: typeof t.gf === "number" ? t.gf : 0,
-            ga: typeof t.ga === "number" ? t.ga : 0,
-            gd: typeof t.gd === "number" ? t.gd : (t.gf || 0) - (t.ga || 0),
-            pts: typeof t.pts === "number" ? t.pts : (t.w || 0) * 3 + (t.d || 0),
-            form: Array.isArray(t.form) ? t.form : ["W", "D", "W", "L", "W"],
-          }));
-          setStandings(enriched);
+          // Normalize teams with fallback stats and filter out deleted legacy clubs
+          const nonDeleted = parsed.filter((t) => !isTeamDeleted(t.id, t.name));
+          if (nonDeleted.length > 0) {
+            activeList = nonDeleted.map((t, idx) => ({
+              id: t.id ?? idx + 1,
+              name: t.name || `Club #${idx + 1}`,
+              shortCode: t.shortCode || `C${idx + 1}`,
+              color: t.color || "#00f0ff",
+              homePitch: t.homePitch || "School Main Arena",
+              coach: t.coach,
+              stadium: t.stadium,
+              coachDetails: t.coachDetails,
+              history: t.history,
+              squad: t.squad,
+              logoUrl: t.logoUrl,
+              mp: typeof t.mp === "number" ? t.mp : 5,
+              w: typeof t.w === "number" ? t.w : 0,
+              d: typeof t.d === "number" ? t.d : 0,
+              l: typeof t.l === "number" ? t.l : 0,
+              gf: typeof t.gf === "number" ? t.gf : 0,
+              ga: typeof t.ga === "number" ? t.ga : 0,
+              gd: typeof t.gd === "number" ? t.gd : (t.gf || 0) - (t.ga || 0),
+              pts: typeof t.pts === "number" ? t.pts : (t.w || 0) * 3 + (t.d || 0),
+              form: Array.isArray(t.form) ? t.form : ["W", "D", "W", "L", "W"],
+            }));
+          }
         }
+      }
+      setStandings(activeList);
+      // Persist cleaned list so legacy teams don't linger
+      try {
+        localStorage.setItem("mpesa_pes_teams_v6", JSON.stringify(activeList));
+      } catch {
+        // Ignore
       }
     } catch {
       setStandings(DEFAULT_STANDINGS);
     }
   }, []);
+
+  const handleDeleteTeam = (teamId: number, teamName: string) => {
+    const updated = standings.filter((t) => t.id !== teamId);
+    setStandings(updated);
+    try {
+      const storedDeleted: (number | string)[] = JSON.parse(
+        localStorage.getItem("mpesa_pes_deleted_teams_v6") || "[]",
+      );
+      if (!storedDeleted.includes(teamId)) storedDeleted.push(teamId);
+      if (!storedDeleted.includes(teamName.toLowerCase()))
+        storedDeleted.push(teamName.toLowerCase());
+      localStorage.setItem("mpesa_pes_deleted_teams_v6", JSON.stringify(storedDeleted));
+      localStorage.setItem("mpesa_pes_teams_v6", JSON.stringify(updated));
+
+      // Also clean up any fixtures referencing this team
+      const storedMatches = localStorage.getItem("mpesa_pes_matches_v6");
+      if (storedMatches) {
+        const matches = JSON.parse(storedMatches);
+        if (Array.isArray(matches)) {
+          const filteredMatches = matches.filter(
+            (m: { homeId: number; awayId: number }) => m.homeId !== teamId && m.awayId !== teamId,
+          );
+          localStorage.setItem("mpesa_pes_matches_v6", JSON.stringify(filteredMatches));
+        }
+      }
+    } catch {
+      // Ignore
+    }
+    setSelectedTeam(null);
+    setToastMessage(`✓ Club "${teamName}" permanently deleted from league.`);
+    setTimeout(() => setToastMessage(null), 3500);
+  };
 
   const handleSort = (col: SortColumn) => {
     if (sortColumn === col) {
@@ -1915,11 +1687,24 @@ export function LeagueStandings() {
               </div>
             )}
 
-            {/* Modal Bottom Close Button */}
-            <div className="pt-2 border-t border-[#2e2554] flex items-center justify-between">
-              <span className="text-[11px] text-gray-400 font-mono">
-                M-Pesa Sunday League • Official Dossier
-              </span>
+            {/* Modal Bottom Actions */}
+            <div className="pt-2 border-t border-[#2e2554] flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <span className="text-[11px] text-gray-400 font-mono hidden sm:inline">
+                  M-Pesa Sunday League • Official Dossier
+                </span>
+                {canDeleteTeam && selectedTeam && (
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteTeam(selectedTeam.id, selectedTeam.name)}
+                    className="px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/30 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                    title="Permanently delete this club from the league"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Delete Club</span>
+                  </button>
+                )}
+              </div>
               <button
                 onClick={() => {
                   setSelectedTeam(null);
@@ -1931,6 +1716,14 @@ export function LeagueStandings() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Floating Toast Notification */}
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 z-50 bg-[#0e0a26] border-2 border-emerald-400/80 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-bottom duration-300">
+          <span className="text-base text-emerald-400">✓</span>
+          <span className="text-xs font-bold">{toastMessage}</span>
         </div>
       )}
     </div>

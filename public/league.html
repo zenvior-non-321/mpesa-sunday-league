@@ -10681,11 +10681,23 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
               this.showToast("Cannot delete: Minimum 2 clubs required.");
               return;
             }
+            const target = this.teams.find((t) => t.id === teamId);
+            const teamName = target ? target.name : `Club #${teamId}`;
             this.teams = this.teams.filter((t) => t.id !== teamId);
             this.matches = this.matches.filter((m) => m.homeId !== teamId && m.awayId !== teamId);
+            try {
+              const storedDeleted = JSON.parse(
+                localStorage.getItem("mpesa_pes_deleted_teams_v6") || "[]",
+              );
+              if (!storedDeleted.includes(teamId)) storedDeleted.push(teamId);
+              if (target && !storedDeleted.includes(target.name.toLowerCase())) {
+                storedDeleted.push(target.name.toLowerCase());
+              }
+              localStorage.setItem("mpesa_pes_deleted_teams_v6", JSON.stringify(storedDeleted));
+            } catch (e) {}
             this.recalculateStandings();
             this.saveStoredData();
-            this.showToast("Club removed.");
+            this.showToast(`✓ Club "${teamName}" permanently deleted from league.`);
           },
 
           openSquadModal(team) {
@@ -12475,96 +12487,6 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
 
             const baseDefaultTeams = [
               {
-                id: 1,
-                name: "Samba Boys",
-                shortCode: "SMB",
-                color: "#00ff85",
-                homePitch: "Samba Arena (School Lower Pitch)",
-                captain: "Kevin Omondi",
-                coach: {
-                  name: "Coach Kennedy Juma",
-                  role: "Pia Head Coach",
-                  email: "kjuma@mpesaleague.org",
-                  photoUrl:
-                    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
-                },
-                assistantCoach: { name: "Coach Peter K." },
-                manager: { name: "Mr. Omondi Senior" },
-                squad: defaultSquads[1],
-              },
-              {
-                id: 2,
-                name: "Grade 10 A",
-                shortCode: "G10A",
-                color: "#00f0ff",
-                homePitch: "Academy Main Stadium",
-                captain: "Emmanuel Kip",
-                coach: {
-                  name: "Coach Patrick Waweru",
-                  role: "Pia Head Coach",
-                  email: "pwaweru@mpesaleague.org",
-                  photoUrl:
-                    "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&auto=format&fit=crop&q=80",
-                },
-                assistantCoach: { name: "Coach Daniel N." },
-                manager: { name: "Class Rep G10A" },
-                squad: defaultSquads[2],
-              },
-              {
-                id: 3,
-                name: "Grade 10 B",
-                shortCode: "G10B",
-                color: "#ffe600",
-                homePitch: "Yellow Fortress Pitch B",
-                captain: "Joshua Mutua",
-                coach: {
-                  name: "Coach Samuel Karanja",
-                  role: "Pia Head Coach",
-                  email: "skaranja@mpesaleague.org",
-                  photoUrl:
-                    "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=150&auto=format&fit=crop&q=80",
-                },
-                assistantCoach: { name: "Coach Alex M." },
-                manager: { name: "Class Rep G10B" },
-                squad: defaultSquads[3],
-              },
-              {
-                id: 4,
-                name: "DP 2 A",
-                shortCode: "DP2A",
-                color: "#ff0077",
-                homePitch: "Senior DP Complex",
-                captain: "Collins Wekesa",
-                coach: {
-                  name: "Coach Alex Kilonzo",
-                  role: "Pia Head Coach",
-                  email: "akilonzo@mpesaleague.org",
-                  photoUrl:
-                    "https://images.unsplash.com/photo-1528892952291-009c663ce843?w=150&auto=format&fit=crop&q=80",
-                },
-                assistantCoach: { name: "Coach Brian T." },
-                manager: { name: "Senior Council DP2" },
-                squad: defaultSquads[4],
-              },
-              {
-                id: 5,
-                name: "DP 2 B",
-                shortCode: "DP2B",
-                color: "#a855f7",
-                homePitch: "Purple Pitch Arena",
-                captain: "Hassan Ali",
-                coach: {
-                  name: "Coach Victor Wanyama",
-                  role: "Pia Head Coach",
-                  email: "vwanyama@mpesaleague.org",
-                  photoUrl:
-                    "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=150&auto=format&fit=crop&q=80",
-                },
-                assistantCoach: { name: "Coach Joseph M." },
-                manager: { name: "Senior Council DP2B" },
-                squad: defaultSquads[5],
-              },
-              {
                 id: 6,
                 name: "Royal Rangers",
                 shortCode: "RYR",
@@ -12614,10 +12536,43 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
               },
             ];
 
-            this.teams = storedTeams ? JSON.parse(storedTeams) : baseDefaultTeams;
-            // Merge in any newly added default clubs missing from previously stored data
+            const legacyDeletedIds = [1, 2, 3, 4, 5];
+            const legacyDeletedNames = ["grade 10 a", "grade 10 b", "dp 2 a", "dp 2 b", "samba boys"];
+            let storedDeletedTeamIds = [];
+            try {
+              storedDeletedTeamIds = JSON.parse(
+                localStorage.getItem("mpesa_pes_deleted_teams_v6") || "[]",
+              );
+            } catch (e) {}
+
+            let loadedTeams = storedTeams ? JSON.parse(storedTeams) : baseDefaultTeams;
+            if (Array.isArray(loadedTeams)) {
+              loadedTeams = loadedTeams.filter((t) => {
+                if (legacyDeletedIds.includes(t.id) && t.name !== "Samba") return false;
+                if (t.name && legacyDeletedNames.includes(t.name.trim().toLowerCase())) return false;
+                if (storedDeletedTeamIds.includes(t.id)) return false;
+                if (
+                  t.name &&
+                  storedDeletedTeamIds.some(
+                    (s) => typeof s === "string" && s.toLowerCase() === t.name.toLowerCase(),
+                  )
+                ) {
+                  return false;
+                }
+                return true;
+              });
+            }
+
+            this.teams = loadedTeams && loadedTeams.length > 0 ? loadedTeams : baseDefaultTeams;
+            // Merge in missing default clubs
             baseDefaultTeams.forEach((dt) => {
-              if (!this.teams.some((t) => t.id === dt.id)) {
+              if (
+                !this.teams.some(
+                  (t) =>
+                    t.id === dt.id ||
+                    (t.name && dt.name && t.name.toLowerCase() === dt.name.toLowerCase()),
+                )
+              ) {
                 this.teams.push(JSON.parse(JSON.stringify(dt)));
               }
             });
@@ -12633,6 +12588,16 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
             this.matches = storedMatches
               ? JSON.parse(storedMatches)
               : this.generateDefaultFixtures();
+            if (Array.isArray(this.matches)) {
+              this.matches = this.matches.filter(
+                (m) =>
+                  this.teams.some((t) => t.id === m.homeId) &&
+                  this.teams.some((t) => t.id === m.awayId),
+              );
+              if (this.matches.length === 0) {
+                this.matches = this.generateDefaultFixtures();
+              }
+            }
 
             this.playerStatsList = storedStats
               ? JSON.parse(storedStats)
@@ -12768,36 +12733,36 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
               {
                 week: 1,
                 matches: [
-                  { h: 1, a: 2, time: "2:00 PM" },
-                  { h: 3, a: 4, time: "4:00 PM" },
+                  { h: 6, a: 7, time: "2:00 PM" },
+                  { h: 8, a: 9, time: "4:00 PM" },
                 ],
               },
               {
                 week: 2,
                 matches: [
-                  { h: 5, a: 1, time: "2:00 PM" },
-                  { h: 2, a: 3, time: "4:00 PM" },
+                  { h: 9, a: 6, time: "2:00 PM" },
+                  { h: 7, a: 8, time: "4:00 PM" },
                 ],
               },
               {
                 week: 3,
                 matches: [
-                  { h: 4, a: 5, time: "2:00 PM" },
-                  { h: 1, a: 3, time: "4:00 PM" },
+                  { h: 6, a: 8, time: "2:00 PM" },
+                  { h: 7, a: 9, time: "4:00 PM" },
                 ],
               },
               {
                 week: 4,
                 matches: [
-                  { h: 2, a: 4, time: "2:00 PM" },
-                  { h: 3, a: 5, time: "4:00 PM" },
+                  { h: 7, a: 6, time: "2:00 PM" },
+                  { h: 9, a: 8, time: "4:00 PM" },
                 ],
               },
               {
                 week: 5,
                 matches: [
-                  { h: 5, a: 2, time: "2:00 PM" },
-                  { h: 4, a: 1, time: "4:00 PM" },
+                  { h: 6, a: 9, time: "2:00 PM" },
+                  { h: 8, a: 7, time: "4:00 PM" },
                 ],
               },
             ];

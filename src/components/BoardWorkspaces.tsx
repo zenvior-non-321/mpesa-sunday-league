@@ -1,11 +1,26 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useRoleAccess, ROLE_HIERARCHY_DATA, type LeagueRole } from "../hooks/useRoleAccess";
+import { DEFAULT_TEAMS, DEFAULT_FIXTURES, isTeamDeleted } from "../lib/fixturesData";
+import {
+  Mail,
+  Vote,
+  Trash2,
+  Copy,
+  Check,
+  Users,
+  Shield,
+  Send,
+  ExternalLink,
+  Calendar,
+} from "lucide-react";
 
 interface AdminSquadPlayer {
   name: string;
   number?: number;
   position?: string;
   photoUrl?: string;
+  role?: string;
+  email?: string;
 }
 
 interface AdminTeam {
@@ -15,6 +30,9 @@ interface AdminTeam {
   shortCode?: string;
   homePitch?: string;
   squad?: AdminSquadPlayer[];
+  captain?: string;
+  coach?: { name?: string; role?: string; email?: string; photoUrl?: string };
+  manager?: { name?: string };
 }
 
 interface AdminPlayerStat {
@@ -27,7 +45,7 @@ export function BoardWorkspaces() {
   const { currentRole, isSuperAdmin, roleDetails, roleTier, switchRole } = useRoleAccess();
 
   // Active workspace tab (defaults to currentRole or SUPER_ADMIN)
-  const [activeWorkspaceRole, setActiveWorkspaceRole] = useState<LeagueRole>(
+  const [activeWorkspaceRole, setActiveWorkspaceRole] = useState<LeagueRole | "TEAM_MANAGERS">(
     isSuperAdmin ? "SUPER_ADMIN" : currentRole === "GUEST" ? "PRESIDENT" : currentRole,
   );
 
@@ -42,16 +60,25 @@ export function BoardWorkspaces() {
   // Synchronized state with localStorage
   const [newsCount, setNewsCount] = useState<number>(1);
   const [fixturesCount, setFixturesCount] = useState<number>(6);
-  const [teamsCount, setTeamsCount] = useState<number>(5);
+  const [teamsCount, setTeamsCount] = useState<number>(4);
   const [playersCount, setPlayersCount] = useState<number>(10);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Player Photo Management State
   const [adminTeams, setAdminTeams] = useState<AdminTeam[]>([]);
-  const [selectedTeamIdForPhoto, setSelectedTeamIdForPhoto] = useState<number>(1);
-  const [selectedPlayerForPhoto, setSelectedPlayerForPhoto] = useState<string>("Kevin Omondi");
+  const [selectedTeamIdForPhoto, setSelectedTeamIdForPhoto] = useState<number>(6);
+  const [selectedPlayerForPhoto, setSelectedPlayerForPhoto] = useState<string>("Jaycrack");
   const [adminPhotoPreview, setAdminPhotoPreview] = useState<string>("");
   const [copiedPlayerLink, setCopiedPlayerLink] = useState<boolean>(false);
+
+  // MVP Link Dispatcher State
+  const [selectedMvpMatchId, setSelectedMvpMatchId] = useState<number>(1);
+  const [copiedMvpLink, setCopiedMvpLink] = useState<boolean>(false);
+  const [copiedMvpEmail, setCopiedMvpEmail] = useState<boolean>(false);
+
+  // Team Managers & Captains Hub State
+  const [selectedManagerTeamId, setSelectedManagerTeamId] = useState<number>(6);
+  const [managerCheckinConfirmed, setManagerCheckinConfirmed] = useState<boolean>(false);
 
   // Forms state for workspace actions
   const [decreeForm, setDecreeForm] = useState({
@@ -60,7 +87,7 @@ export function BoardWorkspaces() {
     content: "",
   });
   const [appealForm, setAppealForm] = useState({
-    club: "Samba Boys",
+    club: "Royal Rangers",
     verdict: "SANCTION_REDUCED",
     justification: "",
   });
@@ -72,12 +99,12 @@ export function BoardWorkspaces() {
   });
   const [refereeForm, setRefereeForm] = useState({
     matchweek: "MW 1",
-    centerRef: "FIFA Center Referee",
+    centerRef: "Ian Muli (FIFA Badge)",
     linesman1: "Official Linesman A",
     linesman2: "Official Linesman B",
   });
   const [cardSanctionForm, setCardSanctionForm] = useState({
-    player: "Kevin Omondi",
+    player: "Jaycrack",
     type: "DIRECT_RED",
     sanction: "1 Match Ban",
   });
@@ -97,13 +124,21 @@ export function BoardWorkspaces() {
       if (storedTeams) {
         const parsed = JSON.parse(storedTeams);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          setAdminTeams(parsed);
-          setTeamsCount(parsed.length);
-          if (!selectedTeamIdForPhoto && parsed[0]) {
-            setSelectedTeamIdForPhoto(parsed[0].id);
+          const nonDeleted = parsed.filter((t: AdminTeam) => !isTeamDeleted(t.id, t.name));
+          if (nonDeleted.length > 0) {
+            setAdminTeams(nonDeleted);
+            setTeamsCount(nonDeleted.length);
+            if (!selectedTeamIdForPhoto && nonDeleted[0]) {
+              setSelectedTeamIdForPhoto(nonDeleted[0].id);
+            }
+            return;
           }
-          return;
         }
+      }
+      setAdminTeams(DEFAULT_TEAMS as unknown as AdminTeam[]);
+      setTeamsCount(DEFAULT_TEAMS.length);
+      if (!selectedTeamIdForPhoto && DEFAULT_TEAMS[0]) {
+        setSelectedTeamIdForPhoto(DEFAULT_TEAMS[0].id);
       }
     } catch {
       // Ignore
@@ -137,8 +172,59 @@ export function BoardWorkspaces() {
     const shareUrl = `${origin}/upload-photo`;
     navigator.clipboard.writeText(shareUrl);
     setCopiedPlayerLink(true);
-    showToast("Shareable Player Photo Upload link copied to clipboard!");
+    showToast("✓ Shareable Player Photo Upload link copied to clipboard!");
     setTimeout(() => setCopiedPlayerLink(false), 3000);
+  };
+
+  const copyMvpShareLink = () => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const shareUrl = `${origin}/mvp-voting?matchId=${selectedMvpMatchId}`;
+    navigator.clipboard.writeText(shareUrl);
+    setCopiedMvpLink(true);
+    showToast("✓ Match MVP Voting link copied to clipboard! Send to members via email or chat.");
+    setTimeout(() => setCopiedMvpLink(false), 3000);
+  };
+
+  const copyMvpEmailTemplate = () => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const shareUrl = `${origin}/mvp-voting?matchId=${selectedMvpMatchId}`;
+    const emailBody = `Subject: Vote for Match MVP - M-Pesa Sunday League\n\nDear League Member,\n\nThe latest match has concluded and voting for the Man of the Match (MVP) is now officially open!\n\nPlease cast your vote using the official ballot link below:\n${shareUrl}\n\nNote: Each league member is entitled to exactly 1 ballot per fixture.\n\nBest regards,\nM-Pesa Sunday League Committee`;
+    navigator.clipboard.writeText(emailBody);
+    setCopiedMvpEmail(true);
+    showToast("✓ Match MVP Email announcement template copied to clipboard!");
+    setTimeout(() => setCopiedMvpEmail(false), 3000);
+  };
+
+  const handleDeleteTeamFromWorkspace = (teamId: number, teamName: string) => {
+    const updated = adminTeams.filter((t) => t.id !== teamId);
+    setAdminTeams(updated);
+    setTeamsCount(updated.length);
+    try {
+      const storedDeleted: (number | string)[] = JSON.parse(
+        localStorage.getItem("mpesa_pes_deleted_teams_v6") || "[]",
+      );
+      if (!storedDeleted.includes(teamId)) storedDeleted.push(teamId);
+      if (!storedDeleted.includes(teamName.toLowerCase()))
+        storedDeleted.push(teamName.toLowerCase());
+      localStorage.setItem("mpesa_pes_deleted_teams_v6", JSON.stringify(storedDeleted));
+      localStorage.setItem("mpesa_pes_teams_v6", JSON.stringify(updated));
+
+      // Clean up matches referencing this team
+      const storedMatches = localStorage.getItem("mpesa_pes_matches_v6");
+      if (storedMatches) {
+        const matches = JSON.parse(storedMatches);
+        if (Array.isArray(matches)) {
+          const filtered = matches.filter(
+            (m: { homeId: number; awayId: number }) => m.homeId !== teamId && m.awayId !== teamId,
+          );
+          localStorage.setItem("mpesa_pes_matches_v6", JSON.stringify(filtered));
+          setFixturesCount(filtered.length);
+        }
+      }
+    } catch {
+      // Ignore
+    }
+    showToast(`✓ Club "${teamName}" permanently deleted from league.`);
   };
 
   const handleAdminPhotoFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -214,7 +300,23 @@ export function BoardWorkspaces() {
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  const currentMeta = ROLE_HIERARCHY_DATA[activeWorkspaceRole] || ROLE_HIERARCHY_DATA.PRESIDENT;
+  const currentMeta =
+    activeWorkspaceRole === "TEAM_MANAGERS"
+      ? {
+          key: "TEAM_MANAGERS" as unknown as LeagueRole,
+          tier: 8,
+          title: "Team Managers & Captains",
+          officialName: "Club Leadership Council",
+          department: "4 Official League Clubs",
+          badgeColor: "from-emerald-400 via-teal-500 to-cyan-500",
+          responsibilities: [
+            "Official starter roster confirmation & check-in",
+            "Player photo upload dispatch to squad members",
+            "Matchday kit coordination and captain briefing",
+          ],
+          permissions: [],
+        }
+      : ROLE_HIERARCHY_DATA[activeWorkspaceRole] || ROLE_HIERARCHY_DATA.PRESIDENT;
 
   return (
     <div className="space-y-6">
@@ -269,7 +371,7 @@ export function BoardWorkspaces() {
                   setActiveWorkspaceRole(role);
                   switchRole(role);
                 }}
-                className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition flex items-center gap-1.5 ${
+                className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer ${
                   isSelected
                     ? "bg-gradient-to-r from-[#00f0ff] to-[#00ff85] text-black font-black shadow-lg scale-102"
                     : "bg-[#141029] text-gray-400 hover:text-white border border-[#2e2554]"
@@ -280,6 +382,17 @@ export function BoardWorkspaces() {
               </button>
             );
           })}
+          <button
+            onClick={() => setActiveWorkspaceRole("TEAM_MANAGERS")}
+            className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer ${
+              activeWorkspaceRole === "TEAM_MANAGERS"
+                ? "bg-gradient-to-r from-emerald-400 to-[#00f0ff] text-black font-black shadow-lg scale-102"
+                : "bg-[#141029] text-gray-400 hover:text-white border border-[#2e2554]"
+            }`}
+          >
+            <span>🛡️</span>
+            <span>Managers & Captains</span>
+          </button>
         </div>
       </div>
 
@@ -642,6 +755,140 @@ export function BoardWorkspaces() {
                 >
                   Check Broadcast Stream
                 </button>
+              </div>
+            </div>
+
+            {/* Match MVP Voting Link Dispatch Station */}
+            <div className="bg-[#141029] p-5 rounded-2xl border border-amber-400/30 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#2e2554] pb-3">
+                <div className="flex items-center gap-2.5">
+                  <Vote className="w-5 h-5 text-amber-400" />
+                  <div>
+                    <h4 className="font-black text-white text-sm uppercase">
+                      Post-Match MVP Voting Link Dispatcher
+                    </h4>
+                    <p className="text-[11px] text-gray-400">
+                      Generate and send direct voting links to league members via email after
+                      fixtures.
+                    </p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30">
+                  Single-Page Voting Portal
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-gray-300 font-bold text-xs uppercase mb-1.5">
+                    Select Concluded Match
+                  </label>
+                  <select
+                    value={selectedMvpMatchId}
+                    onChange={(e) => setSelectedMvpMatchId(Number(e.target.value))}
+                    className="w-full bg-[#0a071d] border border-[#2e2554] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-amber-400"
+                  >
+                    {DEFAULT_FIXTURES.map((f) => (
+                      <option key={f.id} value={f.id}>
+                        MW {f.matchweek}: Match #{f.id} ({f.date})
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-[11px] text-gray-400 mt-1">
+                    Direct ballot link:{" "}
+                    <code className="text-amber-300 font-mono text-[10px]">
+                      /mvp-voting?matchId={selectedMvpMatchId}
+                    </code>
+                  </p>
+                </div>
+
+                <div className="flex flex-col justify-end gap-2.5">
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={copyMvpShareLink}
+                      className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 hover:brightness-110 text-black font-black text-xs transition flex items-center justify-center gap-1.5 cursor-pointer shadow-lg"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>{copiedMvpLink ? "Voting Link Copied!" : "Copy MVP Link"}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={copyMvpEmailTemplate}
+                      className="flex-1 py-2.5 px-4 rounded-xl bg-[#1e1744] hover:bg-[#281f5c] text-white font-bold text-xs border border-amber-400/30 transition flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <Mail className="w-3.5 h-3.5 text-amber-400" />
+                      <span>{copiedMvpEmail ? "Template Copied!" : "Copy Email Text"}</span>
+                    </button>
+                  </div>
+                  <a
+                    href={`/mvp-voting?matchId=${selectedMvpMatchId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[11px] text-center text-amber-300 hover:underline flex items-center justify-center gap-1"
+                  >
+                    <span>Open Voting Ballot Page in New Tab</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            {/* Official 4 Championship Clubs & Roster Management */}
+            <div className="bg-[#141029] p-5 rounded-2xl border border-emerald-400/30 space-y-4">
+              <div className="flex items-center justify-between border-b border-[#2e2554] pb-3">
+                <div className="flex items-center gap-2.5">
+                  <Shield className="w-5 h-5 text-emerald-400" />
+                  <div>
+                    <h4 className="font-black text-white text-sm uppercase">
+                      Official Championship Clubs (4 Active)
+                    </h4>
+                    <p className="text-[11px] text-gray-400">
+                      Royal Rangers, Young Stars City, Samba, and Mzinga.
+                    </p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-400/20 px-2.5 py-1 rounded-full border border-emerald-400/30">
+                  {adminTeams.length} Clubs Active
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+                {adminTeams.map((team) => (
+                  <div
+                    key={team.id}
+                    className="p-4 rounded-2xl bg-[#0a071d] border border-[#2e2554] space-y-3 flex flex-col justify-between"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <span
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: team.color || "#00f0ff" }}
+                        />
+                        <span className="text-[10px] font-mono text-gray-400">
+                          {team.shortCode || "CLUB"}
+                        </span>
+                      </div>
+                      <h5 className="font-black text-white text-sm mt-1">{team.name}</h5>
+                      <p className="text-[11px] text-gray-400 truncate">
+                        🏟️ {team.homePitch || "Home Ground"}
+                      </p>
+                      <div className="text-[10px] text-cyan-300 mt-2 space-y-0.5 font-mono">
+                        <div>Squad: {team.squad?.length || 0} athletes</div>
+                        {team.captain && <div>Captain: {team.captain}</div>}
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteTeamFromWorkspace(team.id, team.name)}
+                      className="w-full py-1.5 px-3 rounded-xl bg-rose-500/15 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/30 text-[11px] font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Delete Club</span>
+                    </button>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -1186,6 +1433,199 @@ export function BoardWorkspaces() {
               Supports the Technological Manager in publishing matchday reports, video cinema reels,
               and ensuring zero-downtime operations during championship fixtures.
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* 8. TEAM MANAGERS & CAPTAINS OPERATIONAL SUITE */}
+      {activeWorkspaceRole === "TEAM_MANAGERS" && (
+        <div className="space-y-6">
+          {/* Club Switcher for Managers */}
+          <div className="bg-[#0e0a26] border border-emerald-400/40 rounded-3xl p-6 shadow-xl space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#2e2554] pb-4">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">🛡️</span>
+                <div>
+                  <h3 className="text-lg font-black text-white uppercase">
+                    Team Managers & Captains Operational Hub
+                  </h3>
+                  <p className="text-xs text-emerald-300">
+                    Official Squad Operations • Matchday Starter Check-In • Player Photo Dispatch
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-400 font-bold">Select Club:</span>
+                <select
+                  value={selectedManagerTeamId}
+                  onChange={(e) => {
+                    setSelectedManagerTeamId(Number(e.target.value));
+                    setManagerCheckinConfirmed(false);
+                  }}
+                  className="bg-[#141029] border border-emerald-400/40 text-white rounded-xl px-3 py-1.5 text-xs font-bold focus:outline-none"
+                >
+                  {adminTeams.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name} ({t.shortCode})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Selected Club Details */}
+            {(() => {
+              const currentTeam =
+                adminTeams.find((t) => t.id === selectedManagerTeamId) || adminTeams[0];
+              if (!currentTeam) return null;
+              return (
+                <div className="space-y-5">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                    <div className="p-4 bg-[#141029] rounded-2xl border border-[#2e2554] space-y-1">
+                      <span className="text-[10px] text-gray-400 uppercase font-bold">
+                        Home Pitch Arena
+                      </span>
+                      <div className="text-sm font-black text-white">
+                        {currentTeam.homePitch || "Official Home Ground"}
+                      </div>
+                      <span className="text-[10px] text-cyan-300 font-mono">
+                        Kit: Primary & Alternate Ready
+                      </span>
+                    </div>
+
+                    <div className="p-4 bg-[#141029] rounded-2xl border border-[#2e2554] space-y-1">
+                      <span className="text-[10px] text-gray-400 uppercase font-bold">
+                        Leadership Bench
+                      </span>
+                      <div className="text-sm font-black text-white">
+                        {currentTeam.captain
+                          ? `Captain: ${currentTeam.captain}`
+                          : "Captain: On Roster"}
+                      </div>
+                      <span className="text-[10px] text-emerald-400">
+                        {currentTeam.coach?.name || "Licensed Pia Coach Assigned"}
+                      </span>
+                    </div>
+
+                    <div className="p-4 bg-[#141029] rounded-2xl border border-[#2e2554] space-y-2 flex flex-col justify-between">
+                      <div>
+                        <span className="text-[10px] text-gray-400 uppercase font-bold">
+                          Squad Members Photo Upload
+                        </span>
+                        <div className="text-[11px] text-gray-300">
+                          Send the upload link to your athletes so their photos appear on the
+                          Leaderboard.
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={copyPlayerShareLink}
+                        className="py-1.5 px-3 rounded-xl bg-gradient-to-r from-emerald-400 to-[#00f0ff] text-black font-black text-xs flex items-center justify-center gap-1.5 cursor-pointer hover:brightness-110"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                        <span>Copy Photo Upload Link For Squad</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Matchday Starter Check-In */}
+                  <div className="p-5 bg-gradient-to-r from-[#141029] to-[#1c143d] rounded-2xl border border-cyan-400/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base">⚡</span>
+                        <h4 className="font-black text-white text-sm uppercase">
+                          Matchday 11 Starter Verification & Hydration Check
+                        </h4>
+                      </div>
+                      <p className="text-xs text-gray-300">
+                        Confirm team readiness, captain armband status, and certified student IDs 2
+                        hours prior to kickoff.
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setManagerCheckinConfirmed(!managerCheckinConfirmed);
+                        showToast(
+                          managerCheckinConfirmed
+                            ? `Check-in unconfirmed for ${currentTeam.name}`
+                            : `✓ Matchday check-in CONFIRMED for ${currentTeam.name}! Referees & Officials notified.`,
+                        );
+                      }}
+                      className={`px-5 py-2.5 rounded-xl font-black text-xs transition cursor-pointer flex items-center gap-2 shrink-0 ${
+                        managerCheckinConfirmed
+                          ? "bg-emerald-400 text-black shadow-lg shadow-emerald-400/20"
+                          : "bg-[#00f0ff]/20 hover:bg-[#00f0ff] text-[#00f0ff] hover:text-black border border-cyan-400/40"
+                      }`}
+                    >
+                      <Check className="w-4 h-4" />
+                      <span>
+                        {managerCheckinConfirmed
+                          ? "✓ Starter Lineup Certified"
+                          : "Confirm Matchday Readiness"}
+                      </span>
+                    </button>
+                  </div>
+
+                  {/* Official Squad Roster Table */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-extrabold text-white text-xs uppercase flex items-center gap-2">
+                        <span>👥</span> Official Squad Roster ({currentTeam.squad?.length || 0}{" "}
+                        Athletes)
+                      </h4>
+                      <span className="text-[10px] text-gray-400 font-mono">
+                        Max 25 Players Rule Active
+                      </span>
+                    </div>
+
+                    <div className="bg-[#0a071d] border border-[#2e2554] rounded-2xl overflow-hidden">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 p-3 max-h-80 overflow-y-auto">
+                        {(currentTeam.squad || []).map((player, idx) => (
+                          <div
+                            key={idx}
+                            className="p-3 rounded-xl bg-[#141029] border border-[#261f4d] flex items-center justify-between text-xs"
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <div
+                                className="w-8 h-8 rounded-lg flex items-center justify-center font-black text-white text-[11px] shrink-0"
+                                style={{ backgroundColor: currentTeam.color || "#00f0ff" }}
+                              >
+                                #{player.number || idx + 1}
+                              </div>
+                              <div className="min-w-0">
+                                <span className="font-bold text-white block truncate text-xs">
+                                  {player.name}
+                                </span>
+                                <span className="text-[10px] text-cyan-300 font-mono">
+                                  {player.position || "FWD"} {player.role ? `• ${player.role}` : ""}
+                                </span>
+                              </div>
+                            </div>
+                            {player.photoUrl ? (
+                              <span
+                                className="text-[9px] text-emerald-400 font-bold bg-emerald-400/10 px-2 py-0.5 rounded border border-emerald-400/30 shrink-0"
+                                title="Photo verified"
+                              >
+                                Photo ✓
+                              </span>
+                            ) : (
+                              <span
+                                className="text-[9px] text-gray-400 bg-white/5 px-2 py-0.5 rounded shrink-0"
+                                title="Awaiting photo"
+                              >
+                                No Photo
+                              </span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}
