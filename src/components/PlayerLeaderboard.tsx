@@ -260,14 +260,13 @@ export function PlayerLeaderboard() {
 
   // Performance Rating formula: (G * 4) + (A * 3) + (CS * 4) + (M * 1) - (YC * 1) - (RC * 3)
   const calcPerformance = (s: PlayerStat): number => {
-    return (
-      s.goals * 4 +
-      s.assists * 3 +
-      s.cleanSheets * 4 +
-      s.matches * 1 -
-      s.yellowCards * 1 -
-      s.redCards * 3
-    );
+    const goals = Number(s.goals) || 0;
+    const assists = Number(s.assists) || 0;
+    const cleanSheets = Number(s.cleanSheets) || 0;
+    const matches = Number(s.matches) || 0;
+    const yellowCards = Number(s.yellowCards) || 0;
+    const redCards = Number(s.redCards) || 0;
+    return goals * 4 + assists * 3 + cleanSheets * 4 + matches * 1 - yellowCards * 1 - redCards * 3;
   };
 
   // Top performers
@@ -767,37 +766,37 @@ export function PlayerLeaderboard() {
 
                     {/* Matches Played */}
                     <td className="py-3 px-3 text-center font-mono text-gray-300">
-                      {player.matches}
+                      {player.matches ?? 0}
                     </td>
 
                     {/* Goals */}
                     <td className="py-3 px-3 text-center font-mono font-black text-sm text-[#00ff85] bg-[#00ff85]/5">
-                      {player.goals}
+                      {player.goals ?? 0}
                     </td>
 
                     {/* Assists */}
                     <td className="py-3 px-3 text-center font-mono font-black text-sm text-[#00f0ff] bg-[#00f0ff]/5">
-                      {player.assists}
+                      {player.assists ?? 0}
                     </td>
 
                     {/* Clean Sheets */}
                     <td className="py-3 px-3 text-center font-mono text-emerald-300">
-                      {player.cleanSheets}
+                      {player.cleanSheets ?? 0}
                     </td>
 
                     {/* Yellow Cards */}
                     <td className="py-3 px-3 text-center font-mono text-amber-300">
-                      {player.yellowCards}
+                      {player.yellowCards ?? 0}
                     </td>
 
                     {/* Red Cards */}
                     <td className="py-3 px-3 text-center font-mono text-rose-400">
-                      {player.redCards}
+                      {player.redCards ?? 0}
                     </td>
 
                     {/* Performance Rating */}
                     <td className="py-3 px-4 text-right font-mono font-black text-[#00f0ff]">
-                      {score > 0 ? `+${score}` : score}
+                      {score > 0 ? `+${score}` : (score ?? 0)}
                     </td>
 
                     {/* Actions for Admin */}

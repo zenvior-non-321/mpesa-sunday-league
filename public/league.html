@@ -47,6 +47,30 @@
           e.preventDefault();
         }
       });
+
+      // Global safety fallbacks so Alpine templates evaluate safely during initial render
+      window.websiteSong = window.websiteSong || {
+        mode: "youtube",
+        youtubeId: "kYtGl1DX5qI",
+        title: "eFootball / PES Official Stadium Anthem",
+        needsTap: false,
+      };
+      window.toast = window.toast || { show: false, message: "" };
+      window.isSuperAdmin = false;
+      window.superAdminSubView = "personnel";
+      window.openSuperAdminSidebar = false;
+      window.initApp = function () {
+        if (window.Alpine && window.Alpine.$data) {
+          try {
+            window.Alpine.$data(document.body).initApp();
+          } catch (e) {}
+        }
+      };
+      document.addEventListener("alpine:init", function () {
+        if (window.leagueApp && window.Alpine) {
+          window.Alpine.data("leagueApp", window.leagueApp);
+        }
+      });
     </script>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -383,12 +407,14 @@
           >
             <i data-lucide="award" class="w-4 h-4 text-amber-400"></i> Golden Boot Board
           </a>
-          <a
-            href="/performance"
-            class="w-full flex items-center gap-3 px-3.5 py-2 rounded-2xl text-gray-300 hover:bg-white/5"
+          <button
+            type="button"
+            @click="activeTab = 'radar'; openSuperAdminSidebar = false"
+            :class="activeTab === 'radar' ? 'bg-efootball-cyan text-black font-black' : 'text-gray-300 hover:bg-white/5'"
+            class="w-full flex items-center gap-3 px-3.5 py-2 rounded-2xl transition cursor-pointer text-left"
           >
             <i data-lucide="activity" class="w-4 h-4 text-pink-400"></i> Radar Analytics
-          </a>
+          </button>
           <button
             @click="activeTab = 'teams'; openSuperAdminSidebar = false"
             class="w-full flex items-center gap-3 px-3.5 py-2 rounded-2xl text-gray-300 hover:bg-white/5"
@@ -602,16 +628,20 @@
           </button>
 
           <!-- Radar Analytics -->
-          <a
-            href="/performance"
-            class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-gray-300 hover:bg-white/5 font-semibold transition"
+          <button
+            type="button"
+            @click="activeTab = 'radar'; if (window.innerWidth < 1024) openSidebarDrawer = false"
+            :class="activeTab === 'radar' ? 'bg-efootball-cyan text-black font-black shadow-md' : 'text-gray-300 hover:bg-white/5 font-semibold'"
+            class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl transition cursor-pointer"
           >
             <div class="flex items-center gap-3">
               <i data-lucide="activity" class="w-4 h-4 text-pink-400"></i>
               <span>Radar Analytics</span>
             </div>
-            <span class="text-[9px] bg-pink-400/20 text-pink-300 px-1.5 py-0.5 rounded font-bold">Charts</span>
-          </a>
+            <span class="text-[9px] bg-pink-400/20 text-pink-300 px-1.5 py-0.5 rounded font-bold"
+              >Charts</span
+            >
+          </button>
 
           <!-- Season Calendar -->
           <a
@@ -622,7 +652,9 @@
               <i data-lucide="calendar-days" class="w-4 h-4 text-blue-400"></i>
               <span>Season Calendar</span>
             </div>
-            <span class="text-[9px] bg-blue-400/20 text-blue-300 px-1.5 py-0.5 rounded font-bold">Month</span>
+            <span class="text-[9px] bg-blue-400/20 text-blue-300 px-1.5 py-0.5 rounded font-bold"
+              >Month</span
+            >
           </a>
 
           <!-- Clubs & Kits -->
@@ -763,18 +795,16 @@
     </aside>
 
     <!-- Left-Side Floating Toggle Tab when Sidebar is Hidden -->
-    <div
-      x-show="!openSidebarDrawer"
-      x-transition.opacity
-      class="fixed left-0 top-32 z-40"
-    >
+    <div x-show="!openSidebarDrawer" x-transition.opacity class="fixed left-0 top-32 z-40">
       <button
         @click="openSidebarDrawer = true; $nextTick(() => { if (window.lucide) window.lucide.createIcons(); })"
         class="bg-gradient-to-r from-efootball-cyan to-emerald-400 text-black font-black py-2.5 px-3 rounded-r-2xl shadow-2xl shadow-cyan-500/30 flex items-center gap-2 hover:translate-x-1 transition duration-200 border-y border-r border-cyan-300 cursor-pointer"
         title="Show Fixed League Sidebar"
       >
         <i data-lucide="panel-left" class="w-4 h-4"></i>
-        <span class="text-[11px] uppercase tracking-wider font-extrabold hidden md:inline">Sidebar</span>
+        <span class="text-[11px] uppercase tracking-wider font-extrabold hidden md:inline"
+          >Sidebar</span
+        >
       </button>
     </div>
 
@@ -1767,7 +1797,9 @@
                     title="Copy shareable link for athletes to upload their profile photo"
                   >
                     <i data-lucide="share-2" class="w-4 h-4 text-efootball-cyan"></i>
-                    <span x-text="copiedShareLink ? 'Link Copied!' : 'Share Upload Link with Players'"></span>
+                    <span
+                      x-text="copiedShareLink ? 'Link Copied!' : 'Share Upload Link with Players'"
+                    ></span>
                   </button>
                   <a
                     href="/upload-photo"
@@ -2639,7 +2671,10 @@
                       </div>
 
                       <div class="p-3 bg-white/5 rounded-xl border border-white/5 space-y-1.5">
-                        <div class="flex items-center justify-between text-[11px]">
+                        <div
+                          class="flex items-center justify-between text-[11px]"
+                          x-show="isSuperAdmin"
+                        >
                           <span class="text-gray-400">Security Access Code:</span>
                           <span
                             class="font-mono text-amber-300 font-bold"
@@ -4952,11 +4987,16 @@
 
                       <!-- Man of the Match & Key Performance Metrics for Completed Matches -->
                       <template x-if="match.status === 'FINISHED'">
-                        <div class="mt-2 pt-2.5 border-t border-efootball-border/60 space-y-2 bg-black/40 p-3 rounded-2xl border border-amber-400/30 shadow-md">
+                        <div
+                          class="mt-2 pt-2.5 border-t border-efootball-border/60 space-y-2 bg-black/40 p-3 rounded-2xl border border-amber-400/30 shadow-md"
+                        >
                           <div class="flex items-center justify-between">
                             <div class="flex items-center gap-1.5">
                               <span class="text-amber-400 text-sm">⭐</span>
-                              <span class="text-[10px] uppercase font-black text-amber-300 tracking-wider">Man of the Match</span>
+                              <span
+                                class="text-[10px] uppercase font-black text-amber-300 tracking-wider"
+                                >Man of the Match</span
+                              >
                             </div>
                             <span
                               class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-efootball-cyan text-black font-black"
@@ -4965,48 +5005,97 @@
                           </div>
 
                           <!-- MOTM Player Capsule -->
-                          <div class="flex items-center justify-between gap-2 bg-efootball-card/90 p-2.5 rounded-xl border border-efootball-border">
+                          <div
+                            class="flex items-center justify-between gap-2 bg-efootball-card/90 p-2.5 rounded-xl border border-efootball-border"
+                          >
                             <div class="flex items-center gap-2.5 min-w-0">
-                              <div class="w-10 h-10 rounded-xl overflow-hidden bg-amber-500/20 border-2 border-amber-400 flex items-center justify-center shrink-0">
-                                <template x-if="match.manOfTheMatch && match.manOfTheMatch.photoUrl">
-                                  <img :src="match.manOfTheMatch.photoUrl" class="w-full h-full object-cover" />
+                              <div
+                                class="w-10 h-10 rounded-xl overflow-hidden bg-amber-500/20 border-2 border-amber-400 flex items-center justify-center shrink-0"
+                              >
+                                <template
+                                  x-if="match.manOfTheMatch && match.manOfTheMatch.photoUrl"
+                                >
+                                  <img
+                                    :src="match.manOfTheMatch.photoUrl"
+                                    class="w-full h-full object-cover"
+                                  />
                                 </template>
-                                <template x-if="!match.manOfTheMatch || !match.manOfTheMatch.photoUrl">
+                                <template
+                                  x-if="!match.manOfTheMatch || !match.manOfTheMatch.photoUrl"
+                                >
                                   <span class="text-xs font-black text-amber-300">MOTM</span>
                                 </template>
                               </div>
                               <div class="min-w-0">
-                                <span class="font-extrabold text-white text-xs block truncate" x-text="(match.manOfTheMatch && match.manOfTheMatch.playerName) || (match.homeScore >= match.awayScore ? 'Kevin Omondi' : 'Alex Rono')"></span>
-                                <span class="text-[10px] text-efootball-cyan font-bold block truncate" x-text="(match.manOfTheMatch && match.manOfTheMatch.teamName) || (match.homeScore >= match.awayScore ? getTeam(match.homeId).name : getTeam(match.awayId).name)"></span>
+                                <span
+                                  class="font-extrabold text-white text-xs block truncate"
+                                  x-text="(match.manOfTheMatch && match.manOfTheMatch.playerName) || (match.homeScore >= match.awayScore ? 'Kevin Omondi' : 'Alex Rono')"
+                                ></span>
+                                <span
+                                  class="text-[10px] text-efootball-cyan font-bold block truncate"
+                                  x-text="(match.manOfTheMatch && match.manOfTheMatch.teamName) || (match.homeScore >= match.awayScore ? getTeam(match.homeId).name : getTeam(match.awayId).name)"
+                                ></span>
                               </div>
                             </div>
 
                             <div class="flex items-center gap-1.5 shrink-0">
-                              <div class="px-2 py-0.5 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-center">
-                                <span class="block text-[8px] text-gray-400 uppercase font-bold">Goals</span>
-                                <span class="font-mono font-black text-emerald-400 text-xs" x-text="'⚽ ' + ((match.manOfTheMatch && match.manOfTheMatch.goals) || Math.max(1, match.homeScore))"></span>
+                              <div
+                                class="px-2 py-0.5 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-center"
+                              >
+                                <span class="block text-[8px] text-gray-400 uppercase font-bold"
+                                  >Goals</span
+                                >
+                                <span
+                                  class="font-mono font-black text-emerald-400 text-xs"
+                                  x-text="'⚽ ' + ((match.manOfTheMatch && match.manOfTheMatch.goals) || Math.max(1, match.homeScore))"
+                                ></span>
                               </div>
-                              <div class="px-2 py-0.5 rounded-lg bg-cyan-500/20 border border-cyan-500/40 text-center">
-                                <span class="block text-[8px] text-gray-400 uppercase font-bold">Assists</span>
-                                <span class="font-mono font-black text-efootball-cyan text-xs" x-text="'👟 ' + ((match.manOfTheMatch && match.manOfTheMatch.assists) || 1)"></span>
+                              <div
+                                class="px-2 py-0.5 rounded-lg bg-cyan-500/20 border border-cyan-500/40 text-center"
+                              >
+                                <span class="block text-[8px] text-gray-400 uppercase font-bold"
+                                  >Assists</span
+                                >
+                                <span
+                                  class="font-mono font-black text-efootball-cyan text-xs"
+                                  x-text="'👟 ' + ((match.manOfTheMatch && match.manOfTheMatch.assists) || 1)"
+                                ></span>
                               </div>
                             </div>
                           </div>
 
                           <!-- Commentary highlight -->
-                          <template x-if="match.manOfTheMatch && match.manOfTheMatch.highlightSummary">
-                            <p class="text-[10px] text-gray-300 italic px-2 py-1 bg-black/40 rounded-lg border border-white/5" x-text="'&ldquo;' + match.manOfTheMatch.highlightSummary + '&rdquo;'"></p>
+                          <template
+                            x-if="match.manOfTheMatch && match.manOfTheMatch.highlightSummary"
+                          >
+                            <p
+                              class="text-[10px] text-gray-300 italic px-2 py-1 bg-black/40 rounded-lg border border-white/5"
+                              x-text="'&ldquo;' + match.manOfTheMatch.highlightSummary + '&rdquo;'"
+                            ></p>
                           </template>
 
                           <!-- Key Performance Metrics (Possession Duel Bar) -->
                           <div class="pt-1.5 border-t border-efootball-border/40 space-y-1">
-                            <div class="flex items-center justify-between text-[9px] uppercase font-bold text-gray-400 tracking-wider">
+                            <div
+                              class="flex items-center justify-between text-[9px] uppercase font-bold text-gray-400 tracking-wider"
+                            >
                               <span>Match Possession & Key Metrics</span>
-                              <span class="text-efootball-cyan font-mono" x-text="getTeam(match.homeId).shortCode + ' ' + (match.homeScore >= match.awayScore ? '56%' : '44%') + ' • ' + (match.homeScore >= match.awayScore ? '44%' : '56%') + ' ' + getTeam(match.awayId).shortCode"></span>
+                              <span
+                                class="text-efootball-cyan font-mono"
+                                x-text="getTeam(match.homeId).shortCode + ' ' + (match.homeScore >= match.awayScore ? '56%' : '44%') + ' • ' + (match.homeScore >= match.awayScore ? '44%' : '56%') + ' ' + getTeam(match.awayId).shortCode"
+                              ></span>
                             </div>
-                            <div class="w-full bg-black/60 rounded-full h-1.5 flex overflow-hidden border border-efootball-border/50">
-                              <div class="bg-emerald-400 h-full" :style="'width: ' + (match.homeScore >= match.awayScore ? '56%' : '44%')"></div>
-                              <div class="bg-efootball-cyan h-full" :style="'width: ' + (match.homeScore >= match.awayScore ? '44%' : '56%')"></div>
+                            <div
+                              class="w-full bg-black/60 rounded-full h-1.5 flex overflow-hidden border border-efootball-border/50"
+                            >
+                              <div
+                                class="bg-emerald-400 h-full"
+                                :style="'width: ' + (match.homeScore >= match.awayScore ? '56%' : '44%')"
+                              ></div>
+                              <div
+                                class="bg-efootball-cyan h-full"
+                                :style="'width: ' + (match.homeScore >= match.awayScore ? '44%' : '56%')"
+                              ></div>
                             </div>
                           </div>
                         </div>
@@ -5039,6 +5128,394 @@
                 </div>
               </div>
             </template>
+          </div>
+        </section>
+
+        <!-- ==================== TAB: RADAR PERFORMANCE & ANALYTICS ==================== -->
+        <section
+          x-show="activeTab === 'radar'"
+          x-transition:enter="transition ease-out duration-200"
+          class="space-y-6"
+        >
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <div class="flex items-center gap-2">
+                <span
+                  class="px-2.5 py-0.5 rounded-full bg-pink-500/20 text-pink-400 font-extrabold text-[10px] tracking-wider uppercase border border-pink-500/30"
+                >
+                  eFootball Tactical Engine
+                </span>
+                <span class="text-xs text-gray-400 font-mono"
+                  >Live Spider Radar & Metric Deltas</span
+                >
+              </div>
+              <h2 class="font-header text-4xl font-black text-white uppercase tracking-wide mt-1">
+                Club Performance Radar
+              </h2>
+              <p class="text-sm text-gray-300">
+                Compare side-by-side match form, attacking potency, defensive discipline, and clean
+                sheets across all 4 championship clubs.
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold text-gray-400">Head-to-Head Comparison</span>
+            </div>
+          </div>
+
+          <!-- Club Selectors for Comparison -->
+          <div
+            class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-[#0e0a26]/90 border border-efootball-border p-4 rounded-3xl"
+          >
+            <div class="space-y-2">
+              <label class="block text-xs font-bold text-efootball-cyan uppercase tracking-wider">
+                Primary Club (Cyan Radar)
+              </label>
+              <select
+                x-model="radarTeamAId"
+                class="w-full bg-black/60 border border-efootball-cyan/40 rounded-2xl px-4 py-2.5 text-white font-bold text-sm focus:outline-none focus:border-efootball-cyan"
+              >
+                <template x-for="t in teams" :key="'radarA-' + t.id">
+                  <option
+                    :value="t.id"
+                    x-text="t.name + ' (' + (t.shortCode || 'CLUB') + ')'"
+                  ></option>
+                </template>
+              </select>
+            </div>
+            <div class="space-y-2">
+              <label class="block text-xs font-bold text-pink-400 uppercase tracking-wider">
+                Comparison Club (Pink Radar)
+              </label>
+              <select
+                x-model="radarTeamBId"
+                class="w-full bg-black/60 border border-pink-500/40 rounded-2xl px-4 py-2.5 text-white font-bold text-sm focus:outline-none focus:border-pink-400"
+              >
+                <template x-for="t in teams" :key="'radarB-' + t.id">
+                  <option
+                    :value="t.id"
+                    x-text="t.name + ' (' + (t.shortCode || 'CLUB') + ')'"
+                  ></option>
+                </template>
+              </select>
+            </div>
+          </div>
+
+          <!-- Radar Visualizer & Tactical Metric Cards Grid -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            <!-- Spider Radar Canvas Card -->
+            <div
+              class="lg:col-span-6 efootball-card rounded-3xl p-6 border border-efootball-border flex flex-col items-center justify-center space-y-4 shadow-2xl relative overflow-hidden"
+            >
+              <div class="w-full flex items-center justify-between pb-2 border-b border-white/5">
+                <span class="text-xs font-bold uppercase tracking-wider text-gray-300"
+                  >6-Axis Tactical Radar</span
+                >
+                <div class="flex items-center gap-4 text-xs font-bold">
+                  <span class="flex items-center gap-1.5 text-efootball-cyan">
+                    <span class="w-3 h-3 rounded-full bg-efootball-cyan inline-block"></span>
+                    <span x-text="getTeamName(radarTeamAId)"></span>
+                  </span>
+                  <span class="flex items-center gap-1.5 text-pink-400">
+                    <span class="w-3 h-3 rounded-full bg-pink-400 inline-block"></span>
+                    <span x-text="getTeamName(radarTeamBId)"></span>
+                  </span>
+                </div>
+              </div>
+
+              <!-- SVG Interactive Spider Radar Chart -->
+              <div class="w-full max-w-[360px] aspect-square relative my-2">
+                <svg viewBox="0 0 400 400" class="w-full h-full overflow-visible">
+                  <!-- Radar Concentric Circles / Hexagons -->
+                  <circle
+                    cx="200"
+                    cy="200"
+                    r="140"
+                    fill="none"
+                    stroke="rgba(255,255,255,0.08)"
+                    stroke-width="1"
+                  />
+                  <circle
+                    cx="200"
+                    cy="200"
+                    r="105"
+                    fill="none"
+                    stroke="rgba(255,255,255,0.08)"
+                    stroke-width="1"
+                    stroke-dasharray="3,3"
+                  />
+                  <circle
+                    cx="200"
+                    cy="200"
+                    r="70"
+                    fill="none"
+                    stroke="rgba(255,255,255,0.08)"
+                    stroke-width="1"
+                  />
+                  <circle
+                    cx="200"
+                    cy="200"
+                    r="35"
+                    fill="none"
+                    stroke="rgba(255,255,255,0.08)"
+                    stroke-width="1"
+                    stroke-dasharray="3,3"
+                  />
+
+                  <!-- Spoke Lines (6 axes) -->
+                  <line
+                    x1="200"
+                    y1="200"
+                    x2="200"
+                    y2="60"
+                    stroke="rgba(255,255,255,0.15)"
+                    stroke-width="1"
+                  />
+                  <line
+                    x1="200"
+                    y1="200"
+                    x2="321"
+                    y2="130"
+                    stroke="rgba(255,255,255,0.15)"
+                    stroke-width="1"
+                  />
+                  <line
+                    x1="200"
+                    y1="200"
+                    x2="321"
+                    y2="270"
+                    stroke="rgba(255,255,255,0.15)"
+                    stroke-width="1"
+                  />
+                  <line
+                    x1="200"
+                    y1="200"
+                    x2="200"
+                    y2="340"
+                    stroke="rgba(255,255,255,0.15)"
+                    stroke-width="1"
+                  />
+                  <line
+                    x1="200"
+                    y1="200"
+                    x2="79"
+                    y2="270"
+                    stroke="rgba(255,255,255,0.15)"
+                    stroke-width="1"
+                  />
+                  <line
+                    x1="200"
+                    y1="200"
+                    x2="79"
+                    y2="130"
+                    stroke="rgba(255,255,255,0.15)"
+                    stroke-width="1"
+                  />
+
+                  <!-- Axis Labels -->
+                  <text
+                    x="200"
+                    y="45"
+                    text-anchor="middle"
+                    fill="#00f0ff"
+                    font-size="11"
+                    font-weight="bold"
+                  >
+                    ATTACK
+                  </text>
+                  <text
+                    x="335"
+                    y="125"
+                    text-anchor="start"
+                    fill="#38bdf8"
+                    font-size="11"
+                    font-weight="bold"
+                  >
+                    DEFENSE
+                  </text>
+                  <text
+                    x="335"
+                    y="280"
+                    text-anchor="start"
+                    fill="#34d399"
+                    font-size="11"
+                    font-weight="bold"
+                  >
+                    CLEAN SHEETS
+                  </text>
+                  <text
+                    x="200"
+                    y="360"
+                    text-anchor="middle"
+                    fill="#fbbf24"
+                    font-size="11"
+                    font-weight="bold"
+                  >
+                    DISCIPLINE
+                  </text>
+                  <text
+                    x="65"
+                    y="280"
+                    text-anchor="end"
+                    fill="#f43f5e"
+                    font-size="11"
+                    font-weight="bold"
+                  >
+                    WIN RATE
+                  </text>
+                  <text
+                    x="65"
+                    y="125"
+                    text-anchor="end"
+                    fill="#a855f7"
+                    font-size="11"
+                    font-weight="bold"
+                  >
+                    FORM
+                  </text>
+
+                  <!-- Team A Polygon (Cyan) -->
+                  <polygon
+                    :points="getRadarPolygonPoints(getRadarStats(radarTeamAId), 140, 200, 200)"
+                    fill="rgba(0, 240, 255, 0.25)"
+                    stroke="#00f0ff"
+                    stroke-width="2.5"
+                  />
+
+                  <!-- Team B Polygon (Pink) -->
+                  <polygon
+                    :points="getRadarPolygonPoints(getRadarStats(radarTeamBId), 140, 200, 200)"
+                    fill="rgba(244, 63, 94, 0.22)"
+                    stroke="#f43f5e"
+                    stroke-width="2.5"
+                  />
+                </svg>
+              </div>
+
+              <div class="text-[11px] text-gray-400 text-center font-mono">
+                Normalized metrics computed from official league standings, clean sheets, and match
+                scorecards.
+              </div>
+            </div>
+
+            <!-- Side-by-Side Tactical Breakdown Cards -->
+            <div class="lg:col-span-6 space-y-4">
+              <!-- Metric Breakdown Table -->
+              <div
+                class="efootball-card rounded-3xl p-5 border border-efootball-border space-y-4 shadow-xl"
+              >
+                <h3
+                  class="font-header text-xl font-black text-white uppercase tracking-wider flex items-center justify-between"
+                >
+                  <span>Head-to-Head Tactical Deltas</span>
+                  <span class="text-xs font-mono text-gray-400">Matchweek Snapshot</span>
+                </h3>
+
+                <div class="space-y-3 font-semibold text-xs">
+                  <!-- Wins -->
+                  <div
+                    class="p-3 bg-black/40 rounded-2xl border border-white/5 flex items-center justify-between"
+                  >
+                    <span
+                      class="font-extrabold text-efootball-cyan text-sm"
+                      x-text="getRadarStats(radarTeamAId).wins + ' Wins'"
+                    ></span>
+                    <span class="text-gray-400 uppercase text-[11px] tracking-wider"
+                      >Victories</span
+                    >
+                    <span
+                      class="font-extrabold text-pink-400 text-sm"
+                      x-text="getRadarStats(radarTeamBId).wins + ' Wins'"
+                    ></span>
+                  </div>
+
+                  <!-- Goals Scored -->
+                  <div
+                    class="p-3 bg-black/40 rounded-2xl border border-white/5 flex items-center justify-between"
+                  >
+                    <span
+                      class="font-extrabold text-efootball-cyan text-sm"
+                      x-text="getRadarStats(radarTeamAId).goalsFor + ' GF'"
+                    ></span>
+                    <span class="text-gray-400 uppercase text-[11px] tracking-wider"
+                      >Goals Scored</span
+                    >
+                    <span
+                      class="font-extrabold text-pink-400 text-sm"
+                      x-text="getRadarStats(radarTeamBId).goalsFor + ' GF'"
+                    ></span>
+                  </div>
+
+                  <!-- Goals Conceded -->
+                  <div
+                    class="p-3 bg-black/40 rounded-2xl border border-white/5 flex items-center justify-between"
+                  >
+                    <span
+                      class="font-extrabold text-efootball-cyan text-sm"
+                      x-text="getRadarStats(radarTeamAId).goalsAgainst + ' GA'"
+                    ></span>
+                    <span class="text-gray-400 uppercase text-[11px] tracking-wider"
+                      >Goals Conceded</span
+                    >
+                    <span
+                      class="font-extrabold text-pink-400 text-sm"
+                      x-text="getRadarStats(radarTeamBId).goalsAgainst + ' GA'"
+                    ></span>
+                  </div>
+
+                  <!-- Clean Sheets -->
+                  <div
+                    class="p-3 bg-black/40 rounded-2xl border border-white/5 flex items-center justify-between"
+                  >
+                    <span
+                      class="font-extrabold text-efootball-cyan text-sm"
+                      x-text="getRadarStats(radarTeamAId).cleanSheets + ' CS'"
+                    ></span>
+                    <span class="text-gray-400 uppercase text-[11px] tracking-wider"
+                      >Clean Sheets</span
+                    >
+                    <span
+                      class="font-extrabold text-pink-400 text-sm"
+                      x-text="getRadarStats(radarTeamBId).cleanSheets + ' CS'"
+                    ></span>
+                  </div>
+
+                  <!-- Win Rate % -->
+                  <div
+                    class="p-3 bg-black/40 rounded-2xl border border-white/5 flex items-center justify-between"
+                  >
+                    <span
+                      class="font-extrabold text-efootball-cyan text-sm"
+                      x-text="getRadarStats(radarTeamAId).winRate + '%'"
+                    ></span>
+                    <span class="text-gray-400 uppercase text-[11px] tracking-wider"
+                      >Win Efficiency</span
+                    >
+                    <span
+                      class="font-extrabold text-pink-400 text-sm"
+                      x-text="getRadarStats(radarTeamBId).winRate + '%'"
+                    ></span>
+                  </div>
+                </div>
+
+                <!-- Quick Switch Button to return to Standings or Fixtures -->
+                <div class="pt-3 border-t border-white/5 flex items-center justify-between">
+                  <button
+                    type="button"
+                    @click="activeTab = 'table'"
+                    class="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white text-xs font-bold transition"
+                  >
+                    ← Back to Standings
+                  </button>
+                  <button
+                    type="button"
+                    @click="activeTab = 'fixtures'"
+                    class="px-3 py-1.5 rounded-xl bg-efootball-cyan/20 hover:bg-efootball-cyan text-efootball-cyan hover:text-black text-xs font-bold transition"
+                  >
+                    View Fixtures Schedule →
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -6549,8 +7026,14 @@
                   ></div>
                   <div>
                     <div class="flex items-center gap-2">
-                      <h3 class="font-header text-3xl font-black text-white uppercase leading-none" x-text="selectedClubProfile.name"></h3>
-                      <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/10 text-efootball-cyan font-bold border border-white/20" x-text="selectedClubProfile.shortCode"></span>
+                      <h3
+                        class="font-header text-3xl font-black text-white uppercase leading-none"
+                        x-text="selectedClubProfile.name"
+                      ></h3>
+                      <span
+                        class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/10 text-efootball-cyan font-bold border border-white/20"
+                        x-text="selectedClubProfile.shortCode"
+                      ></span>
                     </div>
                     <p class="text-xs text-gray-300 font-semibold mt-1 flex items-center gap-1.5">
                       <span class="text-emerald-400">🏟️</span>
@@ -6558,13 +7041,18 @@
                     </p>
                   </div>
                 </div>
-                <button @click="openClubProfileModal = false" class="text-gray-400 hover:text-white p-2">
+                <button
+                  @click="openClubProfileModal = false"
+                  class="text-gray-400 hover:text-white p-2"
+                >
                   <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
               </div>
 
               <!-- Navigation Pills inside modal -->
-              <div class="flex items-center gap-2 overflow-x-auto pb-1 border-b border-efootball-border/50 text-xs font-bold">
+              <div
+                class="flex items-center gap-2 overflow-x-auto pb-1 border-b border-efootball-border/50 text-xs font-bold"
+              >
                 <button
                   @click="clubProfileTab = 'overview'"
                   :class="clubProfileTab === 'overview' ? 'bg-efootball-cyan text-black font-black' : 'bg-efootball-card text-gray-300 border border-efootball-border hover:text-white'"
@@ -6607,31 +7095,53 @@
                 <div class="grid grid-cols-4 gap-2.5 text-center">
                   <div class="bg-black/50 p-3 rounded-2xl border border-efootball-border">
                     <span class="text-[10px] text-gray-400 font-bold block uppercase">Points</span>
-                    <span class="text-2xl font-black text-efootball-cyan font-mono" x-text="selectedClubProfile.pts || 0"></span>
+                    <span
+                      class="text-2xl font-black text-efootball-cyan font-mono"
+                      x-text="selectedClubProfile.pts || 0"
+                    ></span>
                   </div>
                   <div class="bg-black/50 p-3 rounded-2xl border border-efootball-border">
                     <span class="text-[10px] text-gray-400 font-bold block uppercase">Played</span>
-                    <span class="text-2xl font-black text-white font-mono" x-text="selectedClubProfile.mp || 5"></span>
+                    <span
+                      class="text-2xl font-black text-white font-mono"
+                      x-text="selectedClubProfile.mp || 5"
+                    ></span>
                   </div>
                   <div class="bg-black/50 p-3 rounded-2xl border border-efootball-border">
                     <span class="text-[10px] text-gray-400 font-bold block uppercase">Record</span>
-                    <span class="text-xs font-black text-emerald-400 font-mono mt-1 block" x-text="(selectedClubProfile.w || 0) + 'W-' + (selectedClubProfile.d || 0) + 'D-' + (selectedClubProfile.l || 0) + 'L'"></span>
+                    <span
+                      class="text-xs font-black text-emerald-400 font-mono mt-1 block"
+                      x-text="(selectedClubProfile.w || 0) + 'W-' + (selectedClubProfile.d || 0) + 'D-' + (selectedClubProfile.l || 0) + 'L'"
+                    ></span>
                   </div>
                   <div class="bg-black/50 p-3 rounded-2xl border border-efootball-border">
                     <span class="text-[10px] text-gray-400 font-bold block uppercase">GD</span>
-                    <span class="text-2xl font-black text-white font-mono" x-text="((selectedClubProfile.gd || 0) > 0 ? '+' : '') + (selectedClubProfile.gd || 0)"></span>
+                    <span
+                      class="text-2xl font-black text-white font-mono"
+                      x-text="((selectedClubProfile.gd || 0) > 0 ? '+' : '') + (selectedClubProfile.gd || 0)"
+                    ></span>
                   </div>
                 </div>
 
-                <div class="p-4 bg-black/40 rounded-2xl border border-efootball-border flex items-center justify-between">
+                <div
+                  class="p-4 bg-black/40 rounded-2xl border border-efootball-border flex items-center justify-between"
+                >
                   <div class="flex items-center gap-3">
                     <span class="text-xl">⚽</span>
                     <div>
-                      <span class="text-[10px] uppercase font-bold text-gray-400 block">Attack & Defense</span>
-                      <span class="font-bold text-white text-xs" x-text="(selectedClubProfile.gf || 0) + ' Goals Scored • ' + (selectedClubProfile.ga || 0) + ' Conceded'"></span>
+                      <span class="text-[10px] uppercase font-bold text-gray-400 block"
+                        >Attack & Defense</span
+                      >
+                      <span
+                        class="font-bold text-white text-xs"
+                        x-text="(selectedClubProfile.gf || 0) + ' Goals Scored • ' + (selectedClubProfile.ga || 0) + ' Conceded'"
+                      ></span>
                     </div>
                   </div>
-                  <span class="px-2.5 py-1 rounded-xl bg-efootball-cyan/15 text-efootball-cyan font-mono font-bold text-xs" x-text="(((selectedClubProfile.gf || 0) / (selectedClubProfile.ga || 1))).toFixed(2) + 'x Ratio'"></span>
+                  <span
+                    class="px-2.5 py-1 rounded-xl bg-efootball-cyan/15 text-efootball-cyan font-mono font-bold text-xs"
+                    x-text="(((selectedClubProfile.gf || 0) / (selectedClubProfile.ga || 1))).toFixed(2) + 'x Ratio'"
+                  ></span>
                 </div>
               </div>
 
@@ -6642,74 +7152,151 @@
                     <div class="flex items-center gap-2">
                       <span class="text-2xl">🏟️</span>
                       <div>
-                        <h4 class="font-black text-white text-base" x-text="(selectedClubProfile.stadium && selectedClubProfile.stadium.name) || selectedClubProfile.homePitch || 'Academy Ground'"></h4>
-                        <span class="text-[10px] text-efootball-cyan uppercase font-bold">Official Match Pitch</span>
+                        <h4
+                          class="font-black text-white text-base"
+                          x-text="(selectedClubProfile.stadium && selectedClubProfile.stadium.name) || selectedClubProfile.homePitch || 'Academy Ground'"
+                        ></h4>
+                        <span class="text-[10px] text-efootball-cyan uppercase font-bold"
+                          >Official Match Pitch</span
+                        >
                       </div>
                     </div>
-                    <span class="px-2.5 py-1 rounded-xl bg-emerald-500/15 text-emerald-400 font-bold border border-emerald-500/30 text-[10px]">Regulation Pitch</span>
+                    <span
+                      class="px-2.5 py-1 rounded-xl bg-emerald-500/15 text-emerald-400 font-bold border border-emerald-500/30 text-[10px]"
+                      >Regulation Pitch</span
+                    >
                   </div>
 
-                  <p class="text-gray-300 text-xs leading-relaxed" x-text="(selectedClubProfile.stadium && selectedClubProfile.stadium.notes) || 'The designated home ground for official Sunday League matches, equipped with tournament line markings, corner flags, spectator viewing areas, and team shelters.'"></p>
+                  <p
+                    class="text-gray-300 text-xs leading-relaxed"
+                    x-text="(selectedClubProfile.stadium && selectedClubProfile.stadium.notes) || 'The designated home ground for official Sunday League matches, equipped with tournament line markings, corner flags, spectator viewing areas, and team shelters.'"
+                  ></p>
 
                   <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-2">
                     <div class="bg-black/60 p-3 rounded-xl border border-efootball-border">
-                      <span class="text-[9px] uppercase font-bold text-gray-400 block">Capacity</span>
-                      <span class="font-bold text-white text-xs" x-text="(selectedClubProfile.stadium && selectedClubProfile.stadium.capacity) || '1,200 Spectators'"></span>
+                      <span class="text-[9px] uppercase font-bold text-gray-400 block"
+                        >Capacity</span
+                      >
+                      <span
+                        class="font-bold text-white text-xs"
+                        x-text="(selectedClubProfile.stadium && selectedClubProfile.stadium.capacity) || '1,200 Spectators'"
+                      ></span>
                     </div>
                     <div class="bg-black/60 p-3 rounded-xl border border-efootball-border">
-                      <span class="text-[9px] uppercase font-bold text-gray-400 block">Surface</span>
-                      <span class="font-bold text-emerald-400 text-xs" x-text="(selectedClubProfile.stadium && selectedClubProfile.stadium.surface) || 'Hybrid Bermuda Turf & AstroTurf'"></span>
+                      <span class="text-[9px] uppercase font-bold text-gray-400 block"
+                        >Surface</span
+                      >
+                      <span
+                        class="font-bold text-emerald-400 text-xs"
+                        x-text="(selectedClubProfile.stadium && selectedClubProfile.stadium.surface) || 'Hybrid Bermuda Turf & AstroTurf'"
+                      ></span>
                     </div>
-                    <div class="bg-black/60 p-3 rounded-xl border border-efootball-border col-span-2 sm:col-span-1">
-                      <span class="text-[9px] uppercase font-bold text-gray-400 block">Dimensions</span>
-                      <span class="font-mono font-bold text-efootball-cyan text-xs">105m × 68m (FIFA Standard)</span>
+                    <div
+                      class="bg-black/60 p-3 rounded-xl border border-efootball-border col-span-2 sm:col-span-1"
+                    >
+                      <span class="text-[9px] uppercase font-bold text-gray-400 block"
+                        >Dimensions</span
+                      >
+                      <span class="font-mono font-bold text-efootball-cyan text-xs"
+                        >105m × 68m (FIFA Standard)</span
+                      >
                     </div>
                   </div>
 
-                  <div class="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center justify-between">
-                    <span class="text-[11px] font-bold text-emerald-300">Home Fortress Record:</span>
-                    <span class="font-mono font-black text-white text-xs" x-text="(selectedClubProfile.stadium && selectedClubProfile.stadium.record) || '85% Win Rate at Home'"></span>
+                  <div
+                    class="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center justify-between"
+                  >
+                    <span class="text-[11px] font-bold text-emerald-300"
+                      >Home Fortress Record:</span
+                    >
+                    <span
+                      class="font-mono font-black text-white text-xs"
+                      x-text="(selectedClubProfile.stadium && selectedClubProfile.stadium.record) || '85% Win Rate at Home'"
+                    ></span>
                   </div>
                 </div>
               </div>
 
               <!-- TAB 3: COACH & TACTICS -->
               <div x-show="clubProfileTab === 'coach'" class="space-y-4 text-xs">
-                <div class="p-4 bg-black/50 border border-efootball-border rounded-2xl flex items-center justify-between">
+                <div
+                  class="p-4 bg-black/50 border border-efootball-border rounded-2xl flex items-center justify-between"
+                >
                   <div class="flex items-center gap-3.5">
-                    <template x-if="selectedClubProfile.coach && selectedClubProfile.coach.photoUrl">
-                      <img :src="selectedClubProfile.coach.photoUrl" class="w-14 h-14 rounded-2xl object-cover border-2 border-efootball-cyan shadow-md" />
+                    <template
+                      x-if="selectedClubProfile.coach && selectedClubProfile.coach.photoUrl"
+                    >
+                      <img
+                        :src="selectedClubProfile.coach.photoUrl"
+                        class="w-14 h-14 rounded-2xl object-cover border-2 border-efootball-cyan shadow-md"
+                      />
                     </template>
-                    <template x-if="!selectedClubProfile.coach || !selectedClubProfile.coach.photoUrl">
-                      <div class="w-14 h-14 rounded-2xl bg-purple-900/60 flex items-center justify-center font-black text-efootball-cyan text-base border border-efootball-cyan/40">PC</div>
+                    <template
+                      x-if="!selectedClubProfile.coach || !selectedClubProfile.coach.photoUrl"
+                    >
+                      <div
+                        class="w-14 h-14 rounded-2xl bg-purple-900/60 flex items-center justify-center font-black text-efootball-cyan text-base border border-efootball-cyan/40"
+                      >
+                        PC
+                      </div>
                     </template>
                     <div>
-                      <span class="text-[10px] text-gray-400 uppercase font-black tracking-wider block" x-text="(selectedClubProfile.coach && selectedClubProfile.coach.role) || 'Pia Head Coach'"></span>
-                      <h4 class="text-base font-black text-white" x-text="(selectedClubProfile.coach && selectedClubProfile.coach.name) || 'Pia Coach'"></h4>
-                      <span class="text-xs text-efootball-cyan font-mono" x-text="(selectedClubProfile.coach && selectedClubProfile.coach.email) || 'coach@mpesaleague.org'"></span>
+                      <span
+                        class="text-[10px] text-gray-400 uppercase font-black tracking-wider block"
+                        x-text="(selectedClubProfile.coach && selectedClubProfile.coach.role) || 'Pia Head Coach'"
+                      ></span>
+                      <h4
+                        class="text-base font-black text-white"
+                        x-text="(selectedClubProfile.coach && selectedClubProfile.coach.name) || 'Pia Coach'"
+                      ></h4>
+                      <span
+                        class="text-xs text-efootball-cyan font-mono"
+                        x-text="(selectedClubProfile.coach && selectedClubProfile.coach.email) || 'coach@mpesaleague.org'"
+                      ></span>
                     </div>
                   </div>
-                  <span class="px-3 py-1 rounded-xl bg-purple-500/20 text-purple-300 border border-purple-500/30 font-bold text-[10px]">Pia Staff</span>
+                  <span
+                    class="px-3 py-1 rounded-xl bg-purple-500/20 text-purple-300 border border-purple-500/30 font-bold text-[10px]"
+                    >Pia Staff</span
+                  >
                 </div>
 
                 <div class="bg-black/50 p-5 rounded-2xl border border-efootball-border space-y-3">
-                  <div class="flex items-center justify-between border-b border-efootball-border pb-2">
-                    <span class="font-extrabold text-white text-xs uppercase flex items-center gap-1.5">
+                  <div
+                    class="flex items-center justify-between border-b border-efootball-border pb-2"
+                  >
+                    <span
+                      class="font-extrabold text-white text-xs uppercase flex items-center gap-1.5"
+                    >
                       <span>⚡</span> Tactical Formation & Setup
                     </span>
-                    <span class="font-mono text-xs font-black text-emerald-400" x-text="(selectedClubProfile.coachDetails && selectedClubProfile.coachDetails.formation) || '4-3-3 Attacking Gegenpress'"></span>
+                    <span
+                      class="font-mono text-xs font-black text-emerald-400"
+                      x-text="(selectedClubProfile.coachDetails && selectedClubProfile.coachDetails.formation) || '4-3-3 Attacking Gegenpress'"
+                    ></span>
                   </div>
 
-                  <p class="text-gray-300 text-xs leading-relaxed" x-text="(selectedClubProfile.coachDetails && selectedClubProfile.coachDetails.philosophy) || 'Direct high-intensity vertical transitions, quick combination interchanges in the half-spaces, and aggressive counter-pressing.'"></p>
+                  <p
+                    class="text-gray-300 text-xs leading-relaxed"
+                    x-text="(selectedClubProfile.coachDetails && selectedClubProfile.coachDetails.philosophy) || 'Direct high-intensity vertical transitions, quick combination interchanges in the half-spaces, and aggressive counter-pressing.'"
+                  ></p>
 
                   <div class="grid grid-cols-2 gap-3 pt-1">
                     <div class="p-3 bg-black/60 rounded-xl border border-efootball-border">
-                      <span class="text-[9px] uppercase font-bold text-gray-400 block">Managerial Win Rate</span>
-                      <span class="font-mono font-bold text-emerald-400 text-xs" x-text="(selectedClubProfile.coachDetails && selectedClubProfile.coachDetails.winRate) || '75% Win Rate'"></span>
+                      <span class="text-[9px] uppercase font-bold text-gray-400 block"
+                        >Managerial Win Rate</span
+                      >
+                      <span
+                        class="font-mono font-bold text-emerald-400 text-xs"
+                        x-text="(selectedClubProfile.coachDetails && selectedClubProfile.coachDetails.winRate) || '75% Win Rate'"
+                      ></span>
                     </div>
                     <div class="p-3 bg-black/60 rounded-xl border border-efootball-border">
                       <span class="text-[9px] uppercase font-bold text-gray-400 block">Tenure</span>
-                      <span class="font-bold text-white text-xs" x-text="(selectedClubProfile.coachDetails && selectedClubProfile.coachDetails.tenure) || '2 Seasons in Charge'"></span>
+                      <span
+                        class="font-bold text-white text-xs"
+                        x-text="(selectedClubProfile.coachDetails && selectedClubProfile.coachDetails.tenure) || '2 Seasons in Charge'"
+                      ></span>
                     </div>
                   </div>
                 </div>
@@ -6720,14 +7307,20 @@
                 <div class="bg-black/50 p-5 rounded-2xl border border-amber-400/30 space-y-3">
                   <div class="flex items-center gap-2 border-b border-efootball-border pb-2">
                     <span class="text-base">🏆</span>
-                    <h5 class="font-extrabold text-amber-300 uppercase text-xs">Championship Honors & Silverware</h5>
+                    <h5 class="font-extrabold text-amber-300 uppercase text-xs">
+                      Championship Honors & Silverware
+                    </h5>
                   </div>
                   <div class="space-y-1.5">
-                    <div class="p-2.5 rounded-xl bg-black/60 border border-amber-400/20 text-white font-bold flex items-center justify-between">
+                    <div
+                      class="p-2.5 rounded-xl bg-black/60 border border-amber-400/20 text-white font-bold flex items-center justify-between"
+                    >
                       <span>🏆 Sunday League Champions (2024/2025)</span>
                       <span class="text-[10px] text-amber-400 font-mono">Official Title</span>
                     </div>
-                    <div class="p-2.5 rounded-xl bg-black/60 border border-amber-400/20 text-white font-bold flex items-center justify-between">
+                    <div
+                      class="p-2.5 rounded-xl bg-black/60 border border-amber-400/20 text-white font-bold flex items-center justify-between"
+                    >
                       <span>🥇 Academy Inter-House Super Cup</span>
                       <span class="text-[10px] text-amber-400 font-mono">Winner</span>
                     </div>
@@ -6736,29 +7329,53 @@
 
                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                   <div class="bg-black/50 p-3 rounded-xl border border-efootball-border">
-                    <span class="text-[9px] uppercase font-bold text-gray-400 block">All-Time League Record</span>
-                    <span class="font-mono font-bold text-white text-xs" x-text="(selectedClubProfile.history && selectedClubProfile.history.allTimeRecord) || '48 Matches: 32W - 9D - 7L'"></span>
+                    <span class="text-[9px] uppercase font-bold text-gray-400 block"
+                      >All-Time League Record</span
+                    >
+                    <span
+                      class="font-mono font-bold text-white text-xs"
+                      x-text="(selectedClubProfile.history && selectedClubProfile.history.allTimeRecord) || '48 Matches: 32W - 9D - 7L'"
+                    ></span>
                   </div>
                   <div class="bg-black/50 p-3 rounded-xl border border-efootball-border">
-                    <span class="text-[9px] uppercase font-bold text-gray-400 block">Historical Win Rate</span>
-                    <span class="font-mono font-bold text-emerald-400 text-xs" x-text="(selectedClubProfile.history && selectedClubProfile.history.historicWinRate) || '66.7%'"></span>
+                    <span class="text-[9px] uppercase font-bold text-gray-400 block"
+                      >Historical Win Rate</span
+                    >
+                    <span
+                      class="font-mono font-bold text-emerald-400 text-xs"
+                      x-text="(selectedClubProfile.history && selectedClubProfile.history.historicWinRate) || '66.7%'"
+                    ></span>
                   </div>
-                  <div class="bg-black/50 p-3 rounded-xl border border-efootball-border col-span-2 sm:col-span-1">
-                    <span class="text-[9px] uppercase font-bold text-gray-400 block">Highest Victory</span>
-                    <span class="font-bold text-efootball-cyan text-xs" x-text="(selectedClubProfile.history && selectedClubProfile.history.highestWin) || '5 - 0 vs Rivals'"></span>
+                  <div
+                    class="bg-black/50 p-3 rounded-xl border border-efootball-border col-span-2 sm:col-span-1"
+                  >
+                    <span class="text-[9px] uppercase font-bold text-gray-400 block"
+                      >Highest Victory</span
+                    >
+                    <span
+                      class="font-bold text-efootball-cyan text-xs"
+                      x-text="(selectedClubProfile.history && selectedClubProfile.history.highestWin) || '5 - 0 vs Rivals'"
+                    ></span>
                   </div>
                 </div>
 
-                <div class="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl flex items-center justify-between">
+                <div
+                  class="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl flex items-center justify-between"
+                >
                   <span class="text-gray-300">Marquee Derby Rivalry:</span>
-                  <span class="font-bold text-rose-300" x-text="(selectedClubProfile.history && selectedClubProfile.history.derbyRival) || 'The Academy Clásico'"></span>
+                  <span
+                    class="font-bold text-rose-300"
+                    x-text="(selectedClubProfile.history && selectedClubProfile.history.derbyRival) || 'The Academy Clásico'"
+                  ></span>
                 </div>
               </div>
 
               <!-- TAB 5: SQUAD & PHOTOS -->
               <div x-show="clubProfileTab === 'squad'" class="space-y-4 text-xs">
                 <div class="flex items-center justify-between">
-                  <span class="font-extrabold text-white text-xs uppercase flex items-center gap-1.5">
+                  <span
+                    class="font-extrabold text-white text-xs uppercase flex items-center gap-1.5"
+                  >
                     <span>👥</span> Official Squad Roster & Portraits
                   </span>
                   <a
@@ -6770,12 +7387,19 @@
                   </a>
                 </div>
 
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-64 overflow-y-auto custom-scrollbar p-1">
+                <div
+                  class="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-64 overflow-y-auto custom-scrollbar p-1"
+                >
                   <template x-for="(player, idx) in (selectedClubProfile.squad || [])" :key="idx">
-                    <div class="p-3 bg-black/50 rounded-2xl border border-efootball-border flex items-center gap-3">
+                    <div
+                      class="p-3 bg-black/50 rounded-2xl border border-efootball-border flex items-center gap-3"
+                    >
                       <div class="relative shrink-0">
                         <template x-if="player.photoUrl">
-                          <img :src="player.photoUrl" class="w-11 h-11 rounded-xl object-cover border-2 border-emerald-400 shadow" />
+                          <img
+                            :src="player.photoUrl"
+                            class="w-11 h-11 rounded-xl object-cover border-2 border-emerald-400 shadow"
+                          />
                         </template>
                         <template x-if="!player.photoUrl">
                           <div
@@ -6784,13 +7408,25 @@
                             x-text="'#' + (player.number || idx + 1)"
                           ></div>
                         </template>
-                        <span x-show="player.photoUrl" class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full border border-black"></span>
+                        <span
+                          x-show="player.photoUrl"
+                          class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full border border-black"
+                        ></span>
                       </div>
                       <div class="min-w-0">
-                        <span class="font-extrabold text-white block truncate text-xs" x-text="player.name"></span>
+                        <span
+                          class="font-extrabold text-white block truncate text-xs"
+                          x-text="player.name"
+                        ></span>
                         <div class="flex items-center gap-1 mt-0.5">
-                          <span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-white/10 text-efootball-cyan" x-text="player.position || 'Player'"></span>
-                          <span class="text-[10px] font-mono text-gray-400" x-text="'#' + (player.number || idx + 1)"></span>
+                          <span
+                            class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-white/10 text-efootball-cyan"
+                            x-text="player.position || 'Player'"
+                          ></span>
+                          <span
+                            class="text-[10px] font-mono text-gray-400"
+                            x-text="'#' + (player.number || idx + 1)"
+                          ></span>
                         </div>
                       </div>
                     </div>
@@ -6798,13 +7434,16 @@
                 </div>
 
                 <p class="text-[10px] text-gray-400 italic">
-                  💡 Student athletes: Use the shareable upload link to upload your headshot portrait.
+                  💡 Student athletes: Use the shareable upload link to upload your headshot
+                  portrait.
                 </p>
               </div>
 
               <!-- Close Button -->
               <div class="pt-3 border-t border-efootball-border flex items-center justify-between">
-                <span class="text-[10px] text-gray-400 font-mono">M-Pesa Sunday League Official Profile</span>
+                <span class="text-[10px] text-gray-400 font-mono"
+                  >M-Pesa Sunday League Official Profile</span
+                >
                 <button
                   type="button"
                   @click="openClubProfileModal = false"
@@ -8452,7 +9091,7 @@
     <!-- Alpine.js Application Engine -->
     <script>
       // IndexedDB Manager for High-Capacity Audio & Media Storage
-      const SongAudioDB = {
+      window.SongAudioDB = {
         dbName: "MpesaLeagueAudioDB_v4",
         dbVersion: 1,
         getDB() {
@@ -8497,8 +9136,9 @@
           }
         },
       };
+      var SongAudioDB = window.SongAudioDB;
 
-      function leagueApp() {
+      window.leagueApp = function leagueApp() {
         return {
           activeTab: "table",
           isAdmin: false,
@@ -8507,6 +9147,83 @@
           adminPasswordInput: "",
           authCode: "",
           adminError: "",
+
+          // Radar Analytics state
+          radarTeamAId: 6,
+          radarTeamBId: 7,
+          getRadarStats(teamId) {
+            const id = Number(teamId);
+            const team = (this.teams || []).find((t) => t.id === id) ||
+              (this.teams && this.teams[0]) || { id, name: "Club" };
+            const teamMatches = (this.matches || []).filter(
+              (m) => m.status === "FINISHED" && (m.homeId === id || m.awayId === id),
+            );
+            const played = teamMatches.length || 1;
+            let goalsFor = 0;
+            let goalsAgainst = 0;
+            let wins = 0;
+            let cleanSheets = 0;
+            teamMatches.forEach((m) => {
+              const isHome = m.homeId === id;
+              const gf = Number(isHome ? m.homeScore : m.awayScore) || 0;
+              const ga = Number(isHome ? m.awayScore : m.homeScore) || 0;
+              goalsFor += gf;
+              goalsAgainst += ga;
+              if (gf > ga) wins++;
+              if (ga === 0) cleanSheets++;
+            });
+            const winRate = Math.round((wins / played) * 100);
+            const attackScore = Math.min(
+              100,
+              Math.max(25, Math.round((goalsFor / played) * 35) + 30),
+            );
+            const defenseScore = Math.min(
+              100,
+              Math.max(25, Math.round(100 - (goalsAgainst / played) * 25)),
+            );
+            const cleanSheetScore = Math.min(
+              100,
+              Math.max(20, Math.round((cleanSheets / played) * 100)),
+            );
+            const disciplineScore = 85;
+            const formScore = Math.min(
+              100,
+              Math.max(30, Math.round(winRate * 0.6 + attackScore * 0.4)),
+            );
+            return {
+              team,
+              played,
+              wins,
+              goalsFor,
+              goalsAgainst,
+              cleanSheets,
+              winRate,
+              attackScore,
+              defenseScore,
+              cleanSheetScore,
+              disciplineScore,
+              formScore,
+            };
+          },
+          getRadarPolygonPoints(stats, radius, centerX, centerY) {
+            const metrics = [
+              (stats.attackScore || 50) / 100,
+              (stats.defenseScore || 50) / 100,
+              (stats.cleanSheetScore || 50) / 100,
+              (stats.disciplineScore || 85) / 100,
+              (stats.winRate || 50) / 100,
+              (stats.formScore || 50) / 100,
+            ];
+            return metrics
+              .map((val, idx) => {
+                const angle = (Math.PI * 2 * idx) / 6 - Math.PI / 2;
+                const r = radius * Math.max(0.18, Math.min(1, val));
+                const x = centerX + r * Math.cos(angle);
+                const y = centerY + r * Math.sin(angle);
+                return `${Math.round(x)},${Math.round(y)}`;
+              })
+              .join(" ");
+          },
 
           // Super Admin Navigation & Subviews
           openSuperAdminSidebar: false,
@@ -10685,6 +11402,7 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
             const teamName = target ? target.name : `Club #${teamId}`;
             this.teams = this.teams.filter((t) => t.id !== teamId);
             this.matches = this.matches.filter((m) => m.homeId !== teamId && m.awayId !== teamId);
+            this.playerStatsList = this.playerStatsList.filter((p) => p.teamId !== teamId);
             try {
               const storedDeleted = JSON.parse(
                 localStorage.getItem("mpesa_pes_deleted_teams_v6") || "[]",
@@ -10695,6 +11413,12 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
               }
               localStorage.setItem("mpesa_pes_deleted_teams_v6", JSON.stringify(storedDeleted));
             } catch (e) {}
+            // Also sync deletion with server portal API
+            fetch("/api/public/portal?action=delete-team", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ teamId, revision: 0 }),
+            }).catch(() => {});
             this.recalculateStandings();
             this.saveStoredData();
             this.showToast(`✓ Club "${teamName}" permanently deleted from league.`);
@@ -11404,7 +12128,9 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
               this.recalculateStandings();
               this.saveStoredData();
               this.openFixtureModal = false;
-              this.showToast(`✓ Fixture MW ${targetMatch.matchweek}: ${homeName} vs ${awayName} deleted successfully.`);
+              this.showToast(
+                `✓ Fixture MW ${targetMatch.matchweek}: ${homeName} vs ${awayName} deleted successfully.`,
+              );
               this.$nextTick(() => {
                 if (window.lucide) lucide.createIcons();
               });
@@ -11429,7 +12155,9 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
             if (this.selectedWeekFilter === mwNumber) {
               this.selectedWeekFilter = "ALL";
             }
-            this.showToast(`✓ Matchweek ${mwNumber} and all ${count} fixtures deleted successfully.`);
+            this.showToast(
+              `✓ Matchweek ${mwNumber} and all ${count} fixtures deleted successfully.`,
+            );
             this.$nextTick(() => {
               if (window.lucide) lucide.createIcons();
             });
@@ -12406,82 +13134,642 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                 },
               ],
               6: [
-                { name: "Brian", number: 1, position: "GK", foot: "Right", admissionNumber: "ADM-2026-0601", email: "", photoUrl: "" },
-                { name: "Gregory", number: 13, position: "GK", foot: "Right", admissionNumber: "ADM-2026-0602", email: "", photoUrl: "" },
-                { name: "Jattan", number: 2, position: "DEF", foot: "Right", admissionNumber: "ADM-2026-0603", email: "", photoUrl: "" },
-                { name: "Atibu", number: 3, position: "DEF", foot: "Right", admissionNumber: "ADM-2026-0604", email: "", photoUrl: "" },
-                { name: "Haron", number: 4, position: "DEF", foot: "Right", admissionNumber: "ADM-2026-0605", email: "", photoUrl: "" },
-                { name: "Edgar", number: 5, position: "DEF", foot: "Right", admissionNumber: "ADM-2026-0606", email: "", photoUrl: "" },
-                { name: "Mutwiri", number: 6, position: "DEF", foot: "Right", admissionNumber: "ADM-2026-0607", email: "", photoUrl: "" },
-                { name: "Kichuma", number: 14, position: "DEF", foot: "Right", admissionNumber: "ADM-2026-0608", email: "", photoUrl: "" },
-                { name: "Abdiaziz", number: 15, position: "DEF", foot: "Right", admissionNumber: "ADM-2026-0609", email: "", photoUrl: "" },
-                { name: "Eugene", number: 8, position: "MID", foot: "Right", admissionNumber: "ADM-2026-0610", email: "", photoUrl: "" },
-                { name: "Shawn", number: 10, position: "MID", foot: "Right", admissionNumber: "ADM-2026-0611", email: "", photoUrl: "" },
-                { name: "Jaycrack", number: 7, position: "MID", foot: "Right", admissionNumber: "ADM-2026-0612", email: "", photoUrl: "" },
-                { name: "Phisael", number: 11, position: "MID", foot: "Right", admissionNumber: "ADM-2026-0613", email: "", photoUrl: "" },
-                { name: "Opiyo", number: 16, position: "MID", foot: "Right", admissionNumber: "ADM-2026-0614", email: "", photoUrl: "" },
-                { name: "Abdirashid", number: 17, position: "MID", foot: "Right", admissionNumber: "ADM-2026-0615", email: "", photoUrl: "" },
-                { name: "Stafford", number: 18, position: "MID", foot: "Right", admissionNumber: "ADM-2026-0616", email: "", photoUrl: "" },
-                { name: "Vincent", number: 20, position: "MID", foot: "Right", admissionNumber: "ADM-2026-0617", email: "", photoUrl: "" },
-                { name: "Wokabi", number: 9, position: "FWD", foot: "Right", admissionNumber: "ADM-2026-0618", email: "", photoUrl: "" },
-                { name: "Edwin", number: 19, position: "FWD", foot: "Right", admissionNumber: "ADM-2026-0619", email: "", photoUrl: "" },
-                { name: "Carson", number: 21, position: "FWD", foot: "Right", admissionNumber: "ADM-2026-0620", email: "", photoUrl: "" },
+                {
+                  name: "Brian",
+                  number: 1,
+                  position: "GK",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0601",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "Gregory",
+                  number: 13,
+                  position: "GK",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0602",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "Jattan",
+                  number: 2,
+                  position: "DEF",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0603",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "Atibu",
+                  number: 3,
+                  position: "DEF",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0604",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "Haron",
+                  number: 4,
+                  position: "DEF",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0605",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "Edgar",
+                  number: 5,
+                  position: "DEF",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0606",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "Mutwiri",
+                  number: 6,
+                  position: "DEF",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0607",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "Kichuma",
+                  number: 14,
+                  position: "DEF",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0608",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "Abdiaziz",
+                  number: 15,
+                  position: "DEF",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0609",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "Eugene",
+                  number: 8,
+                  position: "MID",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0610",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "Shawn",
+                  number: 10,
+                  position: "MID",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0611",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "Jaycrack",
+                  number: 7,
+                  position: "MID",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0612",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "Phisael",
+                  number: 11,
+                  position: "MID",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0613",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "Opiyo",
+                  number: 16,
+                  position: "MID",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0614",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "Abdirashid",
+                  number: 17,
+                  position: "MID",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0615",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "Stafford",
+                  number: 18,
+                  position: "MID",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0616",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "Vincent",
+                  number: 20,
+                  position: "MID",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0617",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "Wokabi",
+                  number: 9,
+                  position: "FWD",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0618",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "Edwin",
+                  number: 19,
+                  position: "FWD",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0619",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "Carson",
+                  number: 21,
+                  position: "FWD",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0620",
+                  email: "",
+                  photoUrl: "",
+                },
               ],
               7: [
-                { name: "Elly Adams Otieno", number: 10, position: "FWD", foot: "Right", admissionNumber: "ADM-2026-0701", email: "", photoUrl: "" },
-                { name: "Hassan Siad", number: 2, position: "DEF", foot: "Right", admissionNumber: "ADM-2026-0702", email: "", photoUrl: "" },
-                { name: "Ibrahim Salat", number: 3, position: "DEF", foot: "Right", admissionNumber: "ADM-2026-0703", email: "", photoUrl: "" },
-                { name: "Bidan Mwaura", number: 4, position: "MID", foot: "Right", admissionNumber: "ADM-2026-0704", email: "", photoUrl: "" },
-                { name: "Raila Junior", number: 5, position: "MID", foot: "Right", admissionNumber: "ADM-2026-0705", email: "", photoUrl: "" },
-                { name: "Washington Murithi", number: 6, position: "DEF", foot: "Right", admissionNumber: "ADM-2026-0706", email: "", photoUrl: "" },
-                { name: "Ebeneza Moses", number: 7, position: "MID", foot: "Right", admissionNumber: "ADM-2026-0707", email: "", photoUrl: "" },
-                { name: "John Owino", number: 8, position: "FWD", foot: "Right", admissionNumber: "ADM-2026-0708", email: "", photoUrl: "" },
-                { name: "Gabriel Maluki", number: 9, position: "MID", foot: "Right", admissionNumber: "ADM-2026-0709", email: "", photoUrl: "" },
-                { name: "Moffat Osoro", number: 1, position: "GK", foot: "Right", admissionNumber: "ADM-2026-0710", email: "", photoUrl: "" },
-                { name: "Mark Kwemoi", number: 11, position: "DEF", foot: "Right", admissionNumber: "ADM-2026-0711", email: "", photoUrl: "" },
-                { name: "Abdifatah", number: 12, position: "MID", foot: "Right", admissionNumber: "ADM-2026-0712", email: "", photoUrl: "" },
-                { name: "Dennis Macharia", number: 13, position: "MID", foot: "Right", admissionNumber: "ADM-2026-0713", email: "", photoUrl: "" },
-                { name: "Lucas Nawakan", number: 14, position: "DEF", foot: "Right", admissionNumber: "ADM-2026-0714", email: "", photoUrl: "" },
-                { name: "Emmanuel Kariuki", number: 15, position: "FWD", foot: "Right", admissionNumber: "ADM-2026-0715", email: "", photoUrl: "" },
+                {
+                  name: "Elly Adams Otieno",
+                  number: 10,
+                  position: "FWD",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0701",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "Hassan Siad",
+                  number: 2,
+                  position: "DEF",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0702",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "Ibrahim Salat",
+                  number: 3,
+                  position: "DEF",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0703",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "Bidan Mwaura",
+                  number: 4,
+                  position: "MID",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0704",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "Raila Junior",
+                  number: 5,
+                  position: "MID",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0705",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "Washington Murithi",
+                  number: 6,
+                  position: "DEF",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0706",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "Ebeneza Moses",
+                  number: 7,
+                  position: "MID",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0707",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "John Owino",
+                  number: 8,
+                  position: "FWD",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0708",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "Gabriel Maluki",
+                  number: 9,
+                  position: "MID",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0709",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "Moffat Osoro",
+                  number: 1,
+                  position: "GK",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0710",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "Mark Kwemoi",
+                  number: 11,
+                  position: "DEF",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0711",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "Abdifatah",
+                  number: 12,
+                  position: "MID",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0712",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "Dennis Macharia",
+                  number: 13,
+                  position: "MID",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0713",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "Lucas Nawakan",
+                  number: 14,
+                  position: "DEF",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0714",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "Emmanuel Kariuki",
+                  number: 15,
+                  position: "FWD",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0715",
+                  email: "",
+                  photoUrl: "",
+                },
               ],
               8: [
-                { name: "Levis Wanyama", number: 10, position: "MID", foot: "Right", admissionNumber: "ADM-2026-0801", email: "levis.wanyama@mpesafoundationacademy.ac.ke", photoUrl: "" },
-                { name: "Tonny Odundo", number: 9, position: "FWD", foot: "Right", admissionNumber: "ADM-2026-0802", email: "tonny.odundo@mpesafoundationacademy.ac.ke", photoUrl: "" },
-                { name: "Ali Guyo", number: 4, position: "DEF", foot: "Right", admissionNumber: "ADM-2026-0803", email: "ali.diba@mpesafoundationacademy.ac.ke", photoUrl: "" },
-                { name: "Chris Koome", number: 7, position: "MID", foot: "Right", admissionNumber: "ADM-2026-0804", email: "chris.koome@mpesafoundationacademy.ac.ke", photoUrl: "" },
-                { name: "Dennis Thoya", number: 2, position: "DEF", foot: "Right", admissionNumber: "ADM-2026-0805", email: "dennis.thoya@mpesafoundationacademy.ac.ke", photoUrl: "" },
-                { name: "Elvis Kingoo", number: 11, position: "FWD", foot: "Right", admissionNumber: "ADM-2026-0806", email: "elvis.kingoo@mpesafoundationacademy.ac.ke", photoUrl: "" },
-                { name: "Gabriel Ekitui", number: 6, position: "MID", foot: "Right", admissionNumber: "ADM-2026-0807", email: "gabriel.alukwar@mpesafoundationacademy.ac.ke", photoUrl: "" },
-                { name: "George Victor", number: 5, position: "DEF", foot: "Right", admissionNumber: "ADM-2026-0808", email: "george.kibet@mpesafoundationacademy.ac.ke", photoUrl: "" },
-                { name: "Grout Olal", number: 8, position: "MID", foot: "Right", admissionNumber: "ADM-2026-0809", email: "grout.olal@mpesafoundationacademy.ac.ke", photoUrl: "" },
-                { name: "Idi Sebantu", number: 3, position: "DEF", foot: "Right", admissionNumber: "ADM-2026-0810", email: "idi.sebantu@mpesafoundationacademy.ac.ke", photoUrl: "" },
-                { name: "Ken Leneepa", number: 14, position: "MID", foot: "Right", admissionNumber: "ADM-2026-0811", email: "ken.leneepa@mpesafoundationacademy.ac.ke", photoUrl: "" },
-                { name: "King David Amani", number: 15, position: "MID", foot: "Right", admissionNumber: "ADM-2026-0812", email: "king.amani@mpesafoundationacademy.ac.ke", photoUrl: "" },
-                { name: "Lewis Trady", number: 17, position: "FWD", foot: "Right", admissionNumber: "ADM-2026-0813", email: "trady.lewis@mpesafoundationacademy.ac.ke", photoUrl: "" },
-                { name: "Mahad Abdi", number: 18, position: "MID", foot: "Right", admissionNumber: "ADM-2026-0814", email: "mahad.sihal@mpesafoundationacademy.ac.ke", photoUrl: "" },
-                { name: "Mark Tonny", number: 19, position: "FWD", foot: "Right", admissionNumber: "ADM-2026-0815", email: "", photoUrl: "" },
-                { name: "Nimrod Khayumbi", number: 1, position: "GK", foot: "Right", admissionNumber: "ADM-2026-0816", email: "nimrod.khayumbi@mpesafoundationacademy.ac.ke", photoUrl: "" },
-                { name: "Reagan Ogora", number: 20, position: "MID", foot: "Right", admissionNumber: "ADM-2026-0817", email: "reagan.onsongo@mpesafoundationacademy.ac.ke", photoUrl: "" },
-                { name: "Ryan Kiarago", number: 21, position: "MID", foot: "Right", admissionNumber: "ADM-2026-0818", email: "ryan.kiarago@mpesafoundationacademy.ac.ke", photoUrl: "" },
-                { name: "Ryan Odiwuor", number: 22, position: "DEF", foot: "Right", admissionNumber: "ADM-2026-0819", email: "ryan.odiwuor@mpesafoundationacademy.ac.ke", photoUrl: "" },
-                { name: "Wayne Kiptoo", number: 23, position: "MID", foot: "Right", admissionNumber: "ADM-2026-0820", email: "wayne.kiptoo@mpesafoundationacademy.ac.ke", photoUrl: "" },
+                {
+                  name: "Levis Wanyama",
+                  number: 10,
+                  position: "MID",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0801",
+                  email: "levis.wanyama@mpesafoundationacademy.ac.ke",
+                  photoUrl: "",
+                },
+                {
+                  name: "Tonny Odundo",
+                  number: 9,
+                  position: "FWD",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0802",
+                  email: "tonny.odundo@mpesafoundationacademy.ac.ke",
+                  photoUrl: "",
+                },
+                {
+                  name: "Ali Guyo",
+                  number: 4,
+                  position: "DEF",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0803",
+                  email: "ali.diba@mpesafoundationacademy.ac.ke",
+                  photoUrl: "",
+                },
+                {
+                  name: "Chris Koome",
+                  number: 7,
+                  position: "MID",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0804",
+                  email: "chris.koome@mpesafoundationacademy.ac.ke",
+                  photoUrl: "",
+                },
+                {
+                  name: "Dennis Thoya",
+                  number: 2,
+                  position: "DEF",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0805",
+                  email: "dennis.thoya@mpesafoundationacademy.ac.ke",
+                  photoUrl: "",
+                },
+                {
+                  name: "Elvis Kingoo",
+                  number: 11,
+                  position: "FWD",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0806",
+                  email: "elvis.kingoo@mpesafoundationacademy.ac.ke",
+                  photoUrl: "",
+                },
+                {
+                  name: "Gabriel Ekitui",
+                  number: 6,
+                  position: "MID",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0807",
+                  email: "gabriel.alukwar@mpesafoundationacademy.ac.ke",
+                  photoUrl: "",
+                },
+                {
+                  name: "George Victor",
+                  number: 5,
+                  position: "DEF",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0808",
+                  email: "george.kibet@mpesafoundationacademy.ac.ke",
+                  photoUrl: "",
+                },
+                {
+                  name: "Grout Olal",
+                  number: 8,
+                  position: "MID",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0809",
+                  email: "grout.olal@mpesafoundationacademy.ac.ke",
+                  photoUrl: "",
+                },
+                {
+                  name: "Idi Sebantu",
+                  number: 3,
+                  position: "DEF",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0810",
+                  email: "idi.sebantu@mpesafoundationacademy.ac.ke",
+                  photoUrl: "",
+                },
+                {
+                  name: "Ken Leneepa",
+                  number: 14,
+                  position: "MID",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0811",
+                  email: "ken.leneepa@mpesafoundationacademy.ac.ke",
+                  photoUrl: "",
+                },
+                {
+                  name: "King David Amani",
+                  number: 15,
+                  position: "MID",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0812",
+                  email: "king.amani@mpesafoundationacademy.ac.ke",
+                  photoUrl: "",
+                },
+                {
+                  name: "Lewis Trady",
+                  number: 17,
+                  position: "FWD",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0813",
+                  email: "trady.lewis@mpesafoundationacademy.ac.ke",
+                  photoUrl: "",
+                },
+                {
+                  name: "Mahad Abdi",
+                  number: 18,
+                  position: "MID",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0814",
+                  email: "mahad.sihal@mpesafoundationacademy.ac.ke",
+                  photoUrl: "",
+                },
+                {
+                  name: "Mark Tonny",
+                  number: 19,
+                  position: "FWD",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0815",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "Nimrod Khayumbi",
+                  number: 1,
+                  position: "GK",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0816",
+                  email: "nimrod.khayumbi@mpesafoundationacademy.ac.ke",
+                  photoUrl: "",
+                },
+                {
+                  name: "Reagan Ogora",
+                  number: 20,
+                  position: "MID",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0817",
+                  email: "reagan.onsongo@mpesafoundationacademy.ac.ke",
+                  photoUrl: "",
+                },
+                {
+                  name: "Ryan Kiarago",
+                  number: 21,
+                  position: "MID",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0818",
+                  email: "ryan.kiarago@mpesafoundationacademy.ac.ke",
+                  photoUrl: "",
+                },
+                {
+                  name: "Ryan Odiwuor",
+                  number: 22,
+                  position: "DEF",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0819",
+                  email: "ryan.odiwuor@mpesafoundationacademy.ac.ke",
+                  photoUrl: "",
+                },
+                {
+                  name: "Wayne Kiptoo",
+                  number: 23,
+                  position: "MID",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0820",
+                  email: "wayne.kiptoo@mpesafoundationacademy.ac.ke",
+                  photoUrl: "",
+                },
               ],
               9: [
-                { name: "Jeff Njoroge", number: 1, position: "GK", foot: "Right", admissionNumber: "ADM-2026-0901", email: "", photoUrl: "" },
-                { name: "Hamard Adan", number: 10, position: "FWD", foot: "Right", admissionNumber: "ADM-2026-0902", email: "", photoUrl: "" },
-                { name: "Bavian Kipkoriri", number: 2, position: "DEF", foot: "Right", admissionNumber: "ADM-2026-0903", email: "", photoUrl: "" },
-                { name: "Brandon Wandera", number: 7, position: "MID", foot: "Right", admissionNumber: "ADM-2026-0904", email: "", photoUrl: "" },
-                { name: "Collins Kiptum", number: 4, position: "DEF", foot: "Right", admissionNumber: "ADM-2026-0905", email: "", photoUrl: "" },
-                { name: "Eliud Mwaiza", number: 5, position: "DEF", foot: "Right", admissionNumber: "ADM-2026-0906", email: "", photoUrl: "" },
-                { name: "Enock Kiptoo", number: 6, position: "MID", foot: "Right", admissionNumber: "ADM-2026-0907", email: "", photoUrl: "" },
-                { name: "Felix Okoth", number: 9, position: "FWD", foot: "Right", admissionNumber: "ADM-2026-0908", email: "", photoUrl: "" },
-                { name: "Bill Kipkoech", number: 3, position: "DEF", foot: "Right", admissionNumber: "ADM-2026-0909", email: "", photoUrl: "" },
-                { name: "Said Bakari", number: 8, position: "MID", foot: "Right", admissionNumber: "ADM-2026-0910", email: "", photoUrl: "" },
-                { name: "Samuel Ekuwam", number: 11, position: "FWD", foot: "Right", admissionNumber: "ADM-2026-0911", email: "", photoUrl: "" },
-                { name: "Samuel Wanyama", number: 14, position: "MID", foot: "Right", admissionNumber: "ADM-2026-0912", email: "", photoUrl: "" },
-                { name: "Simon Omondi Obara", number: 15, position: "MID", foot: "Right", admissionNumber: "ADM-2026-0913", email: "", photoUrl: "" },
-                { name: "Stephen Kipsang", number: 16, position: "DEF", foot: "Right", admissionNumber: "ADM-2026-0914", email: "", photoUrl: "" },
-                { name: "Haron Lemmy", number: 17, position: "FWD", foot: "Right", admissionNumber: "ADM-2026-0915", email: "", photoUrl: "" },
+                {
+                  name: "Jeff Njoroge",
+                  number: 1,
+                  position: "GK",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0901",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "Hamard Adan",
+                  number: 10,
+                  position: "FWD",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0902",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "Bavian Kipkoriri",
+                  number: 2,
+                  position: "DEF",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0903",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "Brandon Wandera",
+                  number: 7,
+                  position: "MID",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0904",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "Collins Kiptum",
+                  number: 4,
+                  position: "DEF",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0905",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "Eliud Mwaiza",
+                  number: 5,
+                  position: "DEF",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0906",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "Enock Kiptoo",
+                  number: 6,
+                  position: "MID",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0907",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "Felix Okoth",
+                  number: 9,
+                  position: "FWD",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0908",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "Bill Kipkoech",
+                  number: 3,
+                  position: "DEF",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0909",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "Said Bakari",
+                  number: 8,
+                  position: "MID",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0910",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "Samuel Ekuwam",
+                  number: 11,
+                  position: "FWD",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0911",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "Samuel Wanyama",
+                  number: 14,
+                  position: "MID",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0912",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "Simon Omondi Obara",
+                  number: 15,
+                  position: "MID",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0913",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "Stephen Kipsang",
+                  number: 16,
+                  position: "DEF",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0914",
+                  email: "",
+                  photoUrl: "",
+                },
+                {
+                  name: "Haron Lemmy",
+                  number: 17,
+                  position: "FWD",
+                  foot: "Right",
+                  admissionNumber: "ADM-2026-0915",
+                  email: "",
+                  photoUrl: "",
+                },
               ],
             };
 
@@ -12493,7 +13781,12 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                 color: "#f43f5e",
                 homePitch: "Rangers Ground (Upper Pitch)",
                 captain: "Jaycrack Haron",
-                coach: { name: "Coach Amirah Bramuel", role: "Pia Head Coach", email: "", photoUrl: "" },
+                coach: {
+                  name: "Coach Amirah Bramuel",
+                  role: "Pia Head Coach",
+                  email: "",
+                  photoUrl: "",
+                },
                 assistantCoach: { name: "Coach TBD" },
                 manager: { name: "Amirah Bramuel" },
                 squad: defaultSquads[6],
@@ -12505,7 +13798,12 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                 color: "#38bdf8",
                 homePitch: "City Stars Pitch",
                 captain: "Elly Adams Otieno",
-                coach: { name: "Samwel Reagan Wanyama", role: "Pia Head Coach", email: "", photoUrl: "" },
+                coach: {
+                  name: "Samwel Reagan Wanyama",
+                  role: "Pia Head Coach",
+                  email: "",
+                  photoUrl: "",
+                },
                 assistantCoach: { name: "Assistant Coach TBD" },
                 manager: { name: "Young Stars Management" },
                 squad: defaultSquads[7],
@@ -12517,7 +13815,12 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
                 color: "#fbbf24",
                 homePitch: "Samba Arena (School Lower Pitch)",
                 captain: "Levis Wanyama",
-                coach: { name: "Aron Charito", role: "Pia Head Coach", email: "aron.charito@mpesafoundationacademy.ac.ke", photoUrl: "" },
+                coach: {
+                  name: "Aron Charito",
+                  role: "Pia Head Coach",
+                  email: "aron.charito@mpesafoundationacademy.ac.ke",
+                  photoUrl: "",
+                },
                 assistantCoach: { name: "George Victor" },
                 manager: { name: "Levis Wanyama" },
                 squad: defaultSquads[8],
@@ -12537,7 +13840,13 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
             ];
 
             const legacyDeletedIds = [1, 2, 3, 4, 5];
-            const legacyDeletedNames = ["grade 10 a", "grade 10 b", "dp 2 a", "dp 2 b", "samba boys"];
+            const legacyDeletedNames = [
+              "grade 10 a",
+              "grade 10 b",
+              "dp 2 a",
+              "dp 2 b",
+              "samba boys",
+            ];
             let storedDeletedTeamIds = [];
             try {
               storedDeletedTeamIds = JSON.parse(
@@ -12549,7 +13858,8 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
             if (Array.isArray(loadedTeams)) {
               loadedTeams = loadedTeams.filter((t) => {
                 if (legacyDeletedIds.includes(t.id) && t.name !== "Samba") return false;
-                if (t.name && legacyDeletedNames.includes(t.name.trim().toLowerCase())) return false;
+                if (t.name && legacyDeletedNames.includes(t.name.trim().toLowerCase()))
+                  return false;
                 if (storedDeletedTeamIds.includes(t.id)) return false;
                 if (
                   t.name &&
@@ -12563,10 +13873,18 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
               });
             }
 
-            this.teams = loadedTeams && loadedTeams.length > 0 ? loadedTeams : baseDefaultTeams;
-            // Merge in missing default clubs
+            // Merge in missing default clubs (NEVER re-add deleted clubs)
             baseDefaultTeams.forEach((dt) => {
+              const isDeleted =
+                storedDeletedTeamIds.includes(dt.id) ||
+                legacyDeletedIds.includes(dt.id) ||
+                (dt.name &&
+                  (legacyDeletedNames.includes(dt.name.toLowerCase()) ||
+                    storedDeletedTeamIds.some(
+                      (s) => typeof s === "string" && s.toLowerCase() === dt.name.toLowerCase(),
+                    )));
               if (
+                !isDeleted &&
                 !this.teams.some(
                   (t) =>
                     t.id === dt.id ||
@@ -12844,7 +14162,7 @@ M-Pesa Sunday League Hub • Official eFootball Edition`;
             }
           },
         };
-      }
+      };
     </script>
   </body>
 </html>

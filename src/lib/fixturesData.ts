@@ -50,21 +50,23 @@ export const DELETED_LEGACY_TEAM_NAMES = [
 export function isTeamDeleted(id: number | undefined, name?: string): boolean {
   if (id && DELETED_LEGACY_TEAM_IDS.includes(id)) return true;
   if (name && DELETED_LEGACY_TEAM_NAMES.includes(name.trim().toLowerCase())) return true;
-  try {
-    const stored = JSON.parse(localStorage.getItem("mpesa_pes_deleted_teams_v6") || "[]");
-    if (Array.isArray(stored)) {
-      if (id && stored.includes(id)) return true;
-      if (
-        name &&
-        stored.some(
-          (s: string | number) => typeof s === "string" && s.toLowerCase() === name.toLowerCase(),
-        )
-      ) {
-        return true;
+  if (typeof window !== "undefined") {
+    try {
+      const stored = JSON.parse(localStorage.getItem("mpesa_pes_deleted_teams_v6") || "[]");
+      if (Array.isArray(stored)) {
+        if (id && stored.includes(id)) return true;
+        if (
+          name &&
+          stored.some(
+            (s: string | number) => typeof s === "string" && s.toLowerCase() === name.toLowerCase(),
+          )
+        ) {
+          return true;
+        }
       }
+    } catch {
+      // Ignore
     }
-  } catch {
-    // Ignore
   }
   return false;
 }

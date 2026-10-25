@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { BoardWorkspaces } from "../components/BoardWorkspaces";
+import { UnifiedLeagueDashboard } from "../components/UnifiedLeagueDashboard";
 
 export const Route = createFileRoute("/workspaces")({
   head: () => ({
@@ -19,7 +19,7 @@ function WorkspacesPage() {
   return (
     <div className="min-h-screen bg-[#070512] text-white p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
-        <BoardWorkspaces />
+        <UnifiedLeagueDashboard initialMode="board" />
       </div>
     </div>
   );

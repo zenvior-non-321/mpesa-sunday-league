@@ -118,7 +118,25 @@ function RootShell({ children }: { children: ReactNode }) {
         <HeadContent />
       </head>
       <body>
+        {/* Persistent background YouTube player (active iframe container so audio stream works across pages) */}
+        <div
+          id="pes-yt-player-wrapper"
+          style={{
+            position: "fixed",
+            bottom: "8px",
+            right: "8px",
+            width: "160px",
+            height: "90px",
+            zIndex: 9999,
+            pointerEvents: "none",
+            opacity: 0.001,
+            overflow: "hidden",
+          }}
+        >
+          <div id="pes-yt-player" style={{ width: "100%", height: "100%" }} />
+        </div>
         {children}
+        <script src="/anthem-player.js" async />
         <Scripts />
       </body>
     </html>

@@ -1,5 +1,5 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { UnifiedLeagueDashboard } from "../components/UnifiedLeagueDashboard";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -8,32 +8,23 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "M-Pesa Sunday League eFootball standings, fixtures, match highlights and league officials.",
+          "Official eFootball Edition portal for M-Pesa Sunday League featuring tables, player stats leaderboard, fixtures, clubs, and squad management.",
       },
       { property: "og:title", content: "M-Pesa Sunday League | Fixtures, Results & Officials" },
       {
         property: "og:description",
         content:
-          "Follow league results, fixtures, highlights and meet the M-Pesa Sunday League officials.",
+          "Official eFootball Edition portal for M-Pesa Sunday League featuring tables, player stats leaderboard, fixtures, clubs, and squad management.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  beforeLoad: () => {
-    if (typeof window === "undefined") {
-      throw redirect({ href: "/league.html" });
-    }
-  },
-  component: function IndexRedirect() {
-    useEffect(() => {
-      window.location.replace("/league.html");
-    }, []);
+  component: function IndexDashboard() {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#070512] text-white">
-        <div className="flex flex-col items-center gap-3">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-cyan-400 border-t-transparent" />
-          <p className="font-mono text-sm text-gray-400">Loading M-Pesa Sunday League...</p>
+      <div className="min-h-screen bg-[#070512] text-white p-4 sm:p-6 lg:p-8">
+        <div className="max-w-7xl mx-auto">
+          <UnifiedLeagueDashboard initialMode="viewer" initialTab="hub" />
         </div>
       </div>
     );

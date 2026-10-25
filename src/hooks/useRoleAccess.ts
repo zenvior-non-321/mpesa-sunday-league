@@ -525,18 +525,27 @@ export const ALL_ACTION_DEFINITIONS: Record<PermissionKey, AuthorizedAction> = {
  * based on the defined 7-tier role hierarchy.
  */
 export function useRoleAccess(initialRole?: LeagueRole) {
-  const [currentRole, setCurrentRole] = useState<LeagueRole>(() => {
-    if (initialRole) return initialRole;
-    if (typeof window !== "undefined") {
-      const storedRole = localStorage.getItem("mpesa_pes_auth_role");
-      if (storedRole && storedRole in ROLE_HIERARCHY_DATA) {
-        return storedRole as LeagueRole;
+  const [currentRole, setCurrentRole] = useState<LeagueRole>(initialRole || "GUEST");
+
+  // Read stored role on client mount after hydration to prevent SSR mismatch
+  useEffect(() => {
+    try {
+      if (typeof window !== "undefined") {
+        const storedRole = localStorage.getItem("mpesa_pes_auth_role");
+        if (storedRole && storedRole in ROLE_HIERARCHY_DATA) {
+          setCurrentRole(storedRole as LeagueRole);
+          return;
+        }
+        const isSuper = localStorage.getItem("mpesa_pes_super_admin") === "true";
+        if (isSuper) {
+          setCurrentRole("SUPER_ADMIN");
+          return;
+        }
       }
-      const isSuper = localStorage.getItem("mpesa_pes_super_admin") === "true";
-      if (isSuper) return "SUPER_ADMIN";
+    } catch {
+      // Ignore
     }
-    return "GUEST";
-  });
+  }, []);
 
   // Listen to cross-component role changes
   useEffect(() => {

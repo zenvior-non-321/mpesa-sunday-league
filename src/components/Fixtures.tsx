@@ -115,8 +115,8 @@ export function Fixtures() {
     status: MatchFixture["status"];
   }>({
     matchweek: 1,
-    homeId: 1,
-    awayId: 2,
+    homeId: 6,
+    awayId: 7,
     date: "Sunday, Nov 1, 2026",
     time: "2:00 PM",
     venue: "School Pitch Arena",
@@ -128,33 +128,58 @@ export function Fixtures() {
   useEffect(() => {
     try {
       const storedFixtures = localStorage.getItem("mpesa_pes_matches_v6");
-      const storedDeleted = new Set<number>(
+      const storedDeletedFixtures = new Set<number>(
         JSON.parse(localStorage.getItem("mpesa_pes_deleted_fixtures_v6") || "[]"),
       );
-      if (storedFixtures) {
-        const parsed = JSON.parse(storedFixtures);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          // Merge any newly introduced default fixtures (e.g. Royal Rangers, Young Stars City, Mzinga)
-          const existingIds = new Set(parsed.map((f: MatchFixture) => f.id));
-          const missing = DEFAULT_FIXTURES.filter(
-            (df) => !existingIds.has(df.id) && !storedDeleted.has(df.id),
-          );
-          setFixtures([...parsed, ...missing]);
-        } else {
-          setFixtures(DEFAULT_FIXTURES.filter((df) => !storedDeleted.has(df.id)));
-        }
-      } else {
-        setFixtures(DEFAULT_FIXTURES.filter((df) => !storedDeleted.has(df.id)));
-      }
 
       const storedTeams = localStorage.getItem("mpesa_pes_teams_v6");
-      if (storedTeams) {
-        const parsed = JSON.parse(storedTeams);
+      const initialTeams = storedTeams ? JSON.parse(storedTeams) : DEFAULT_TEAMS;
+      const cleanTeams = sanitizeTeamsList(
+        Array.isArray(initialTeams) ? initialTeams : DEFAULT_TEAMS,
+      );
+      setTeams(cleanTeams);
+
+      const activeTeamIds = new Set(cleanTeams.map((t) => t.id));
+
+      if (storedFixtures) {
+        const parsed: MatchFixture[] = JSON.parse(storedFixtures);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          const existingTeamIds = new Set(parsed.map((t: Team) => t.id));
-          const missingTeams = DEFAULT_TEAMS.filter((dt) => !existingTeamIds.has(dt.id));
-          setTeams([...parsed, ...missingTeams]);
+          const existingIds = new Set(parsed.map((f: MatchFixture) => f.id));
+          const missing = DEFAULT_FIXTURES.filter(
+            (df) =>
+              !existingIds.has(df.id) &&
+              !storedDeletedFixtures.has(df.id) &&
+              activeTeamIds.has(df.homeId) &&
+              activeTeamIds.has(df.awayId),
+          );
+          const combined = [...parsed, ...missing].filter(
+            (f) =>
+              !storedDeletedFixtures.has(f.id) &&
+              activeTeamIds.has(f.homeId) &&
+              activeTeamIds.has(f.awayId) &&
+              !isTeamDeleted(f.homeId) &&
+              !isTeamDeleted(f.awayId),
+          );
+          setFixtures(combined);
+        } else {
+          setFixtures(
+            DEFAULT_FIXTURES.filter(
+              (df) =>
+                !storedDeletedFixtures.has(df.id) &&
+                activeTeamIds.has(df.homeId) &&
+                activeTeamIds.has(df.awayId),
+            ),
+          );
         }
+      } else {
+        setFixtures(
+          DEFAULT_FIXTURES.filter(
+            (df) =>
+              !storedDeletedFixtures.has(df.id) &&
+              activeTeamIds.has(df.homeId) &&
+              activeTeamIds.has(df.awayId),
+          ),
+        );
       }
     } catch {
       setFixtures(DEFAULT_FIXTURES);
@@ -287,7 +312,8 @@ export function Fixtures() {
   const handleCreateFixture = (e: React.FormEvent) => {
     e.preventDefault();
     if (newFixture.homeId === newFixture.awayId) {
-      alert("Home team and Away team must be different!");
+      setDeleteSuccessToast("⚠️ Home team and Away team must be different!");
+      setTimeout(() => setDeleteSuccessToast(null), 4000);
       return;
     }
 
@@ -674,9 +700,13 @@ export function Fixtures() {
                         </div>
                       ) : (
                         <div className="flex items-center gap-2 bg-[#141029] border border-[#2e2554] px-3.5 py-1.5 rounded-xl shadow-inner font-mono">
-                          <span className="text-xl font-black text-white">{fixture.homeScore}</span>
+                          <span className="text-xl font-black text-white">
+                            {fixture.homeScore ?? 0}
+                          </span>
                           <span className="text-gray-500 text-xs font-bold">-</span>
-                          <span className="text-xl font-black text-white">{fixture.awayScore}</span>
+                          <span className="text-xl font-black text-white">
+                            {fixture.awayScore ?? 0}
+                          </span>
                         </div>
                       )}
                     </div>

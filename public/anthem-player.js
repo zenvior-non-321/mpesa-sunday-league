@@ -54,9 +54,12 @@
           if (wantPlay) start();
         },
         onStateChange: function (e) {
-          if (e.data === YT.PlayerState.ENDED && wantPlay) {
-            player.seekTo(0, true);
-            player.playVideo();
+          if (e.data === YT.PlayerState.ENDED) {
+            try {
+              window.dispatchEvent(
+                new CustomEvent("pes_song_ended", { detail: { videoId: targetId } }),
+              );
+            } catch (err) {}
           }
           if (e.data === YT.PlayerState.PLAYING) wantPlay = true;
           if (e.data === YT.PlayerState.PAUSED) wantPlay = false;

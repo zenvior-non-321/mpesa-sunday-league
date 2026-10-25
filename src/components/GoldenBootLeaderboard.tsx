@@ -408,7 +408,10 @@ export function GoldenBootLeaderboard({ customContenders }: GoldenBootLeaderboar
                         G/Match
                       </span>
                       <span className="font-mono text-base font-black text-amber-300">
-                        {(contender.goals / contender.matchesPlayed).toFixed(2)}
+                        {(contender.matchesPlayed > 0
+                          ? contender.goals / contender.matchesPlayed
+                          : 0
+                        ).toFixed(2)}
                       </span>
                     </div>
                   </div>
@@ -505,7 +508,7 @@ export function GoldenBootLeaderboard({ customContenders }: GoldenBootLeaderboar
                           {c.openPlayGoals}
                         </td>
                         <td className="py-3.5 px-4 text-right font-mono font-bold text-amber-300">
-                          {(c.goals / c.matchesPlayed).toFixed(2)}
+                          {(c.matchesPlayed > 0 ? c.goals / c.matchesPlayed : 0).toFixed(2)}
                         </td>
                       </tr>
                     );
@@ -713,8 +716,10 @@ export function GoldenBootLeaderboard({ customContenders }: GoldenBootLeaderboar
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {contenders.slice(0, 6).map((c) => {
-              const conversion = ((c.goals / (c.shotsOnTarget || 1)) * 100).toFixed(1);
-              const openPlayPct = ((c.openPlayGoals / c.goals) * 100).toFixed(0);
+              const conversion = (c.shotsOnTarget ? (c.goals / c.shotsOnTarget) * 100 : 0).toFixed(
+                1,
+              );
+              const openPlayPct = (c.goals ? (c.openPlayGoals / c.goals) * 100 : 0).toFixed(0);
 
               return (
                 <div

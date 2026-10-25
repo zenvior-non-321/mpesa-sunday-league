@@ -28,6 +28,8 @@ export interface TeamRadarMetric {
   form: string[];
 }
 
+import { isTeamDeleted } from "../lib/fixturesData";
+
 const DEFAULT_RADAR_TEAMS: TeamRadarMetric[] = [
   {
     id: 1,
@@ -44,22 +46,6 @@ const DEFAULT_RADAR_TEAMS: TeamRadarMetric[] = [
     pts: 13,
     cleanSheets: 3,
     form: ["W", "W", "D", "W", "W"],
-  },
-  {
-    id: 2,
-    name: "Grade 10 A",
-    shortCode: "G10A",
-    color: "#00f0ff",
-    mp: 5,
-    w: 3,
-    d: 1,
-    l: 1,
-    gf: 10,
-    ga: 5,
-    gd: 5,
-    pts: 10,
-    cleanSheets: 2,
-    form: ["W", "L", "W", "D", "W"],
   },
   {
     id: 6,
@@ -108,54 +94,6 @@ const DEFAULT_RADAR_TEAMS: TeamRadarMetric[] = [
     pts: 8,
     cleanSheets: 2,
     form: ["D", "W", "L", "W", "D"],
-  },
-  {
-    id: 3,
-    name: "Grade 10 B",
-    shortCode: "G10B",
-    color: "#ffe600",
-    mp: 5,
-    w: 1,
-    d: 2,
-    l: 2,
-    gf: 6,
-    ga: 8,
-    gd: -2,
-    pts: 5,
-    cleanSheets: 1,
-    form: ["D", "D", "L", "W", "L"],
-  },
-  {
-    id: 4,
-    name: "DP 2 A",
-    shortCode: "DP2A",
-    color: "#ff0077",
-    mp: 5,
-    w: 1,
-    d: 1,
-    l: 3,
-    gf: 5,
-    ga: 11,
-    gd: -6,
-    pts: 4,
-    cleanSheets: 0,
-    form: ["L", "D", "W", "L", "L"],
-  },
-  {
-    id: 5,
-    name: "DP 2 B",
-    shortCode: "DP2B",
-    color: "#a855f7",
-    mp: 5,
-    w: 0,
-    d: 1,
-    l: 4,
-    gf: 2,
-    ga: 17,
-    gd: -15,
-    pts: 1,
-    cleanSheets: 0,
-    form: ["L", "L", "L", "D", "L"],
   },
 ];
 
@@ -224,28 +162,63 @@ export function TeamPerformanceRadar() {
   // Sync teams from localStorage if available
   useEffect(() => {
     try {
-      const stored = localStorage.getItem("mpesa_pes_teams_v6");
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          const mapped: TeamRadarMetric[] = parsed.map((item, idx) => ({
-            id: item.id ?? idx + 1,
-            name: item.name || `Club #${idx + 1}`,
-            shortCode: item.shortCode || `C${idx + 1}`,
-            color: item.color || "#00f0ff",
-            mp: Number(item.mp) || 0,
-            w: Number(item.w) || 0,
-            d: Number(item.d) || 0,
-            l: Number(item.l) || 0,
-            gf: Number(item.gf) || 0,
-            ga: Number(item.ga) || 0,
-            gd: (Number(item.gf) || 0) - (Number(item.ga) || 0),
-            pts: Number(item.pts) || 0,
-            cleanSheets: item.cleanSheets ? Number(item.cleanSheets) : 1,
+      const storedStandings = localStorage.getItem("mpesa_pes_standings_v6");
+      const storedTeams = localStorage.getItem("mpesa_pes_teams_v6");
+
+      let standingsList: Record<string, unknown>[] = [];
+      if (storedStandings) {
+        const parsed = JSON.parse(storedStandings);
+        if (Array.isArray(parsed) && parsed.length > 0) standingsList = parsed;
+      }
+
+      let teamsList: Record<string, unknown>[] = [];
+      if (storedTeams) {
+        const parsed = JSON.parse(storedTeams);
+        if (Array.isArray(parsed) && parsed.length > 0) teamsList = parsed;
+      }
+
+      const sourceList = standingsList.length > 0 ? standingsList : teamsList;
+      if (sourceList.length > 0) {
+        const nonDeleted = sourceList.filter(
+          (t) => !isTeamDeleted(Number(t.id), typeof t.name === "string" ? t.name : ""),
+        );
+        const activeList = nonDeleted.length > 0 ? nonDeleted : sourceList;
+
+        const mapped: TeamRadarMetric[] = activeList.map((item, idx) => {
+          const matchingTeam = teamsList.find(
+            (t) =>
+              t.id === item.id ||
+              (typeof t.name === "string" &&
+                typeof item.name === "string" &&
+                t.name.toLowerCase() === item.name.toLowerCase()),
+          );
+          const mp = Number(item.mp ?? item.played) || 0;
+          const w = Number(item.w ?? item.won) || 0;
+          const d = Number(item.d ?? item.drawn) || 0;
+          const l = Number(item.l ?? item.lost) || 0;
+          const gf = Number(item.gf) || 0;
+          const ga = Number(item.ga) || 0;
+          const gd = Number(item.gd !== undefined ? item.gd : gf - ga) || 0;
+          const pts = Number(item.pts ?? item.points) || 0;
+
+          return {
+            id: Number(item.id) || idx + 1,
+            name: item.name || matchingTeam?.name || `Club #${idx + 1}`,
+            shortCode: item.shortCode || matchingTeam?.shortCode || `C${idx + 1}`,
+            color: item.color || matchingTeam?.color || "#00f0ff",
+            mp,
+            w,
+            d,
+            l,
+            gf,
+            ga,
+            gd,
+            pts,
+            cleanSheets: Number(item.cleanSheets) || 1,
             form: Array.isArray(item.form) ? item.form : ["-", "-", "-", "-", "-"],
-          }));
-          setTeams(mapped);
-        }
+          };
+        });
+        setTeams(mapped);
       }
     } catch {
       // Use fallback
@@ -595,7 +568,7 @@ export function TeamPerformanceRadar() {
                       : "text-gray-300"
                 }`}
               >
-                {primaryTeam.gd > 0 ? `+${primaryTeam.gd}` : primaryTeam.gd}
+                {primaryTeam.gd > 0 ? `+${primaryTeam.gd}` : (primaryTeam.gd ?? 0)}
               </span>
             </div>
           </div>
@@ -618,8 +591,8 @@ export function TeamPerformanceRadar() {
                     {primaryTeam.name}
                   </h3>
                   <span className="text-xs text-gray-400">
-                    Record: {primaryTeam.w}W - {primaryTeam.d}D - {primaryTeam.l}L (
-                    {primaryTeam.pts} pts)
+                    Record: {primaryTeam.w ?? 0}W - {primaryTeam.d ?? 0}D - {primaryTeam.l ?? 0}L (
+                    {primaryTeam.pts ?? 0} pts)
                   </span>
                 </div>
               </div>
@@ -661,7 +634,8 @@ export function TeamPerformanceRadar() {
                       vs {compareTeam.name}
                     </h4>
                     <span className="text-[11px] text-gray-400">
-                      {compareTeam.w}W - {compareTeam.d}D - {compareTeam.l}L ({compareTeam.pts} pts)
+                      {compareTeam.w ?? 0}W - {compareTeam.d ?? 0}D - {compareTeam.l ?? 0}L (
+                      {compareTeam.pts ?? 0} pts)
                     </span>
                   </div>
                 </div>

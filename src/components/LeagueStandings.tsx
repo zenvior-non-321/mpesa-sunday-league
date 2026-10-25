@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useRoleAccess } from "../hooks/useRoleAccess";
 import { isTeamDeleted } from "../lib/fixturesData";
-import { Trash2 } from "lucide-react";
+import { Trash2, Trophy, Crown } from "lucide-react";
 
 export interface PiaCoach {
   name: string;
@@ -67,9 +67,15 @@ export interface TeamStanding {
   gd: number; // Goal Difference
   pts: number; // Points
   form: string[]; // ['W', 'D', 'L', ...]
+  played?: number;
+  won?: number;
+  drawn?: number;
+  lost?: number;
+  points?: number;
+  spiritualBonus?: number;
 }
 
-const DEFAULT_STANDINGS: TeamStanding[] = [
+export const DEFAULT_STANDINGS: TeamStanding[] = [
   {
     id: 1,
     name: "Samba Boys",
@@ -537,14 +543,16 @@ export function LeagueStandings() {
               history: t.history,
               squad: t.squad,
               logoUrl: t.logoUrl,
-              mp: typeof t.mp === "number" ? t.mp : 5,
-              w: typeof t.w === "number" ? t.w : 0,
-              d: typeof t.d === "number" ? t.d : 0,
-              l: typeof t.l === "number" ? t.l : 0,
-              gf: typeof t.gf === "number" ? t.gf : 0,
-              ga: typeof t.ga === "number" ? t.ga : 0,
-              gd: typeof t.gd === "number" ? t.gd : (t.gf || 0) - (t.ga || 0),
-              pts: typeof t.pts === "number" ? t.pts : (t.w || 0) * 3 + (t.d || 0),
+              mp: Number.isFinite(t.mp) ? t.mp : Number(t.played) || 5,
+              w: Number.isFinite(t.w) ? t.w : Number(t.won) || 0,
+              d: Number.isFinite(t.d) ? t.d : Number(t.drawn) || 0,
+              l: Number.isFinite(t.l) ? t.l : Number(t.lost) || 0,
+              gf: Number.isFinite(t.gf) ? t.gf : 0,
+              ga: Number.isFinite(t.ga) ? t.ga : 0,
+              gd: Number.isFinite(t.gd) ? t.gd : (Number(t.gf) || 0) - (Number(t.ga) || 0),
+              pts: Number.isFinite(t.pts)
+                ? t.pts
+                : Number(t.points) || (Number(t.w) || 0) * 3 + (Number(t.d) || 0),
               form: Array.isArray(t.form) ? t.form : ["W", "D", "W", "L", "W"],
             }));
           }
@@ -1012,21 +1020,28 @@ export function LeagueStandings() {
             </thead>
             <tbody className="divide-y divide-[#2e2554]/60 text-sm font-semibold">
               {sortedStandings.map((team, index) => {
-                const isLeader = index === 0 && sortColumn === "pts" && sortDirection === "desc";
+                const isLeader =
+                  (index === 0 && sortColumn === "pts" && sortDirection === "desc") ||
+                  (index === 0 && sortColumn === "rank" && sortDirection === "asc") ||
+                  (sortColumn === "pts" && index === 0);
 
                 return (
                   <tr
                     key={team.id}
                     onClick={() => setSelectedTeam(team)}
-                    className="hover:bg-[#1a1438]/80 transition-colors group cursor-pointer"
+                    className={`transition-all duration-200 group cursor-pointer ${
+                      isLeader
+                        ? "bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-transparent border-l-4 border-amber-400 shadow-sm shadow-amber-500/5 hover:from-amber-500/25 hover:via-yellow-500/20"
+                        : "hover:bg-[#1a1438]/80"
+                    }`}
                   >
                     {/* Pos */}
                     <td className="py-4 px-4 text-center font-black">
-                      <div className="flex items-center justify-center">
+                      <div className="flex items-center justify-center gap-1">
                         <span
                           className={`w-7 h-7 rounded-xl flex items-center justify-center text-xs font-black ${
-                            index === 0
-                              ? "bg-amber-400 text-black shadow-md shadow-amber-400/20"
+                            isLeader
+                              ? "bg-gradient-to-tr from-amber-400 to-yellow-500 text-black shadow-md shadow-amber-400/30"
                               : index === 1
                                 ? "bg-cyan-400/20 text-[#00f0ff] border border-cyan-400/30"
                                 : index === 2
@@ -1036,6 +1051,9 @@ export function LeagueStandings() {
                         >
                           {index + 1}
                         </span>
+                        {isLeader && (
+                          <Trophy className="w-4 h-4 text-amber-400 fill-amber-400/30 animate-pulse hidden sm:inline shrink-0" />
+                        )}
                       </div>
                     </td>
 
@@ -1043,7 +1061,11 @@ export function LeagueStandings() {
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-3">
                         <div
-                          className="w-10 h-10 rounded-2xl flex items-center justify-center font-black text-xs text-white shadow-lg border border-white/20 relative overflow-hidden shrink-0"
+                          className={`w-10 h-10 rounded-2xl flex items-center justify-center font-black text-xs text-white shadow-lg border relative overflow-hidden shrink-0 ${
+                            isLeader
+                              ? "border-amber-400 ring-2 ring-amber-400/30"
+                              : "border-white/20"
+                          }`}
                           style={{ backgroundColor: team.color }}
                         >
                           {team.logoUrl ? (
@@ -1058,12 +1080,19 @@ export function LeagueStandings() {
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="font-extrabold text-white group-hover:text-[#00f0ff] transition-colors">
+                            <span
+                              className={`font-extrabold transition-colors ${
+                                isLeader
+                                  ? "text-amber-200 group-hover:text-amber-100"
+                                  : "text-white group-hover:text-[#00f0ff]"
+                              }`}
+                            >
                               {team.name}
                             </span>
                             {isLeader && (
-                              <span className="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.2 rounded-full font-black">
-                                1ST PLACE
+                              <span className="text-[10px] bg-amber-400/20 text-amber-300 border border-amber-400/40 px-2 py-0.5 rounded-full font-black flex items-center gap-1 shadow-sm">
+                                <Trophy className="w-3 h-3 text-amber-400 fill-amber-400" />
+                                <span>LEAGUE LEADERS</span>
                               </span>
                             )}
                           </div>
