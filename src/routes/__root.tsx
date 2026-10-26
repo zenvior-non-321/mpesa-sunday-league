@@ -113,14 +113,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
-      <body>
+      <body suppressHydrationWarning>
         {/* Persistent background YouTube player (active iframe container so audio stream works across pages) */}
         <div
           id="pes-yt-player-wrapper"
+          suppressHydrationWarning
           style={{
             position: "fixed",
             bottom: "8px",

@@ -32,6 +32,12 @@ import {
   getEmailDisplayName,
   CONFIRMED_ACADEMY_EMAILS,
 } from "../lib/voterVerification";
+import { AdminVotingVoterAudit } from "./AdminVotingVoterAudit";
+import {
+  getMvpWinnersHistory,
+  DEFAULT_MVP_WINNERS,
+  type MvpWinnerRecord,
+} from "../lib/mvpWinnersHistory";
 
 export interface MvpVoteRecord {
   matchId: number;
@@ -50,6 +56,11 @@ export interface MvpVoteRecord {
       playerPhoto?: string;
       position?: string;
       number?: number;
+      voters?: Array<{
+        name: string;
+        email: string;
+        votedAt: string;
+      }>;
     };
   };
   voterEmails: string[];
@@ -89,9 +100,16 @@ export function MatchMvpVoting({ initialMatchId, onClose }: MatchMvpVotingProps)
   const [verificationError, setVerificationError] = useState<string | null>(null);
   const [verifiedEmail, setVerifiedEmail] = useState<string | null>(null);
 
-  // Admin: custom email registration
   const [newSchoolEmailInput, setNewSchoolEmailInput] = useState<string>("");
   const [showVoterAudit, setShowVoterAudit] = useState<boolean>(false);
+  const [mvpHistory, setMvpHistory] = useState<MvpWinnerRecord[]>(DEFAULT_MVP_WINNERS);
+
+  useEffect(() => {
+    setMvpHistory(getMvpWinnersHistory());
+    const handleUpdate = () => setMvpHistory(getMvpWinnersHistory());
+    window.addEventListener("mpesa_mvp_winners_updated", handleUpdate);
+    return () => window.removeEventListener("mpesa_mvp_winners_updated", handleUpdate);
+  }, []);
 
   // Load matches and stored votes
   useEffect(() => {
@@ -383,7 +401,19 @@ export function MatchMvpVoting({ initialMatchId, onClose }: MatchMvpVotingProps)
       position: candidateObj?.position || "FWD",
       number: candidateObj?.number || 10,
       playerPhoto: candidateObj?.photoUrl,
+      voters: [],
     };
+
+    const voterEntry = {
+      name: voterName.trim() || getEmailDisplayName(emailNorm),
+      email: emailNorm,
+      votedAt:
+        new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) +
+        " • " +
+        new Date().toLocaleDateString(),
+    };
+
+    const currentVoters = existingCandidateVotes.voters || [];
 
     const updatedPoll: MvpVoteRecord = {
       ...currentPoll,
@@ -392,6 +422,7 @@ export function MatchMvpVoting({ initialMatchId, onClose }: MatchMvpVotingProps)
         [selectedCandidate]: {
           ...existingCandidateVotes,
           votesCount: existingCandidateVotes.votesCount + 1,
+          voters: [...currentVoters, voterEntry],
         },
       },
       voterEmails: [...currentPoll.voterEmails, emailNorm],
@@ -602,65 +633,23 @@ export function MatchMvpVoting({ initialMatchId, onClose }: MatchMvpVotingProps)
         </div>
       </div>
 
-      {/* Super Admin Voter Audit Desk (if toggled) */}
+      {/* Super Admin Voter Audit Desk & Reset Interface */}
       {canAdminVoting && showVoterAudit && (
-        <div className="bg-[#141029] border-2 border-cyan-400/30 rounded-3xl p-5 space-y-4 animate-in fade-in">
-          <div className="flex items-center justify-between border-b border-[#2e2554] pb-3">
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-cyan-400" />
-              <h4 className="font-header text-sm font-black text-white uppercase">
-                School Voter Audit & Registry Desk (Match #{selectedMatchId})
-              </h4>
-            </div>
-            <span className="text-xs font-mono text-cyan-300 font-bold">
-              {currentPoll.voterEmails.length} Verified Ballots Cast
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <span className="text-[10px] text-gray-400 font-bold uppercase block mb-1">
-                Verified Voters for This Fixture (Single-Vote Audit):
-              </span>
-              <div className="bg-[#090615] rounded-xl p-3 border border-[#2e2554] max-h-36 overflow-y-auto space-y-1 font-mono text-xs">
-                {currentPoll.voterEmails.length === 0 ? (
-                  <p className="text-gray-500 italic">No ballots cast yet for this fixture.</p>
-                ) : (
-                  currentPoll.voterEmails.map((email, idx) => (
-                    <div key={idx} className="flex items-center justify-between text-gray-300">
-                      <span>✓ {email}</span>
-                      <span className="text-[10px] text-emerald-400 font-bold">Voted</span>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-
-            <div>
-              <span className="text-[10px] text-gray-400 font-bold uppercase block mb-1">
-                Official Academy Voter Roster ({CONFIRMED_ACADEMY_EMAILS.length} Confirmed Members):
-              </span>
-              <form onSubmit={handleAddSchoolEmail} className="flex gap-2">
-                <input
-                  type="email"
-                  placeholder="e.g. new.student@mpesafoundationacademy.ac.ke"
-                  value={newSchoolEmailInput}
-                  onChange={(e) => setNewSchoolEmailInput(e.target.value)}
-                  className="flex-1 bg-[#090615] border border-[#2e2554] focus:border-cyan-400 rounded-xl px-3 py-2 text-xs text-white outline-none"
-                />
-                <button
-                  type="submit"
-                  className="px-4 py-2 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-black text-xs font-black uppercase transition cursor-pointer"
-                >
-                  Add
-                </button>
-              </form>
-              <p className="text-[10px] text-gray-400 mt-1.5">
-                Preloaded with 344 confirmed M-Pesa Foundation Academy student & staff emails.
-              </p>
-            </div>
-          </div>
-        </div>
+        <AdminVotingVoterAudit
+          matchId={selectedMatchId}
+          matchweek={currentMatch.matchweek}
+          matchTitle={`${homeTeam.name} vs ${awayTeam.name}`}
+          matchDate={currentMatch.date}
+          currentPoll={currentPoll}
+          onUpdatePoll={(updated) => {
+            const updatedAll = {
+              ...pollData,
+              [selectedMatchId]: updated,
+            };
+            persistPollData(updatedAll);
+          }}
+          onShowToast={showToast}
+        />
       )}
 
       {/* Match Clásico Header Banner */}
@@ -1127,6 +1116,80 @@ export function MatchMvpVoting({ initialMatchId, onClose }: MatchMvpVotingProps)
             )}
           </div>
         </div>
+      </div>
+
+      {/* Cumulative MVP Winners Records Table (Permanent Feature) */}
+      <div className="bg-[#0b0821] border border-[#2e2554] rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#2e2554] pb-4">
+          <div>
+            <h3 className="font-header text-base font-black text-white uppercase flex items-center gap-2">
+              <Trophy className="w-5 h-5 text-amber-400" />
+              Official MVP Hall of Fame • Cumulative Winners Records Table
+            </h3>
+            <p className="text-xs text-gray-400 mt-0.5">
+              Certified matchweek winners remain permanently preserved in this records table even
+              when individual match voting logs are cleared.
+            </p>
+          </div>
+
+          <span className="px-3 py-1 rounded-full bg-amber-400/20 text-amber-300 text-xs font-mono font-bold border border-amber-400/30">
+            {mvpHistory.length} Certified Champions
+          </span>
+        </div>
+
+        {mvpHistory.length === 0 ? (
+          <p className="text-xs text-gray-500 italic py-4 text-center">
+            No MVP champions certified yet. Once a matchweek poll concludes, the winner will be
+            archived here.
+          </p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs text-left">
+              <thead>
+                <tr className="border-b border-[#2e2554] text-[10px] uppercase font-bold text-gray-400 bg-[#141029]/60">
+                  <th className="py-2.5 px-3">MW</th>
+                  <th className="py-2.5 px-3">MVP Champion</th>
+                  <th className="py-2.5 px-3">Club</th>
+                  <th className="py-2.5 px-3 text-center">Ballots Won</th>
+                  <th className="py-2.5 px-3 text-center">Vote Share</th>
+                  <th className="py-2.5 px-3">Certified On</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#1e1742]">
+                {mvpHistory.map((w) => (
+                  <tr key={w.id} className="hover:bg-white/5 transition">
+                    <td className="py-3 px-3 font-mono font-black text-cyan-300">
+                      MW {w.matchweek}
+                    </td>
+                    <td className="py-3 px-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-lg bg-amber-400/20 border border-amber-400/40 flex items-center justify-center font-bold text-amber-300 text-xs shrink-0">
+                          👑
+                        </div>
+                        <div>
+                          <span className="font-black text-white block">{w.winnerName}</span>
+                          <span className="text-[10px] text-gray-400 font-mono">
+                            {w.fixtureTitle}
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-3 px-3 font-semibold text-gray-200">{w.teamName}</td>
+                    <td className="py-3 px-3 text-center font-mono font-bold text-emerald-400">
+                      {w.votesCount} / {w.totalBallotsCast}
+                    </td>
+                    <td className="py-3 px-3 text-center font-mono font-black text-amber-300">
+                      {w.votePercentage}%
+                    </td>
+                    <td className="py-3 px-3 text-gray-400 font-mono text-[11px]">
+                      {w.certifiedAt}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

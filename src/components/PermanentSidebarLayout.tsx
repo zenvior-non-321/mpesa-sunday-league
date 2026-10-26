@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Link, useRouterState, useRouter } from "@tanstack/react-router";
 import {
   Trophy,
@@ -21,10 +21,17 @@ import {
   Globe,
   FileCheck2,
   MessageSquare,
+  CheckCircle2,
 } from "lucide-react";
 import { useRoleAccess } from "../hooks/useRoleAccess";
 import { AnthemPlayerWidget } from "./AnthemPlayerWidget";
 import { UnifiedAccessModal } from "./UnifiedAccessModal";
+import {
+  getCurrentRbacUser,
+  logoutRbacUser,
+  type RbacRole,
+  type RbacUser,
+} from "../lib/rbacSystem";
 
 interface PermanentSidebarLayoutProps {
   children: React.ReactNode;
@@ -181,17 +188,47 @@ export function PermanentSidebarLayout({ children }: PermanentSidebarLayoutProps
     },
   ];
 
-  // When logged in, provide administrative command and media studio
-  const allNavItems = isLoggedIn
-    ? [
+  const [isMounted, setIsMounted] = useState<boolean>(false);
+  const [rbacUser, setRbacUser] = useState<RbacUser | null>(null);
+
+  useEffect(() => {
+    setIsMounted(true);
+    setRbacUser(getCurrentRbacUser());
+    const handleRbacUpdate = () => {
+      setRbacUser(getCurrentRbacUser());
+    };
+    window.addEventListener("mpesa_rbac_changed", handleRbacUpdate);
+    window.addEventListener("mpesa_role_changed", handleRbacUpdate);
+    window.addEventListener("storage", handleRbacUpdate);
+    return () => {
+      window.removeEventListener("mpesa_rbac_changed", handleRbacUpdate);
+      window.removeEventListener("mpesa_role_changed", handleRbacUpdate);
+      window.removeEventListener("storage", handleRbacUpdate);
+    };
+  }, []);
+
+  // Determine active RBAC role from state & whitelist
+  // Default to 'public' during SSR and initial hydration to prevent server/client HTML divergence
+  const activeRbacRole: RbacRole = useMemo(() => {
+    if (!isMounted) return "public";
+    if (isSuperAdmin || rbacUser?.role === "admin") return "admin";
+    if ((currentRole !== "GUEST" && currentRole) || rbacUser?.role === "board") return "board";
+    return "public";
+  }, [isMounted, isSuperAdmin, currentRole, rbacUser]);
+
+  // Dynamically render sidebar menu items strictly based on role:
+  // - Admin: Master Command, YouTube Studio, Public Suite, Honours, Registration Desk
+  // - Board: Council Workspace, YouTube Studio, Public Suite, Honours
+  // - Public: Strictly League Table, Teams, Fixtures, Radar, Calendar, Voting, and Comments
+  const allNavItems = useMemo(() => {
+    if (activeRbacRole === "admin") {
+      return [
         {
           to: "/workspaces",
-          label: isSuperAdmin ? "👑 Master Command" : "👔 Council Workspace",
-          icon: isSuperAdmin ? Crown : Briefcase,
-          badge: isSuperAdmin ? "Super Admin" : "Board",
-          badgeColor: isSuperAdmin
-            ? "bg-amber-400/20 text-amber-300 border-amber-400/30"
-            : "bg-indigo-400/20 text-indigo-300 border-indigo-400/30",
+          label: "👑 Master Command",
+          icon: Crown,
+          badge: "Super Admin",
+          badgeColor: "bg-amber-400/20 text-amber-300 border-amber-400/30",
         },
         {
           to: "/anthem",
@@ -215,8 +252,39 @@ export function PermanentSidebarLayout({ children }: PermanentSidebarLayoutProps
           badge: "Forms",
           badgeColor: "bg-emerald-400/20 text-emerald-300 border-emerald-400/30",
         },
-      ]
-    : publicNavItems;
+      ];
+    }
+
+    if (activeRbacRole === "board") {
+      return [
+        {
+          to: "/workspaces",
+          label: "👔 Council Workspace",
+          icon: Briefcase,
+          badge: "Board",
+          badgeColor: "bg-indigo-400/20 text-indigo-300 border-indigo-400/30",
+        },
+        {
+          to: "/anthem",
+          label: "YouTube & Playlist Studio",
+          icon: Music,
+          badge: "Media Studio",
+          badgeColor: "bg-purple-400/20 text-purple-300 border-purple-400/30",
+        },
+        ...publicNavItems,
+        {
+          to: "/leaderboard",
+          label: "Honours & Golden Boot",
+          icon: Award,
+          badge: "Records",
+          badgeColor: "bg-yellow-400/20 text-yellow-300 border-yellow-400/30",
+        },
+      ];
+    }
+
+    // Public Spectator role
+    return publicNavItems;
+  }, [activeRbacRole]);
 
   return (
     <div className="min-h-screen bg-[#070512] text-white flex flex-col">
@@ -335,39 +403,78 @@ export function PermanentSidebarLayout({ children }: PermanentSidebarLayoutProps
           </div>
         </div>
 
-        {/* Sidebar Footer with Login & Logout */}
+        {/* Sidebar Footer with RBAC Active Identity & Login/Logout */}
         <div className="pt-4 border-t border-[#261f4d] space-y-2">
-          {!isLoggedIn ? (
+          {!isLoggedIn && !rbacUser ? (
             <button
               type="button"
               onClick={() => setShowAccessModal(true)}
               className="w-full bg-[#141029] hover:bg-[#1f1744] border border-amber-400/30 text-amber-300 hover:text-white py-2.5 rounded-2xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow"
             >
               <KeyRound className="w-3.5 h-3.5 text-amber-400" />
-              <span>Council & Admin Login</span>
+              <span>Council & Academy Login</span>
             </button>
           ) : (
-            <>
-              <Link
-                to="/workspaces"
-                className="w-full bg-[#141029] hover:bg-[#1f1744] border border-amber-400/30 text-amber-300 hover:text-white py-2 rounded-2xl text-xs font-bold transition flex items-center justify-center gap-2"
-              >
-                {isSuperAdmin ? (
-                  <Crown className="w-3.5 h-3.5 text-amber-400" />
-                ) : (
-                  <Briefcase className="w-3.5 h-3.5 text-blue-400" />
+            <div className="space-y-2">
+              {/* Active RBAC User Pill */}
+              <div className="p-2.5 rounded-2xl bg-[#141029] border border-[#2e2554] space-y-1">
+                <div className="flex items-center justify-between">
+                  <span
+                    className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border ${
+                      activeRbacRole === "admin"
+                        ? "bg-amber-400/20 text-amber-300 border-amber-400/30"
+                        : activeRbacRole === "board"
+                          ? "bg-indigo-400/20 text-indigo-300 border-indigo-400/30"
+                          : "bg-emerald-400/20 text-emerald-300 border-emerald-400/30"
+                    }`}
+                  >
+                    {activeRbacRole === "admin"
+                      ? "👑 Super Admin"
+                      : activeRbacRole === "board"
+                        ? "👔 Council Member"
+                        : "🎓 Verified Student"}
+                  </span>
+                  <span className="text-[10px] text-gray-500 font-mono">RBAC</span>
+                </div>
+                <div className="text-xs font-bold text-white truncate">
+                  {rbacUser?.displayName ||
+                    (isSuperAdmin ? "Master Administrator" : "League Official")}
+                </div>
+                {rbacUser?.email && (
+                  <div className="text-[10px] text-gray-400 font-mono truncate">
+                    {rbacUser.email}
+                  </div>
                 )}
-                <span>{isSuperAdmin ? "Master Command" : "Council Workspace"}</span>
-              </Link>
+              </div>
+
+              {/* Workspace Link for Admin & Board */}
+              {activeRbacRole !== "public" && (
+                <Link
+                  to="/workspaces"
+                  className="w-full bg-[#141029] hover:bg-[#1f1744] border border-amber-400/30 text-amber-300 hover:text-white py-2 rounded-2xl text-xs font-bold transition flex items-center justify-center gap-2"
+                >
+                  {activeRbacRole === "admin" ? (
+                    <Crown className="w-3.5 h-3.5 text-amber-400" />
+                  ) : (
+                    <Briefcase className="w-3.5 h-3.5 text-blue-400" />
+                  )}
+                  <span>{activeRbacRole === "admin" ? "Master Command" : "Council Workspace"}</span>
+                </Link>
+              )}
+
+              {/* Logout Button */}
               <button
                 type="button"
-                onClick={() => switchRole("GUEST")}
+                onClick={() => {
+                  logoutRbacUser();
+                  switchRole("GUEST");
+                }}
                 className="w-full bg-rose-500/15 hover:bg-rose-500/30 text-rose-300 py-2 rounded-2xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer"
               >
                 <LogOut className="w-3.5 h-3.5" />
-                <span>Exit to Public Viewer</span>
+                <span>Log Out ({activeRbacRole})</span>
               </button>
-            </>
+            </div>
           )}
         </div>
       </aside>

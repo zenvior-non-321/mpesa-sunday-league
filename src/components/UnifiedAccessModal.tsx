@@ -1,17 +1,27 @@
 import React, { useState } from "react";
-import { KeyRound, Shield, AlertCircle, Eye, EyeOff, X, ArrowRight, Lock } from "lucide-react";
+import {
+  KeyRound,
+  Shield,
+  AlertCircle,
+  Eye,
+  EyeOff,
+  X,
+  ArrowRight,
+  Lock,
+  Mail,
+} from "lucide-react";
 import { useRoleAccess, type LeagueRole } from "../hooks/useRoleAccess";
-import { authenticateBoardMember } from "../lib/boardMembersRegistry";
+import { authenticateWithRbac } from "../lib/rbacSystem";
 
 interface UnifiedAccessModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess?: (role: LeagueRole, mode: "admin" | "board", memberName?: string) => void;
+  onSuccess?: (role: LeagueRole, mode: "admin" | "board" | "viewer", memberName?: string) => void;
 }
 
 export function UnifiedAccessModal({ isOpen, onClose, onSuccess }: UnifiedAccessModalProps) {
   const { switchRole } = useRoleAccess();
-  const [accessCode, setAccessCode] = useState("");
+  const [accessCredential, setAccessCredential] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -21,44 +31,40 @@ export function UnifiedAccessModal({ isOpen, onClose, onSuccess }: UnifiedAccess
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    const cleaned = accessCode.trim();
+    const cleaned = accessCredential.trim();
 
     if (!cleaned) {
-      setError("Please enter your access code.");
+      setError("Please enter your academy email or authorized access code.");
       return;
     }
 
     setIsSubmitting(true);
 
-    // 1. Check Super Admin Master Passcode (msl-27, case-insensitive)
-    if (cleaned.toLowerCase() === "msl-27") {
-      switchRole("SUPER_ADMIN");
+    // Authenticate via RBAC System (checks whitelist for admin, board, or public roles)
+    const result = authenticateWithRbac(cleaned);
+
+    if (result.success && result.user) {
+      const user = result.user;
+      switchRole(user.leagueRole);
+
       if (onSuccess) {
-        onSuccess("SUPER_ADMIN", "admin");
+        onSuccess(
+          user.leagueRole,
+          user.role === "admin" ? "admin" : user.role === "board" ? "board" : "viewer",
+          user.displayName,
+        );
       }
-      setAccessCode("");
+
+      setAccessCredential("");
       setIsSubmitting(false);
       onClose();
       return;
     }
 
-    // 2. Check Dynamic Registered Board Members
-    const member = authenticateBoardMember(cleaned);
-    if (member) {
-      switchRole(member.role);
-      if (onSuccess) {
-        onSuccess(member.role, "board", member.name);
-      }
-      setAccessCode("");
-      setIsSubmitting(false);
-      onClose();
-      return;
-    }
-
-    // 3. Invalid credential - generic message without code leakage
     setIsSubmitting(false);
     setError(
-      "Invalid access code. Please verify your assigned credential or contact the administrator.",
+      result.error ||
+        "Invalid credentials. Please verify your academy email or confidential access code.",
     );
   };
 
@@ -80,41 +86,43 @@ export function UnifiedAccessModal({ isOpen, onClose, onSuccess }: UnifiedAccess
           <div>
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30">
-                Official Access Portal
+                Official Access Portal • RBAC
               </span>
             </div>
             <h3 className="font-header text-xl font-black text-white uppercase tracking-wide mt-0.5">
-              League Official Login
+              Portal Access Gateway
             </h3>
           </div>
         </div>
 
         <p className="text-xs text-gray-300 leading-relaxed">
-          Enter your authorized access code. Your entered code automatically determines your
-          destination — unlocking either the Super Admin Command Console or your assigned Executive
-          Department Workspace.
+          Sign in with your verified M-Pesa Foundation Academy email from the 344-member roster or
+          your confidential Council access code. The RBAC system automatically unlocks your assigned
+          role:
+          <strong> Super Admin</strong>, <strong>Council Board Member</strong>, or{" "}
+          <strong>Verified Public Spectator</strong>.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-gray-400 font-bold uppercase text-[10px] mb-1.5 flex items-center justify-between">
-              <span>Access / Passcode</span>
+              <span>Academy Email or Access Code</span>
               <span className="text-[10px] text-gray-400 font-mono flex items-center gap-1">
                 <Lock className="w-3 h-3 text-emerald-400" />
-                Encrypted Verification
+                Encrypted RBAC Check
               </span>
             </label>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
                 autoFocus
-                value={accessCode}
+                value={accessCredential}
                 onChange={(e) => {
-                  setAccessCode(e.target.value);
+                  setAccessCredential(e.target.value);
                   if (error) setError(null);
                 }}
-                placeholder="Enter your assigned access code"
-                className="w-full bg-[#161033] border border-[#3b2d6e] focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 rounded-2xl px-4 py-3 text-sm font-mono text-white tracking-widest outline-none pr-12 transition"
+                placeholder="name@mpesafoundationacademy.ac.ke or Access Code"
+                className="w-full bg-[#161033] border border-[#3b2d6e] focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 rounded-2xl px-4 py-3 text-sm font-mono text-white outline-none pr-12 transition"
               />
               <button
                 type="button"

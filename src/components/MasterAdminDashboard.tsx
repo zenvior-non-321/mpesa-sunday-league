@@ -48,6 +48,7 @@ import {
 import { BoardMemberManager } from "./BoardMemberManager";
 import { AnthemStudioAndPlaylist } from "./AnthemStudioAndPlaylist";
 import { FanCommunityComments } from "./FanCommunityComments";
+import { AdminVotingVoterAudit } from "./AdminVotingVoterAudit";
 import { DEFAULT_TEAMS, DEFAULT_FIXTURES, isTeamDeleted } from "../lib/fixturesData";
 import { DEFAULT_STANDINGS, type TeamStanding } from "./LeagueStandings";
 import { useRoleAccess } from "../hooks/useRoleAccess";
@@ -2150,6 +2151,37 @@ export function MasterAdminDashboard({ onExitToViewer }: { onExitToViewer?: () =
                       </div>
 
                       <div className="flex items-center gap-2 self-start md:self-auto shrink-0">
+                        {fix.status !== "COMPLETED" && fix.status !== "FINISHED" ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updated = fixtures.map((f) =>
+                                f.id === fix.id
+                                  ? {
+                                      ...f,
+                                      status: "COMPLETED",
+                                      homeScore: f.homeScore ?? 0,
+                                      awayScore: f.awayScore ?? 0,
+                                    }
+                                  : f,
+                              );
+                              saveFixtures(updated);
+                              showToast(
+                                `✓ Matchweek ${fix.matchweek}: Match closed & official score certified!`,
+                              );
+                            }}
+                            className="px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500 text-emerald-300 hover:text-black font-extrabold text-xs transition flex items-center gap-1 border border-emerald-500/30 cursor-pointer"
+                            title="Conclude and close this match immediately"
+                          >
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <span>Close Match</span>
+                          </button>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded-lg bg-emerald-500/15 text-emerald-400 text-[10px] font-bold border border-emerald-500/30 flex items-center gap-1">
+                            <CheckCircle2 className="w-2.5 h-2.5" />
+                            <span>Closed</span>
+                          </span>
+                        )}
                         <button
                           type="button"
                           onClick={() => {
@@ -2676,6 +2708,46 @@ export function MasterAdminDashboard({ onExitToViewer }: { onExitToViewer?: () =
                     </button>
                   </div>
                 </div>
+
+                {/* Embedded Secure Voter Audit & Log Reset Interface */}
+                {(() => {
+                  const matchObj = fixtures.find((f) => f.id === votingMatchId) || fixtures[0];
+                  const homeTeamObj = teams.find((t) => t.id === matchObj?.homeId);
+                  const awayTeamObj = teams.find((t) => t.id === matchObj?.awayId);
+                  const storedPolls = JSON.parse(
+                    typeof window !== "undefined"
+                      ? localStorage.getItem("mpesa_pes_mvp_votes_v1") || "{}"
+                      : "{}",
+                  );
+                  const currentPoll = storedPolls[votingMatchId] || {
+                    matchId: votingMatchId,
+                    isOpen: true,
+                    votes: {},
+                    voterEmails: [],
+                  };
+
+                  return (
+                    <div className="pt-2">
+                      <AdminVotingVoterAudit
+                        matchId={votingMatchId}
+                        matchweek={matchObj?.matchweek || 1}
+                        matchTitle={`${homeTeamObj?.name || "Home"} vs ${awayTeamObj?.name || "Away"}`}
+                        matchDate={matchObj?.date || "Oct 25, 2026"}
+                        currentPoll={currentPoll}
+                        onUpdatePoll={(updated) => {
+                          storedPolls[votingMatchId] = updated;
+                          localStorage.setItem(
+                            "mpesa_pes_mvp_votes_v1",
+                            JSON.stringify(storedPolls),
+                          );
+                          window.dispatchEvent(new Event("storage"));
+                          setVotedEmailsCount(updated.voterEmails?.length || 0);
+                        }}
+                        onShowToast={showToast}
+                      />
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           )}
