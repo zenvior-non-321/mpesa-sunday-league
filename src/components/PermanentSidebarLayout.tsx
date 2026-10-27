@@ -22,6 +22,14 @@ import {
   FileCheck2,
   MessageSquare,
   CheckCircle2,
+  BookOpen,
+  DollarSign,
+  Send,
+  Camera,
+  FileText,
+  Database,
+  Flag,
+  Layers,
 } from "lucide-react";
 import { useRoleAccess } from "../hooks/useRoleAccess";
 import { AnthemPlayerWidget } from "./AnthemPlayerWidget";
@@ -68,17 +76,17 @@ export function PermanentSidebarLayout({ children }: PermanentSidebarLayoutProps
         // Fallback public list from directory
         setOfficialsList([
           {
-            name: "Bramuel Amirah",
-            role: "President",
+            name: "Alex Haro",
+            role: "1. President",
             responsibilities: [
-              "Provides overall leadership and direction for the league.",
+              "Provides overall leadership and executive direction for the league.",
               "Oversees the work of the administrative crew and ensures rules are followed.",
               "Leads meetings and helps resolve major disputes.",
             ],
           },
           {
-            name: "Joseph Kamande",
-            role: "Deputy President",
+            name: "Babra Nandako",
+            role: "2. Deputy President",
             responsibilities: [
               "Assists the President in managing league activities.",
               "Acts on behalf of the President when necessary.",
@@ -86,8 +94,8 @@ export function PermanentSidebarLayout({ children }: PermanentSidebarLayoutProps
             ],
           },
           {
-            name: "Cheryl Cosmas",
-            role: "Register and Regulations Manager",
+            name: "Whitney Juma",
+            role: "3. Register and Regulations Manager",
             responsibilities: [
               "Maintains accurate records of registered clubs, players, coaches, and managers.",
               "Ensures that registration requirements and league regulations are followed.",
@@ -95,8 +103,8 @@ export function PermanentSidebarLayout({ children }: PermanentSidebarLayoutProps
             ],
           },
           {
-            name: "Mitchelle Muthoni",
-            role: "Match Officiating Programmes Manager",
+            name: "Idi Sebantu",
+            role: "4. Match Officiating Programmes Manager",
             responsibilities: [
               "Organises match officiating schedules and assigns referees to fixtures.",
               "Ensures matches are officiated fairly and impartially.",
@@ -105,7 +113,7 @@ export function PermanentSidebarLayout({ children }: PermanentSidebarLayoutProps
           },
           {
             name: "Tonnie Mark Odundo",
-            role: "Records and File Manager",
+            role: "5. Records and File Manager",
             responsibilities: [
               "Maintains official league documents, reports, fixtures, results, standings, and disciplinary records.",
               "Ensures important league information is properly organised and accessible.",
@@ -113,8 +121,8 @@ export function PermanentSidebarLayout({ children }: PermanentSidebarLayoutProps
             ],
           },
           {
-            name: "Trady Lewis",
-            role: "Technological Manager",
+            name: "Victor Kiplagat",
+            role: "6. Technological Manager",
             responsibilities: [
               "Oversees the league’s digital platforms, website, and online updates.",
               "Publishes fixtures, results, standings, announcements, and match reports.",
@@ -122,12 +130,21 @@ export function PermanentSidebarLayout({ children }: PermanentSidebarLayoutProps
             ],
           },
           {
-            name: "Ahmed Kusow",
-            role: "Assistant Technological Manager",
+            name: "Sturridge Ochongoi",
+            role: "7. Assistant Technological Manager",
             responsibilities: [
               "Supports the Technological Manager in updating and maintaining digital platforms.",
               "Assists in publishing match reports, results, and announcements.",
               "Helps ensure continuity of digital operations.",
+            ],
+          },
+          {
+            name: "Bidan Mwaura",
+            role: "Official Match Referee",
+            responsibilities: [
+              "Presides over official league fixtures and ensures fair play.",
+              "Files post-match referee match reports and card sanctions.",
+              "Enforces constitutional on-pitch rules and regulations.",
             ],
           },
         ]);
@@ -136,57 +153,60 @@ export function PermanentSidebarLayout({ children }: PermanentSidebarLayoutProps
   }, []);
 
   // Public viewer features: strictly limited to League Table, Teams, Fixtures, Radar, Calendar, Voting, and Comments
-  const publicNavItems = [
-    {
-      to: "/standings",
-      label: "League Table",
-      icon: Trophy,
-      badge: "Standings",
-      badgeColor: "bg-cyan-400/20 text-[#00f0ff] border-cyan-400/30",
-    },
-    {
-      to: "/clubs",
-      label: "Teams & Squads",
-      icon: Shield,
-      badge: "Rosters",
-      badgeColor: "bg-blue-400/20 text-blue-300 border-blue-400/30",
-    },
-    {
-      to: "/fixtures",
-      label: "Fixtures & Scores",
-      icon: Calendar,
-      badge: "Schedule",
-      badgeColor: "bg-emerald-400/20 text-emerald-300 border-emerald-400/30",
-    },
-    {
-      to: "/performance",
-      label: "Radar Analytics",
-      icon: Activity,
-      badge: "Tactics",
-      badgeColor: "bg-pink-400/20 text-pink-300 border-pink-400/30",
-    },
-    {
-      to: "/calendar",
-      label: "Season Calendar",
-      icon: CalendarDays,
-      badge: "Events",
-      badgeColor: "bg-blue-400/20 text-blue-300 border-blue-400/30",
-    },
-    {
-      to: "/mvp-voting",
-      label: "MVP Balloting",
-      icon: Vote,
-      badge: "Voting",
-      badgeColor: "bg-amber-400/20 text-amber-300 border-amber-400/30",
-    },
-    {
-      to: "/community",
-      label: "Fan Cheers & Comments",
-      icon: MessageSquare,
-      badge: "Community",
-      badgeColor: "bg-purple-400/20 text-purple-300 border-purple-400/30",
-    },
-  ];
+  const publicNavItems = useMemo(
+    () => [
+      {
+        to: "/standings",
+        label: "League Table",
+        icon: Trophy,
+        badge: "Standings",
+        badgeColor: "bg-cyan-400/20 text-[#00f0ff] border-cyan-400/30",
+      },
+      {
+        to: "/clubs",
+        label: "Teams & Squads",
+        icon: Shield,
+        badge: "Rosters",
+        badgeColor: "bg-blue-400/20 text-blue-300 border-blue-400/30",
+      },
+      {
+        to: "/fixtures",
+        label: "Fixtures & Scores",
+        icon: Calendar,
+        badge: "Schedule",
+        badgeColor: "bg-emerald-400/20 text-emerald-300 border-emerald-400/30",
+      },
+      {
+        to: "/performance",
+        label: "Radar Analytics",
+        icon: Activity,
+        badge: "Tactics",
+        badgeColor: "bg-pink-400/20 text-pink-300 border-pink-400/30",
+      },
+      {
+        to: "/calendar",
+        label: "Season Calendar",
+        icon: CalendarDays,
+        badge: "Events",
+        badgeColor: "bg-blue-400/20 text-blue-300 border-blue-400/30",
+      },
+      {
+        to: "/mvp-voting",
+        label: "MVP Balloting",
+        icon: Vote,
+        badge: "Voting",
+        badgeColor: "bg-amber-400/20 text-amber-300 border-amber-400/30",
+      },
+      {
+        to: "/community",
+        label: "Fan Cheers & Comments",
+        icon: MessageSquare,
+        badge: "Community",
+        badgeColor: "bg-purple-400/20 text-purple-300 border-purple-400/30",
+      },
+    ],
+    [],
+  );
 
   const [isMounted, setIsMounted] = useState<boolean>(false);
   const [rbacUser, setRbacUser] = useState<RbacUser | null>(null);
@@ -208,6 +228,26 @@ export function PermanentSidebarLayout({ children }: PermanentSidebarLayoutProps
   }, []);
 
   // Determine active RBAC role from state & whitelist
+  // Active section state for MasterAdminDashboard synchronization
+  const [activeAdminSection, setActiveAdminSection] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("mpesa_admin_active_section") || "board_members";
+    }
+    return "board_members";
+  });
+
+  useEffect(() => {
+    const handleSection = (e: Event) => {
+      const custom = e as CustomEvent<string>;
+      if (custom.detail) setActiveAdminSection(custom.detail);
+    };
+    window.addEventListener("mpesa_select_admin_section", handleSection);
+    return () => {
+      window.removeEventListener("mpesa_select_admin_section", handleSection);
+    };
+  }, []);
+
+  // Determine active RBAC role from state & whitelist
   // Default to 'public' during SSR and initial hydration to prevent server/client HTML divergence
   const activeRbacRole: RbacRole = useMemo(() => {
     if (!isMounted) return "public";
@@ -216,75 +256,576 @@ export function PermanentSidebarLayout({ children }: PermanentSidebarLayoutProps
     return "public";
   }, [isMounted, isSuperAdmin, currentRole, rbacUser]);
 
-  // Dynamically render sidebar menu items strictly based on role:
-  // - Admin: Master Command, YouTube Studio, Public Suite, Honours, Registration Desk
-  // - Board: Council Workspace, YouTube Studio, Public Suite, Honours
-  // - Public: Strictly League Table, Teams, Fixtures, Radar, Calendar, Voting, and Comments
-  const allNavItems = useMemo(() => {
-    if (activeRbacRole === "admin") {
+  // Handle sidebar navigation clicks with section/tab dispatch
+  const handleNavClick = (item: {
+    to: string;
+    adminSection?: string;
+    boardRole?: LeagueRole;
+    boardSubTab?: string;
+  }) => {
+    if (item.adminSection && typeof window !== "undefined") {
+      localStorage.setItem("mpesa_admin_active_section", item.adminSection);
+      setActiveAdminSection(item.adminSection);
+      window.dispatchEvent(
+        new CustomEvent("mpesa_select_admin_section", { detail: item.adminSection }),
+      );
+    }
+    if (item.boardSubTab && typeof window !== "undefined") {
+      localStorage.setItem("mpesa_board_sub_tab", item.boardSubTab);
+      window.dispatchEvent(
+        new CustomEvent("mpesa_select_board_sub_tab", {
+          detail: { role: item.boardRole || currentRole, tab: item.boardSubTab },
+        }),
+      );
+    }
+    if (typeof window !== "undefined" && window.innerWidth < 1024) {
+      setIsSidebarOpen(false);
+    }
+  };
+
+  // 1. SUPREME ADMIN HUB: Exact 14-item navigation menu requested by Super Admin
+  const supremeAdminNavItems = useMemo(
+    () => [
+      {
+        to: "/workspaces",
+        adminSection: "board_members",
+        label: "Council Board Members",
+        subLabel: "Add, Edit, Suspend & RBAC",
+        icon: Crown,
+        badge: "Officials",
+        badgeColor: "bg-amber-400/20 text-amber-300 border-amber-400/30",
+      },
+      {
+        to: "/workspaces",
+        adminSection: "seasons_leagues",
+        label: "Seasons & Curriculum",
+        subLabel: "Divisions & Bible Verses",
+        icon: BookOpen,
+        badge: "Curriculum",
+        badgeColor: "bg-cyan-400/20 text-cyan-300 border-cyan-400/30",
+      },
+      {
+        to: "/workspaces",
+        adminSection: "teams_clubs",
+        label: "Clubs & Squad Rosters",
+        subLabel: "15-Player Cap & Transfers",
+        icon: Shield,
+        badge: "15-Cap",
+        badgeColor: "bg-emerald-400/20 text-emerald-300 border-emerald-400/30",
+      },
+      {
+        to: "/workspaces",
+        adminSection: "fixtures_scores",
+        label: "Fixtures & Live Scoring",
+        subLabel: "Referees & Conduct Points",
+        icon: Calendar,
+        badge: "Scores",
+        badgeColor: "bg-blue-400/20 text-blue-300 border-blue-400/30",
+      },
+      {
+        to: "/workspaces",
+        adminSection: "standings_ledger",
+        label: "Standings & Points Ledger",
+        subLabel: "Tiebreakers & Overrides",
+        icon: Trophy,
+        badge: "Ledger",
+        badgeColor: "bg-yellow-400/20 text-yellow-300 border-yellow-400/30",
+      },
+      {
+        to: "/workspaces",
+        adminSection: "player_stats",
+        label: "Golden Boot & Player Stats",
+        subLabel: "Goals, Assists & MVP Count",
+        icon: Award,
+        badge: "Stats",
+        badgeColor: "bg-purple-400/20 text-purple-300 border-purple-400/30",
+      },
+      {
+        to: "/workspaces",
+        adminSection: "finances_fees",
+        label: "Finances & Fee Tracking",
+        subLabel: "MPESA Invoices & Expenses",
+        icon: DollarSign,
+        badge: "M-PESA",
+        badgeColor: "bg-emerald-400/20 text-emerald-300 border-emerald-400/30",
+      },
+      {
+        to: "/workspaces",
+        adminSection: "broadcasts_alerts",
+        label: "Mass Alerts & Broadcasts",
+        subLabel: "Instant SMS & Email Blasts",
+        icon: Send,
+        badge: "SMS/Email",
+        badgeColor: "bg-pink-400/20 text-pink-300 border-pink-400/30",
+      },
+      {
+        to: "/workspaces",
+        adminSection: "anthem_studio",
+        label: "Stadium Soundtrack Studio",
+        subLabel: "YouTube Songs & Auto-Play",
+        icon: Music,
+        badge: "YouTube",
+        badgeColor: "bg-red-400/20 text-red-300 border-red-400/30",
+      },
+      {
+        to: "/workspaces",
+        adminSection: "fan_comments",
+        label: "Fan Cheers & Community",
+        subLabel: "Moderation, Pinning & Prayers",
+        icon: MessageSquare,
+        badge: "Admin Only",
+        badgeColor: "bg-teal-400/20 text-teal-300 border-teal-400/30",
+      },
+      {
+        to: "/workspaces",
+        adminSection: "voting_center",
+        label: "MVP Balloting Dispatcher",
+        subLabel: "Voting Links & Ballot Tallies",
+        icon: Vote,
+        badge: "Audits",
+        badgeColor: "bg-amber-400/20 text-amber-300 border-amber-400/30",
+      },
+      {
+        to: "/workspaces",
+        adminSection: "media_photos",
+        label: "Athlete Photos & Media",
+        subLabel: "Direct Upload & Share Links",
+        icon: Camera,
+        badge: "Uploads",
+        badgeColor: "bg-indigo-400/20 text-indigo-300 border-indigo-400/30",
+      },
+      {
+        to: "/workspaces",
+        adminSection: "decrees_minutes",
+        label: "Decrees & Council Minutes",
+        subLabel: "Directives & Formal Minutes",
+        icon: FileText,
+        badge: "Decrees",
+        badgeColor: "bg-cyan-400/20 text-cyan-300 border-cyan-400/30",
+      },
+      {
+        to: "/workspaces",
+        adminSection: "system_backup",
+        label: "Database Backup & Audit",
+        subLabel: "JSON/CSV Export & Disaster Recovery",
+        icon: Database,
+        badge: "Backup",
+        badgeColor: "bg-violet-400/20 text-violet-300 border-violet-400/30",
+      },
+    ],
+    [],
+  );
+
+  // 2. COUNCIL BOARD WORKSPACES: Tailored unique dashboard functions per role
+  const boardRoleNavItems = useMemo(() => {
+    const roleKey = rbacUser?.leagueRole || currentRole || "PRESIDENT";
+
+    if (roleKey === "PRESIDENT") {
       return [
         {
           to: "/workspaces",
-          label: "👑 Master Command",
+          boardRole: "PRESIDENT" as LeagueRole,
+          boardSubTab: "overview",
+          label: "Executive Overview",
+          subLabel: "Leadership Decrees & Status",
           icon: Crown,
-          badge: "Super Admin",
+          badge: "President",
           badgeColor: "bg-amber-400/20 text-amber-300 border-amber-400/30",
         },
         {
-          to: "/anthem",
-          label: "YouTube & Playlist Studio",
-          icon: Music,
-          badge: "Media Studio",
-          badgeColor: "bg-purple-400/20 text-purple-300 border-purple-400/30",
-        },
-        ...publicNavItems,
-        {
-          to: "/leaderboard",
-          label: "Honours & Golden Boot",
+          to: "/workspaces",
+          boardRole: "PRESIDENT" as LeagueRole,
+          boardSubTab: "hearings",
+          label: "Dispute & Hearing Center",
+          subLabel: "Protests, Appeals & Formal Rulings",
           icon: Award,
-          badge: "Records",
+          badge: "Hearings",
           badgeColor: "bg-yellow-400/20 text-yellow-300 border-yellow-400/30",
         },
         {
-          to: "/desk",
-          label: "Registration Desk",
+          to: "/workspaces",
+          boardRole: "PRESIDENT" as LeagueRole,
+          boardSubTab: "policy",
+          label: "Policy & Constitution",
+          subLabel: "Rulebook Amendments & Conduct",
+          icon: BookOpen,
+          badge: "By-Laws",
+          badgeColor: "bg-cyan-400/20 text-cyan-300 border-cyan-400/30",
+        },
+        {
+          to: "/workspaces",
+          boardRole: "PRESIDENT" as LeagueRole,
+          boardSubTab: "voting",
+          label: "Board Voting & Motions",
+          subLabel: "Table Motions, Tallies & Resolutions",
+          icon: Vote,
+          badge: "Motions",
+          badgeColor: "bg-purple-400/20 text-purple-300 border-purple-400/30",
+        },
+        {
+          to: "/workspaces",
+          boardRole: "PRESIDENT" as LeagueRole,
+          boardSubTab: "approvals",
+          label: "Executive Approvals",
+          subLabel: "New Club Affiliations & Budgets",
+          icon: CheckCircle2,
+          badge: "Sign-offs",
+          badgeColor: "bg-emerald-400/20 text-emerald-300 border-emerald-400/30",
+        },
+        {
+          to: "/workspaces",
+          boardRole: "PRESIDENT" as LeagueRole,
+          boardSubTab: "meeting",
+          label: "Board Meeting Planner",
+          subLabel: "Council Agendas & Meeting Schedule",
+          icon: CalendarDays,
+          badge: "Planner",
+          badgeColor: "bg-blue-400/20 text-blue-300 border-blue-400/30",
+        },
+      ];
+    }
+
+    if (roleKey === "DEPUTY_PRESIDENT") {
+      return [
+        {
+          to: "/workspaces",
+          boardRole: "DEPUTY_PRESIDENT" as LeagueRole,
+          boardSubTab: "overview",
+          label: "Executive Operations Hub",
+          subLabel: "Supervision & Stand-in Powers",
+          icon: Shield,
+          badge: "Operations",
+          badgeColor: "bg-cyan-400/20 text-cyan-300 border-cyan-400/30",
+        },
+        {
+          to: "/workspaces",
+          boardRole: "DEPUTY_PRESIDENT" as LeagueRole,
+          boardSubTab: "monitoring",
+          label: "Department Progress Monitor",
+          subLabel: "4 Core Departments Tracking",
+          icon: Activity,
+          badge: "Progress",
+          badgeColor: "bg-blue-400/20 text-blue-300 border-blue-400/30",
+        },
+        {
+          to: "/workspaces",
+          boardRole: "DEPUTY_PRESIDENT" as LeagueRole,
+          boardSubTab: "acting_override",
+          label: "Acting Presidential Override",
+          subLabel: "Emergency Stand-in Hearing Desk",
+          icon: Crown,
+          badge: "Override",
+          badgeColor: "bg-amber-400/20 text-amber-300 border-amber-400/30",
+        },
+        {
+          to: "/workspaces",
+          boardRole: "DEPUTY_PRESIDENT" as LeagueRole,
+          boardSubTab: "task_force",
+          label: "Special Task Force Manager",
+          subLabel: "Active Inspections & Projects",
+          icon: Briefcase,
+          badge: "Task Force",
+          badgeColor: "bg-purple-400/20 text-purple-300 border-purple-400/30",
+        },
+        {
+          to: "/workspaces",
+          boardRole: "DEPUTY_PRESIDENT" as LeagueRole,
+          boardSubTab: "escalations",
+          label: "Inter-Department Escalations",
+          subLabel: "Fast-Track Council Resolutions",
+          icon: FileText,
+          badge: "Escalate",
+          badgeColor: "bg-rose-400/20 text-rose-300 border-rose-400/30",
+        },
+      ];
+    }
+
+    if (roleKey === "REGULATIONS_MANAGER") {
+      return [
+        {
+          to: "/workspaces",
+          boardRole: "REGULATIONS_MANAGER" as LeagueRole,
+          boardSubTab: "dashboard",
+          label: "Registration Dashboard",
+          subLabel: "Compliance & Squad Cap Monitor",
+          icon: FileText,
+          badge: "Registrar",
+          badgeColor: "bg-emerald-400/20 text-emerald-300 border-emerald-400/30",
+        },
+        {
+          to: "/workspaces",
+          boardRole: "REGULATIONS_MANAGER" as LeagueRole,
+          boardSubTab: "licensing",
+          label: "Club & Staff Licensing",
+          subLabel: "Affiliations & Manager Approvals",
+          icon: Shield,
+          badge: "Licensing",
+          badgeColor: "bg-teal-400/20 text-teal-300 border-teal-400/30",
+        },
+        {
+          to: "/workspaces",
+          boardRole: "REGULATIONS_MANAGER" as LeagueRole,
+          boardSubTab: "player_verification",
+          label: "Player Verification Desk",
+          subLabel: "Digital Passes & School ID Audits",
+          icon: Users,
+          badge: "Passes",
+          badgeColor: "bg-cyan-400/20 text-cyan-300 border-cyan-400/30",
+        },
+        {
+          to: "/workspaces",
+          boardRole: "REGULATIONS_MANAGER" as LeagueRole,
+          boardSubTab: "eligibility_violations",
+          label: "Eligibility & Violations",
+          subLabel: "15-Player Cap & Suspensions",
+          icon: Award,
+          badge: "Audits",
+          badgeColor: "bg-amber-400/20 text-amber-300 border-amber-400/30",
+        },
+        {
+          to: "/workspaces",
+          boardRole: "REGULATIONS_MANAGER" as LeagueRole,
+          boardSubTab: "compliance_waivers",
+          label: "Compliance & Waivers",
+          subLabel: "Parental Consent & Medical Records",
           icon: FileCheck2,
-          badge: "Forms",
+          badge: "Waivers",
+          badgeColor: "bg-purple-400/20 text-purple-300 border-purple-400/30",
+        },
+      ];
+    }
+
+    if (roleKey === "MATCH_OFFICIATING_MANAGER") {
+      return [
+        {
+          to: "/workspaces",
+          boardRole: "MATCH_OFFICIATING_MANAGER" as LeagueRole,
+          boardSubTab: "overview",
+          label: "Officiating Center Overview",
+          subLabel: "Matchday Referee Readiness",
+          icon: Flag,
+          badge: "Officiating",
+          badgeColor: "bg-purple-400/20 text-purple-300 border-purple-400/30",
+        },
+        {
+          to: "/workspaces",
+          boardRole: "MATCH_OFFICIATING_MANAGER" as LeagueRole,
+          boardSubTab: "scheduler",
+          label: "Referee Match Scheduler",
+          subLabel: "Ref Bidan Mwaura & Pitch Chaplains",
+          icon: Calendar,
+          badge: "Appointments",
+          badgeColor: "bg-blue-400/20 text-blue-300 border-blue-400/30",
+        },
+        {
+          to: "/workspaces",
+          boardRole: "MATCH_OFFICIATING_MANAGER" as LeagueRole,
+          boardSubTab: "ref_reports",
+          label: "Post-Match Referee Reports",
+          subLabel: "Scorecard Ratings & Evaluations",
+          icon: FileText,
+          badge: "Scorecards",
+          badgeColor: "bg-cyan-400/20 text-cyan-300 border-cyan-400/30",
+        },
+        {
+          to: "/workspaces",
+          boardRole: "MATCH_OFFICIATING_MANAGER" as LeagueRole,
+          boardSubTab: "performance",
+          label: "Disciplinary Card Hearings",
+          subLabel: "Yellow/Red Sanction Reviews",
+          icon: Award,
+          badge: "Hearings",
+          badgeColor: "bg-amber-400/20 text-amber-300 border-amber-400/30",
+        },
+        {
+          to: "/workspaces",
+          boardRole: "MATCH_OFFICIATING_MANAGER" as LeagueRole,
+          boardSubTab: "disputes",
+          label: "Officiating Disputes Desk",
+          subLabel: "Club Protests & Fair-Play Arbitrations",
+          icon: Shield,
+          badge: "Disputes",
+          badgeColor: "bg-rose-400/20 text-rose-300 border-rose-400/30",
+        },
+      ];
+    }
+
+    if (roleKey === "RECORDS_MANAGER") {
+      return [
+        {
+          to: "/workspaces",
+          boardRole: "RECORDS_MANAGER" as LeagueRole,
+          boardSubTab: "vault_home",
+          label: "Records & Archives Overview",
+          subLabel: "Historical Files & Registry Vault",
+          icon: BookOpen,
+          badge: "Vault",
+          badgeColor: "bg-cyan-400/20 text-cyan-300 border-cyan-400/30",
+        },
+        {
+          to: "/workspaces",
+          boardRole: "RECORDS_MANAGER" as LeagueRole,
+          boardSubTab: "doc_vault",
+          label: "Official Document Vault",
+          subLabel: "Constitution, By-Laws & PDF Archive",
+          icon: FileText,
+          badge: "Documents",
+          badgeColor: "bg-blue-400/20 text-blue-300 border-blue-400/30",
+        },
+        {
+          to: "/workspaces",
+          boardRole: "RECORDS_MANAGER" as LeagueRole,
+          boardSubTab: "results_archive",
+          label: "Results & Standings Archive",
+          subLabel: "Certify Fixture Scorecards & Points",
+          icon: Trophy,
+          badge: "Standings",
+          badgeColor: "bg-yellow-400/20 text-yellow-300 border-yellow-400/30",
+        },
+        {
+          to: "/workspaces",
+          boardRole: "RECORDS_MANAGER" as LeagueRole,
+          boardSubTab: "disciplinary_ledger",
+          label: "Disciplinary Ledger",
+          subLabel: "Historical Card & Incident Registry",
+          icon: Award,
+          badge: "Ledger",
+          badgeColor: "bg-purple-400/20 text-purple-300 border-purple-400/30",
+        },
+        {
+          to: "/workspaces",
+          boardRole: "RECORDS_MANAGER" as LeagueRole,
+          boardSubTab: "decisions_registry",
+          label: "Council Decisions Registry",
+          subLabel: "Timestamped Minutes & Decree Vault",
+          icon: Database,
+          badge: "Minutes",
           badgeColor: "bg-emerald-400/20 text-emerald-300 border-emerald-400/30",
         },
       ];
     }
 
-    if (activeRbacRole === "board") {
+    if (roleKey === "TECH_MANAGER") {
       return [
         {
           to: "/workspaces",
-          label: "👔 Council Workspace",
-          icon: Briefcase,
-          badge: "Board",
-          badgeColor: "bg-indigo-400/20 text-indigo-300 border-indigo-400/30",
-        },
-        {
-          to: "/anthem",
-          label: "YouTube & Playlist Studio",
-          icon: Music,
-          badge: "Media Studio",
+          boardRole: "TECH_MANAGER" as LeagueRole,
+          boardSubTab: "tech_overview",
+          label: "Tech Operations Overview",
+          subLabel: "Digital Platforms & Live Engine",
+          icon: Activity,
+          badge: "Tech Lead",
           badgeColor: "bg-purple-400/20 text-purple-300 border-purple-400/30",
         },
-        ...publicNavItems,
         {
-          to: "/leaderboard",
-          label: "Honours & Golden Boot",
-          icon: Award,
-          badge: "Records",
-          badgeColor: "bg-yellow-400/20 text-yellow-300 border-yellow-400/30",
+          to: "/workspaces",
+          boardRole: "TECH_MANAGER" as LeagueRole,
+          boardSubTab: "website_cms",
+          label: "Website CMS & Banners",
+          subLabel: "Headline & Multimedia Graphics",
+          icon: Globe,
+          badge: "CMS",
+          badgeColor: "bg-cyan-400/20 text-cyan-300 border-cyan-400/30",
+        },
+        {
+          to: "/workspaces",
+          boardRole: "TECH_MANAGER" as LeagueRole,
+          boardSubTab: "live_publishing",
+          label: "Live Publishing & Scoreboard",
+          subLabel: "Pitchside LED Scoreboard Ticker",
+          icon: Send,
+          badge: "Broadcast",
+          badgeColor: "bg-emerald-400/20 text-emerald-300 border-emerald-400/30",
+        },
+        {
+          to: "/workspaces",
+          boardRole: "TECH_MANAGER" as LeagueRole,
+          boardSubTab: "infrastructure",
+          label: "Digital Infrastructure",
+          subLabel: "Server Uptime & Diagnostics",
+          icon: Database,
+          badge: "Uptime",
+          badgeColor: "bg-blue-400/20 text-blue-300 border-blue-400/30",
+        },
+        {
+          to: "/workspaces",
+          boardRole: "TECH_MANAGER" as LeagueRole,
+          boardSubTab: "integrity_audit",
+          label: "System Integrity Audits",
+          subLabel: "Security Protocols & Data Health",
+          icon: Shield,
+          badge: "Security",
+          badgeColor: "bg-amber-400/20 text-amber-300 border-amber-400/30",
         },
       ];
     }
 
-    // Public Spectator role
+    // Default to ASST_TECH_MANAGER
+    return [
+      {
+        to: "/workspaces",
+        boardRole: "ASST_TECH_MANAGER" as LeagueRole,
+        boardSubTab: "support_desk",
+        label: "Assistant Tech Support Desk",
+        subLabel: "Operations & Queue Overview",
+        icon: Layers,
+        badge: "Support",
+        badgeColor: "bg-indigo-400/20 text-indigo-300 border-indigo-400/30",
+      },
+      {
+        to: "/workspaces",
+        boardRole: "ASST_TECH_MANAGER" as LeagueRole,
+        boardSubTab: "content_queue",
+        label: "Content Queue & Previews",
+        subLabel: "Match Recaps & Devotionals Drafts",
+        icon: FileText,
+        badge: "Drafts",
+        badgeColor: "bg-cyan-400/20 text-cyan-300 border-cyan-400/30",
+      },
+      {
+        to: "/workspaces",
+        boardRole: "ASST_TECH_MANAGER" as LeagueRole,
+        boardSubTab: "media_library",
+        label: "Media Library & Gallery",
+        subLabel: "Matchday Highlights & Photo Vault",
+        icon: Camera,
+        badge: "Media",
+        badgeColor: "bg-purple-400/20 text-purple-300 border-purple-400/30",
+      },
+      {
+        to: "/workspaces",
+        boardRole: "ASST_TECH_MANAGER" as LeagueRole,
+        boardSubTab: "user_support",
+        label: "User Helpdesk & Tickets",
+        subLabel: "Staff & Referee Tech Support",
+        icon: MessageSquare,
+        badge: "Helpdesk",
+        badgeColor: "bg-emerald-400/20 text-emerald-300 border-emerald-400/30",
+      },
+      {
+        to: "/workspaces",
+        boardRole: "ASST_TECH_MANAGER" as LeagueRole,
+        boardSubTab: "data_backup",
+        label: "Data Backup Assistant",
+        subLabel: "Manual JSON & Archive Integrity",
+        icon: Database,
+        badge: "Backup",
+        badgeColor: "bg-blue-400/20 text-blue-300 border-blue-400/30",
+      },
+    ];
+  }, [rbacUser, currentRole]);
+
+  // Sidebar navigation items selection based strictly on active role
+  const allNavItems = useMemo(() => {
+    if (activeRbacRole === "admin") {
+      return supremeAdminNavItems;
+    }
+    if (activeRbacRole === "board") {
+      return boardRoleNavItems;
+    }
+    // Public spectator role: strictly view-only features and send comments
     return publicNavItems;
-  }, [activeRbacRole]);
+  }, [activeRbacRole, supremeAdminNavItems, boardRoleNavItems, publicNavItems]);
 
   return (
     <div className="min-h-screen bg-[#070512] text-white flex flex-col">
@@ -298,13 +839,13 @@ export function PermanentSidebarLayout({ children }: PermanentSidebarLayoutProps
 
       {/* Permanent Fixed Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-72 bg-[#080517] border-r border-[#261f4d] shadow-2xl flex flex-col justify-between p-5 overflow-y-auto transition-transform duration-300 ease-in-out ${
+        className={`fixed inset-y-0 left-0 z-50 w-80 bg-[#080517] border-r border-[#261f4d] shadow-2xl flex flex-col justify-between p-4 sm:p-5 overflow-y-auto transition-transform duration-300 ease-in-out ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="space-y-5">
+        <div className="space-y-4">
           {/* Brand & Collapse Header */}
-          <div className="flex items-center justify-between border-b border-[#261f4d] pb-4">
+          <div className="flex items-center justify-between border-b border-[#261f4d] pb-3">
             <Link to="/standings" className="flex items-center gap-3 group">
               <div className="w-10 h-10 rounded-2xl bg-white border border-emerald-400 p-1 flex items-center justify-center shadow-lg shrink-0 group-hover:scale-105 transition">
                 <img
@@ -314,7 +855,7 @@ export function PermanentSidebarLayout({ children }: PermanentSidebarLayoutProps
                 />
               </div>
               <div>
-                <h3 className="font-header text-lg font-black text-white leading-none uppercase">
+                <h3 className="font-header text-base font-black text-white leading-none uppercase">
                   Sunday League
                 </h3>
                 <p className="text-[10px] text-[#00f0ff] font-bold uppercase tracking-wider">
@@ -332,63 +873,150 @@ export function PermanentSidebarLayout({ children }: PermanentSidebarLayoutProps
             </button>
           </div>
 
-          {/* Navigation Links — ALL FEATURES INCLUDED */}
-          <div className="space-y-1 text-xs">
-            <span className="text-[10px] uppercase font-black text-gray-400 tracking-wider px-3 block mb-1">
-              Championship Hub
-            </span>
+          {/* Navigation Links Group Header */}
+          <div className="space-y-1.5 text-xs">
+            <div className="px-2 pb-1 flex items-center justify-between border-b border-[#1b153b]">
+              <span className="text-[10px] uppercase font-black tracking-wider flex items-center gap-1.5 text-amber-300">
+                {activeRbacRole === "admin" && (
+                  <>
+                    <Crown className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                    <span>Supreme Admin Hub</span>
+                  </>
+                )}
+                {activeRbacRole === "board" && (
+                  <>
+                    <Briefcase className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                    <span>Council Workspace</span>
+                  </>
+                )}
+                {activeRbacRole === "public" && (
+                  <>
+                    <Trophy className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                    <span>Public Spectator Suite</span>
+                  </>
+                )}
+              </span>
+              <span className="text-[9px] px-2 py-0.5 rounded-full font-mono font-bold bg-[#141029] text-gray-400 border border-[#2e2554]">
+                {activeRbacRole === "admin"
+                  ? "14 Modules"
+                  : activeRbacRole === "board"
+                    ? "Executive"
+                    : "View Only"}
+              </span>
+            </div>
 
-            {allNavItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = currentPath === item.to;
+            {/* Menu Items with Title, Subtitle, Icon & Badges */}
+            <div className="space-y-1 max-h-[50vh] lg:max-h-[54vh] overflow-y-auto pr-1">
+              {allNavItems.map((item, index) => {
+                const Icon = item.icon;
+                const isActive = item.adminSection
+                  ? currentPath === "/workspaces" && activeAdminSection === item.adminSection
+                  : currentPath === item.to;
 
-              return (
+                return (
+                  <Link
+                    key={`${item.to}-${item.adminSection || item.boardSubTab || index}`}
+                    to={item.to}
+                    onClick={() => handleNavClick(item)}
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-2xl transition duration-150 group cursor-pointer ${
+                      isActive
+                        ? activeRbacRole === "admin"
+                          ? "bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-black shadow-lg shadow-amber-500/20"
+                          : "bg-gradient-to-r from-[#00f0ff] to-emerald-400 text-black font-black shadow-lg shadow-cyan-500/20"
+                        : "text-gray-300 hover:text-white hover:bg-white/5 font-semibold"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <Icon
+                        className={`w-4 h-4 shrink-0 ${
+                          isActive
+                            ? "text-black"
+                            : activeRbacRole === "admin"
+                              ? "text-amber-400"
+                              : "text-[#00f0ff]"
+                        }`}
+                      />
+                      <div className="min-w-0">
+                        <div className="text-xs truncate font-bold leading-tight">{item.label}</div>
+                        {item.subLabel && (
+                          <div
+                            className={`text-[9.5px] truncate leading-tight mt-0.5 ${
+                              isActive ? "text-black/80 font-bold" : "text-gray-400 font-normal"
+                            }`}
+                          >
+                            {item.subLabel}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {item.badge && (
+                      <span
+                        className={`text-[8.5px] px-1.5 py-0.5 rounded-full font-bold border shrink-0 ml-1.5 ${
+                          isActive
+                            ? "bg-black/20 text-black border-black/30"
+                            : item.badgeColor || "bg-white/10 text-gray-300 border-white/20"
+                        }`}
+                      >
+                        {item.badge}
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* Public Spectator Switcher for Admin & Board */}
+            {activeRbacRole !== "public" && (
+              <div className="pt-2 border-t border-[#1b153b] space-y-1">
+                <span className="text-[9px] uppercase font-bold text-gray-400 tracking-wider px-2 block">
+                  Public Perspective
+                </span>
                 <Link
-                  key={item.to}
-                  to={item.to}
+                  to="/standings"
                   onClick={() => {
                     if (typeof window !== "undefined" && window.innerWidth < 1024) {
                       setIsSidebarOpen(false);
                     }
                   }}
-                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl transition duration-200 ${
-                    isActive
-                      ? "bg-gradient-to-r from-[#00f0ff] to-emerald-400 text-black font-black shadow-lg shadow-cyan-500/20"
-                      : "text-gray-300 hover:text-white hover:bg-white/5 font-semibold"
-                  }`}
+                  className="w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-gray-300 hover:text-white hover:bg-white/5 text-xs font-semibold transition"
                 >
-                  <div className="flex items-center gap-3">
-                    <Icon className={`w-4 h-4 ${isActive ? "text-black" : "text-[#00f0ff]"}`} />
-                    <span>{item.label}</span>
+                  <div className="flex items-center gap-2">
+                    <Trophy className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>Public Standings & Table</span>
                   </div>
-
-                  {item.badge && (
-                    <span
-                      className={`text-[9px] px-2 py-0.5 rounded-full font-bold border ${
-                        isActive
-                          ? "bg-black/20 text-black border-black/30"
-                          : item.badgeColor || "bg-white/10 text-gray-300 border-white/20"
-                      }`}
-                    >
-                      {item.badge}
-                    </span>
-                  )}
+                  <span className="text-[9px] text-gray-500 font-mono">View Only</span>
                 </Link>
-              );
-            })}
+                <Link
+                  to="/fixtures"
+                  onClick={() => {
+                    if (typeof window !== "undefined" && window.innerWidth < 1024) {
+                      setIsSidebarOpen(false);
+                    }
+                  }}
+                  className="w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-gray-300 hover:text-white hover:bg-white/5 text-xs font-semibold transition"
+                >
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Public Fixtures Schedule</span>
+                  </div>
+                  <span className="text-[9px] text-gray-500 font-mono">View Only</span>
+                </Link>
+              </div>
+            )}
 
             {/* Public League Officials Directory Button */}
             <button
               type="button"
               onClick={() => setShowOfficialsModal(true)}
-              className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-gray-300 hover:text-white hover:bg-white/5 font-semibold transition cursor-pointer text-xs"
+              className="w-full flex items-center justify-between px-3 py-2 rounded-2xl text-gray-300 hover:text-white hover:bg-white/5 font-semibold transition cursor-pointer text-xs mt-1"
             >
-              <div className="flex items-center gap-3">
-                <Users className="w-4 h-4 text-purple-400" />
-                <span>League Officials</span>
+              <div className="flex items-center gap-2.5">
+                <Users className="w-4 h-4 text-purple-400 shrink-0" />
+                <span>League Officials Directory</span>
               </div>
               <span className="text-[9px] px-2 py-0.5 rounded-full font-bold border bg-purple-500/20 text-purple-300 border-purple-500/30">
-                Directory
+                Council
               </span>
             </button>
           </div>

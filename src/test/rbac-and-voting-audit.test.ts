@@ -57,8 +57,8 @@ describe("Role-Based Access Control (RBAC) System", () => {
   });
 
   it("authenticates board members by their academy email with board role", () => {
-    // Cheryl Cosmas is registered on the council as Regulations Manager
-    const result = authenticateWithRbac("cheryl.cosmas@mpesafoundationacademy.ac.ke");
+    // Whitney Juma is registered on the council as Regulations Manager
+    const result = authenticateWithRbac("whitney.achieng@mpesafoundationacademy.ac.ke");
     expect(result.success).toBe(true);
     expect(result.user?.role).toBe("board");
     expect(result.user?.leagueRole).toBe("REGULATIONS_MANAGER");
@@ -69,7 +69,7 @@ describe("Role-Based Access Control (RBAC) System", () => {
       "abdiaziz.ali@mpesafoundationacademy.ac.ke",
       "edgar.momanyi@mpesafoundationacademy.ac.ke",
       "fatuma.jiele@mpesafoundationacademy.ac.ke",
-      "tonny.odundo@mpesafoundationacademy.ac.ke",
+      "brian.richard@mpesafoundationacademy.ac.ke",
       "zuena.njoki@mpesafoundationacademy.ac.ke",
     ];
 

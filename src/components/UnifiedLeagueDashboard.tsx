@@ -99,15 +99,27 @@ export function UnifiedLeagueDashboard({
   // Synchronize dashboard mode if user is already authenticated
   useEffect(() => {
     if (isSuperAdmin) {
-      if (initialMode === "admin") {
+      if (initialMode === "admin" || initialMode === "board") {
         setDashboardMode("admin");
       }
-    } else if (currentRole !== "GUEST") {
+    } else if (currentRole !== "GUEST" && currentRole !== undefined) {
       if (initialMode === "board") {
         setDashboardMode("board");
       }
     }
   }, [isSuperAdmin, currentRole, initialMode]);
+
+  useEffect(() => {
+    const handleSelectAdminSection = () => {
+      if (isSuperAdmin) {
+        setDashboardMode("admin");
+      }
+    };
+    window.addEventListener("mpesa_select_admin_section", handleSelectAdminSection);
+    return () => {
+      window.removeEventListener("mpesa_select_admin_section", handleSelectAdminSection);
+    };
+  }, [isSuperAdmin]);
 
   // Global event listener to open login modal from any component
   useEffect(() => {

@@ -309,7 +309,7 @@ export function BoardMemberManager() {
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Bramuel Amirah"
+                  placeholder="e.g. Alex Haro"
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
                   className="w-full bg-[#0a071b] border border-[#2e2554] focus:border-amber-400 rounded-xl px-3 py-2.5 text-xs text-white outline-none"

@@ -135,7 +135,7 @@ export const ROLE_HIERARCHY_DATA: Record<LeagueRole, RoleMetadata> = {
     key: "PRESIDENT",
     tier: 1,
     title: "President",
-    officialName: "Bramuel Amirah",
+    officialName: "Alex Haro",
     department: "Office of the League President",
     badgeColor: "from-yellow-400 to-amber-500",
     responsibilities: [
@@ -163,7 +163,7 @@ export const ROLE_HIERARCHY_DATA: Record<LeagueRole, RoleMetadata> = {
     key: "DEPUTY_PRESIDENT",
     tier: 2,
     title: "Deputy President",
-    officialName: "Joseph Kamande",
+    officialName: "Babra Nandako",
     department: "Executive Operations & Logistics",
     badgeColor: "from-blue-400 to-cyan-500",
     responsibilities: [
@@ -186,7 +186,7 @@ export const ROLE_HIERARCHY_DATA: Record<LeagueRole, RoleMetadata> = {
     key: "REGULATIONS_MANAGER",
     tier: 3,
     title: "Register and Regulations Manager",
-    officialName: "Cheryl Cosmas",
+    officialName: "Whitney Juma",
     department: "Registration & Regulatory Compliance",
     badgeColor: "from-emerald-400 to-teal-500",
     responsibilities: [
@@ -208,7 +208,7 @@ export const ROLE_HIERARCHY_DATA: Record<LeagueRole, RoleMetadata> = {
     key: "MATCH_OFFICIATING_MANAGER",
     tier: 4,
     title: "Match Officiating Programmes Manager",
-    officialName: "Mitchelle Muthoni",
+    officialName: "Idi Sebantu",
     department: "Match Officiating & Refereeing Standards",
     badgeColor: "from-purple-400 to-violet-600",
     responsibilities: [
@@ -250,7 +250,7 @@ export const ROLE_HIERARCHY_DATA: Record<LeagueRole, RoleMetadata> = {
     key: "TECH_MANAGER",
     tier: 6,
     title: "Technological Manager",
-    officialName: "Trady Lewis",
+    officialName: "Victor Kiplagat",
     department: "Digital Systems, Media Broadcasting & Pitchside LED",
     badgeColor: "from-fuchsia-400 to-pink-600",
     responsibilities: [
@@ -272,7 +272,7 @@ export const ROLE_HIERARCHY_DATA: Record<LeagueRole, RoleMetadata> = {
     key: "ASST_TECH_MANAGER",
     tier: 7,
     title: "Assistant Technological Manager",
-    officialName: "Ahmed Kusow",
+    officialName: "Sturridge Ochongoi",
     department: "Digital Support & Media Operations",
     badgeColor: "from-indigo-400 to-cyan-400",
     responsibilities: [

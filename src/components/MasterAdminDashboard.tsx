@@ -271,9 +271,42 @@ const DEFAULT_BROADCASTS: BroadcastAlert[] = [
   },
 ];
 
-export function MasterAdminDashboard({ onExitToViewer }: { onExitToViewer?: () => void }) {
+export function MasterAdminDashboard({
+  onExitToViewer,
+  initialSection = "board_members",
+}: {
+  onExitToViewer?: () => void;
+  initialSection?: AdminSection;
+}) {
   const { switchRole } = useRoleAccess();
-  const [activeSection, setActiveSection] = useState<AdminSection>("board_members");
+  const [activeSection, setActiveSection] = useState<AdminSection>(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("mpesa_admin_active_section");
+      if (stored) return stored as AdminSection;
+    }
+    return initialSection;
+  });
+
+  useEffect(() => {
+    const handleSelectSection = (e: Event) => {
+      const customEvent = e as CustomEvent<AdminSection>;
+      if (customEvent.detail) {
+        setActiveSection(customEvent.detail);
+      }
+    };
+    window.addEventListener("mpesa_select_admin_section", handleSelectSection);
+    return () => {
+      window.removeEventListener("mpesa_select_admin_section", handleSelectSection);
+    };
+  }, []);
+
+  const handleSectionSelect = (sec: AdminSection) => {
+    setActiveSection(sec);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("mpesa_admin_active_section", sec);
+    }
+  };
+
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Teams & Clubs state
@@ -444,13 +477,13 @@ export function MasterAdminDashboard({ onExitToViewer }: { onExitToViewer?: () =
       id: "log-3",
       action: "15-Player Squad Cap Audit Complete",
       timestamp: "Today, 10:00 EAT",
-      operator: "Cheryl Cosmas (Registrar)",
+      operator: "Whitney Juma (Registrar)",
     },
     {
       id: "log-4",
       action: "Stadium Anthem Preset Synchronized",
       timestamp: "Today, 10:45 EAT",
-      operator: "Trady Lewis (Tech Manager)",
+      operator: "Victor Kiplagat (Tech Manager)",
     },
   ]);
 
@@ -960,7 +993,8 @@ export function MasterAdminDashboard({ onExitToViewer }: { onExitToViewer?: () =
       "Cornerstone Arena (Pitch 1)",
     ];
     const referees = [
-      "Mitchelle Muthoni (National Ref)",
+      "Bidan Mwaura (Official Match Referee)",
+      "Idi Sebantu (Officiating Programmes Manager)",
       "Kevin Ombati (Senior Official)",
       "Sarah Wanjiku (Youth Official)",
       "David Kibet (FIFA Accredited)",
@@ -1582,7 +1616,7 @@ export function MasterAdminDashboard({ onExitToViewer }: { onExitToViewer?: () =
                 <button
                   key={nav.id}
                   type="button"
-                  onClick={() => setActiveSection(nav.id as AdminSection)}
+                  onClick={() => handleSectionSelect(nav.id as AdminSection)}
                   className={`w-full flex items-center justify-between p-3 rounded-2xl transition duration-200 cursor-pointer text-left ${
                     isActive
                       ? "bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-black shadow-lg shadow-amber-500/20"

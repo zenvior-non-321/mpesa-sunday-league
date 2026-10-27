@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useRoleAccess } from "../hooks/useRoleAccess";
+import { getCurrentRbacUser } from "../lib/rbacSystem";
 import { LeagueCalendarView } from "./LeagueCalendarView";
 import { MatchMvpVoting } from "./MatchMvpVoting";
 import { MatchNotificationDispatch } from "./MatchNotificationDispatch";
@@ -74,12 +75,35 @@ export { DEFAULT_TEAMS, DEFAULT_FIXTURES };
 
 export function Fixtures() {
   const { currentRole, isSuperAdmin } = useRoleAccess();
+  const [rbacRole, setRbacRole] = useState<string>("public");
+
+  useEffect(() => {
+    const updateRole = () => {
+      const user = getCurrentRbacUser();
+      setRbacRole(user?.role || "public");
+    };
+    updateRole();
+    window.addEventListener("mpesa_rbac_changed", updateRole);
+    window.addEventListener("mpesa_role_changed", updateRole);
+    window.addEventListener("storage", updateRole);
+    return () => {
+      window.removeEventListener("mpesa_rbac_changed", updateRole);
+      window.removeEventListener("mpesa_role_changed", updateRole);
+      window.removeEventListener("storage", updateRole);
+    };
+  }, []);
+
+  // Public viewers and students are strictly read-only spectators (scores, fixtures, status).
+  // Editing, creating, quick closing, and deleting matches is reserved for Board Members & Admins.
   const canManageFixtures =
-    isSuperAdmin ||
-    currentRole === "RECORDS_MANAGER" ||
-    currentRole === "TECH_MANAGER" ||
-    currentRole === "ASST_TECH_MANAGER" ||
-    currentRole === "PRESIDENT";
+    rbacRole !== "public" &&
+    (isSuperAdmin ||
+      rbacRole === "admin" ||
+      (rbacRole === "board" &&
+        (currentRole === "RECORDS_MANAGER" ||
+          currentRole === "TECH_MANAGER" ||
+          currentRole === "ASST_TECH_MANAGER" ||
+          currentRole === "PRESIDENT")));
 
   const [fixtures, setFixtures] = useState<MatchFixture[]>([]);
   const [teams, setTeams] = useState<Team[]>(DEFAULT_TEAMS);

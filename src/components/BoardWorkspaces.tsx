@@ -52,6 +52,7 @@ import {
   QrCode,
   ShieldAlert,
   Flame,
+  CheckSquare,
 } from "lucide-react";
 
 interface AdminSquadPlayer {
@@ -123,8 +124,79 @@ export function BoardWorkspaces() {
     }
   }, []);
 
+  useEffect(() => {
+    const handleSelectBoardSubTab = (e: Event) => {
+      const customEvent = e as CustomEvent<{ role?: LeagueRole; tab: string }>;
+      if (customEvent.detail) {
+        const { role, tab } = customEvent.detail;
+        if (role) setActiveWorkspaceRole(role);
+        if (tab) {
+          if (["overview", "hearings", "policy", "voting", "approvals", "meeting"].includes(tab)) {
+            setPresidentTab(tab as typeof presidentTab);
+          }
+          if (
+            ["overview", "monitoring", "acting_override", "task_force", "escalations"].includes(tab)
+          ) {
+            setDeputyTab(tab as typeof deputyTab);
+          }
+          if (
+            [
+              "dashboard",
+              "licensing",
+              "player_verification",
+              "eligibility_violations",
+              "compliance_waivers",
+            ].includes(tab)
+          ) {
+            setRegulationsTab(tab as typeof regulationsTab);
+          }
+          if (["overview", "scheduler", "ref_reports", "performance", "disputes"].includes(tab)) {
+            setOfficiatingTab(tab as typeof officiatingTab);
+          }
+          if (
+            [
+              "vault_home",
+              "doc_vault",
+              "results_archive",
+              "disciplinary_ledger",
+              "decisions_registry",
+            ].includes(tab)
+          ) {
+            setRecordsTab(tab as typeof recordsTab);
+          }
+          if (
+            [
+              "tech_overview",
+              "website_cms",
+              "live_publishing",
+              "infrastructure",
+              "integrity_audit",
+            ].includes(tab)
+          ) {
+            setTechTab(tab as typeof techTab);
+          }
+          if (
+            [
+              "support_desk",
+              "content_queue",
+              "media_library",
+              "user_support",
+              "data_backup",
+            ].includes(tab)
+          ) {
+            setAsstTechTab(tab as typeof asstTechTab);
+          }
+        }
+      }
+    };
+    window.addEventListener("mpesa_select_board_sub_tab", handleSelectBoardSubTab);
+    return () => {
+      window.removeEventListener("mpesa_select_board_sub_tab", handleSelectBoardSubTab);
+    };
+  }, []);
+
   // =========================================================================
-  // 1. PRESIDENT — Bramuel Amirah State & Sub-Menu Tabs
+  // 1. PRESIDENT — Alex Haro State & Sub-Menu Tabs
   // =========================================================================
   const [presidentTab, setPresidentTab] = useState<
     "overview" | "hearings" | "policy" | "voting" | "approvals" | "meeting"
@@ -182,7 +254,7 @@ export function BoardWorkspaces() {
       id: "motion-1",
       title: "Motion to Approve Easter Knockout Cup Schedule & Venues",
       deadline: "Sunday, Oct 25, 2026 at 23:59 EAT",
-      yesVotes: ["Bramuel Amirah (President)", "Joseph Kamande (Deputy)", "Tonnie Mark (Records)"],
+      yesVotes: ["Alex Haro (President)", "Babra Nandako (Deputy)", "Tonnie Mark (Records)"],
       noVotes: [] as string[],
       status: "OPEN",
     },
@@ -190,7 +262,11 @@ export function BoardWorkspaces() {
       id: "motion-2",
       title: "Ratification of Digital YouTube Studio Anthem Playlist",
       deadline: "Friday, Oct 30, 2026 at 18:00 EAT",
-      yesVotes: ["Bramuel Amirah (President)", "Trady Lewis (Tech)", "Ahmed Kusow (Asst Tech)"],
+      yesVotes: [
+        "Alex Haro (President)",
+        "Victor Kiplagat (Tech)",
+        "Sturridge Ochongoi (Asst Tech)",
+      ],
       noVotes: [] as string[],
       status: "PASSED",
     },
@@ -228,7 +304,7 @@ export function BoardWorkspaces() {
   const [newMeetingDate, setNewMeetingDate] = useState("Wednesday, Nov 11, 2026");
 
   // =========================================================================
-  // 2. DEPUTY PRESIDENT — Joseph Kamande State & Sub-Menu Tabs
+  // 2. DEPUTY PRESIDENT — Babra Nandako State & Sub-Menu Tabs
   // =========================================================================
   const [deputyTab, setDeputyTab] = useState<
     "overview" | "monitoring" | "acting_override" | "task_force" | "escalations"
@@ -239,7 +315,7 @@ export function BoardWorkspaces() {
     {
       id: "tf-1",
       name: "Tournament Grounds Safety & Line Marking Inspection",
-      assignedTo: "Joseph Kamande & Field Stewards",
+      assignedTo: "Babra Nandako & Field Stewards",
       progress: 85,
       status: "IN_PROGRESS",
     },
@@ -281,7 +357,7 @@ export function BoardWorkspaces() {
   ]);
 
   // =========================================================================
-  // 3. REGISTER & REGULATIONS — Cheryl Cosmas State & Sub-Menu Tabs
+  // 3. REGISTER & REGULATIONS — Whitney Juma State & Sub-Menu Tabs
   // =========================================================================
   const [regulationsTab, setRegulationsTab] = useState<
     | "dashboard"
@@ -381,13 +457,21 @@ export function BoardWorkspaces() {
   ]);
 
   // =========================================================================
-  // 4. MATCH OFFICIATING — Mitchelle Muthoni State & Sub-Menu Tabs
+  // 4. MATCH OFFICIATING — Idi Sebantu State & Sub-Menu Tabs
   // =========================================================================
   const [officiatingTab, setOfficiatingTab] = useState<
     "overview" | "scheduler" | "ref_reports" | "performance" | "disputes"
   >("overview");
 
   const [referees, setReferees] = useState([
+    {
+      id: "ref-bm",
+      name: "Bidan Mwaura",
+      badge: "Official League Referee",
+      assignedMatches: 5,
+      rating: 5.0,
+      active: true,
+    },
     {
       id: "ref-1",
       name: "Ian Muli",
@@ -511,7 +595,7 @@ export function BoardWorkspaces() {
   const [seasonStandingsLocked, setSeasonStandingsLocked] = useState(false);
 
   // =========================================================================
-  // 6. TECHNOLOGICAL MANAGER — Trady Lewis State & Sub-Menu Tabs
+  // 6. TECHNOLOGICAL MANAGER — Victor Kiplagat State & Sub-Menu Tabs
   // =========================================================================
   const [techTab, setTechTab] = useState<
     "tech_overview" | "website_cms" | "live_publishing" | "infrastructure" | "integrity_audit"
@@ -537,7 +621,7 @@ export function BoardWorkspaces() {
   const [liveFeedEnabled, setLiveFeedEnabled] = useState(true);
 
   // =========================================================================
-  // 7. ASSISTANT TECH MANAGER — Ahmed Kusow State & Sub-Menu Tabs
+  // 7. ASSISTANT TECH MANAGER — Sturridge Ochongoi State & Sub-Menu Tabs
   // =========================================================================
   const [asstTechTab, setAsstTechTab] = useState<
     "support_desk" | "content_queue" | "media_library" | "user_support" | "data_backup"
@@ -548,21 +632,21 @@ export function BoardWorkspaces() {
       id: "draft-1",
       title: "Player of the Week: Kevin Omondi's Opening Day Brace",
       status: "READY_FOR_APPROVAL",
-      submittedBy: "Ahmed Kusow",
+      submittedBy: "Sturridge Ochongoi",
       type: "Match Recap",
     },
     {
       id: "draft-2",
       title: "Upcoming Derby Preview: Defense vs Attack",
       status: "DRAFTING",
-      submittedBy: "Ahmed Kusow",
+      submittedBy: "Sturridge Ochongoi",
       type: "Match Preview",
     },
     {
       id: "draft-3",
       title: "Midweek Devotional: 1 Cor 9:24 — Running for the Imperishable Crown",
       status: "READY_FOR_APPROVAL",
-      submittedBy: "Ahmed Kusow",
+      submittedBy: "Sturridge Ochongoi",
       type: "Devotional",
     },
   ]);
@@ -792,10 +876,9 @@ export function BoardWorkspaces() {
                     Presidential Executive Briefing & Directive
                   </h4>
                   <p className="text-xs text-gray-300 leading-relaxed">
-                    Welcome President Bramuel Amirah. As chief executive officer of the M-Pesa
-                    Sunday League, your authority governs all administrative crew tiers,
-                    constitutional integrity, appeals jurisprudence, and inter-departmental
-                    policies.
+                    Welcome President Alex Haro. As chief executive officer of the M-Pesa Sunday
+                    League, your authority governs all administrative crew tiers, constitutional
+                    integrity, appeals jurisprudence, and inter-departmental policies.
                   </p>
                   <div className="p-3 bg-black/40 rounded-2xl border border-amber-400/20 text-xs text-amber-300 font-mono">
                     Official Ruling: Article IV strict 15-player squad limit active across all four
@@ -1047,7 +1130,7 @@ export function BoardWorkspaces() {
                             id: `motion-${Date.now()}`,
                             title: newMotionTitle.trim(),
                             deadline: "Sunday, Nov 08, 2026 at 23:59 EAT",
-                            yesVotes: ["Bramuel Amirah (President)"],
+                            yesVotes: ["Alex Haro (President)"],
                             noVotes: [],
                             status: "OPEN",
                           },
@@ -1309,7 +1392,7 @@ export function BoardWorkspaces() {
                   Executive Operations Hub
                 </h4>
                 <p className="text-xs text-gray-300 leading-relaxed">
-                  Welcome Deputy President Joseph Kamande. Your executive mandate encompasses
+                  Welcome Deputy President Babra Nandako. Your executive mandate encompasses
                   operational monitoring across all four administrative managers, stand-in
                   presidential authority, and task force field supervision.
                 </p>
@@ -1359,7 +1442,7 @@ export function BoardWorkspaces() {
                 <div className="space-y-3">
                   <div className="p-3 bg-[#141029] rounded-2xl border border-cyan-400/20 space-y-1.5">
                     <div className="flex items-center justify-between text-xs font-bold text-white">
-                      <span>Registration Department (Cheryl Cosmas)</span>
+                      <span>Registration Department (Whitney Juma)</span>
                       <span className="text-emerald-400 font-mono">100% Compliant</span>
                     </div>
                     <div className="w-full bg-[#080517] h-2 rounded-full overflow-hidden">
@@ -1368,7 +1451,7 @@ export function BoardWorkspaces() {
                   </div>
                   <div className="p-3 bg-[#141029] rounded-2xl border border-cyan-400/20 space-y-1.5">
                     <div className="flex items-center justify-between text-xs font-bold text-white">
-                      <span>Match Officiating Department (Mitchelle Muthoni)</span>
+                      <span>Match Officiating Department (Idi Sebantu • Ref Bidan Mwaura)</span>
                       <span className="text-cyan-400 font-mono">100% Coverage</span>
                     </div>
                     <div className="w-full bg-[#080517] h-2 rounded-full overflow-hidden">
@@ -1386,7 +1469,7 @@ export function BoardWorkspaces() {
                   </div>
                   <div className="p-3 bg-[#141029] rounded-2xl border border-cyan-400/20 space-y-1.5">
                     <div className="flex items-center justify-between text-xs font-bold text-white">
-                      <span>Tech & Media Department (Trady Lewis / Ahmed Kusow)</span>
+                      <span>Tech & Media Department (Victor Kiplagat / Sturridge Ochongoi)</span>
                       <span className="text-yellow-400 font-mono">99.98% Live</span>
                     </div>
                     <div className="w-full bg-[#080517] h-2 rounded-full overflow-hidden">
@@ -1406,7 +1489,7 @@ export function BoardWorkspaces() {
                       Executive Acting Override (Toggle)
                     </h4>
                     <p className="text-xs text-gray-300 mt-0.5">
-                      Toggle emergency executive approval controls when President Bramuel Amirah is
+                      Toggle emergency executive approval controls when President Alex Haro is
                       absent.
                     </p>
                   </div>
@@ -1436,9 +1519,9 @@ export function BoardWorkspaces() {
                     Emergency Stand-in Hearing Desk:
                   </span>
                   <p className="text-xs text-gray-400">
-                    With override engaged, Deputy President Joseph Kamande can certify urgent
-                    fixture reschedulings, approve interim medical waivers, and preside over
-                    preliminary disciplinary reviews.
+                    With override engaged, Deputy President Babra Nandako can certify urgent fixture
+                    reschedulings, approve interim medical waivers, and preside over preliminary
+                    disciplinary reviews.
                   </p>
                 </div>
               </div>
@@ -2657,7 +2740,7 @@ export function BoardWorkspaces() {
                               id: `draft-${Date.now()}`,
                               title: newDraftTitle.trim(),
                               status: "READY_FOR_APPROVAL",
-                              submittedBy: "Ahmed Kusow",
+                              submittedBy: "Sturridge Ochongoi",
                               type: newDraftType,
                             },
                           ]);

@@ -33,6 +33,8 @@ import {
 } from "lucide-react";
 import { DEFAULT_TEAMS, DEFAULT_FIXTURES, isTeamDeleted } from "../lib/fixturesData";
 import { DEFAULT_STANDINGS, type TeamStanding, type SquadMember } from "./LeagueStandings";
+import { getCurrentRbacUser } from "../lib/rbacSystem";
+import { useRoleAccess } from "../hooks/useRoleAccess";
 
 export interface PublicNewsArticle {
   id: string;
@@ -90,7 +92,7 @@ const DEFAULT_NEWS_ARTICLES: PublicNewsArticle[] = [
     excerpt:
       "All participating clubs confirm compliance with the executive registration directive and student eligibility standards.",
     content:
-      "Regulations Manager Cheryl Cosmas officially confirmed that all 4 active league clubs have successfully verified their 15-player squad limit rosters. Verified student admission cards, medical emergency numbers, and parental consent waivers are now secured in the digital league vault.",
+      "Regulations Manager Whitney Juma officially confirmed that all 4 active league clubs have successfully verified their 15-player squad limit rosters. Verified student admission cards, medical emergency numbers, and parental consent waivers are now secured in the digital league vault.",
     author: "Registrar Office",
     date: "Wednesday, Oct 21, 2026",
     imageUrl:
@@ -116,6 +118,31 @@ export function PublicViewerHub({
   useEffect(() => {
     if (initialSubTab) setActiveSubTab(initialSubTab);
   }, [initialSubTab]);
+
+  const { isSuperAdmin, currentRole } = useRoleAccess();
+  const [rbacRole, setRbacRole] = useState<string>("public");
+
+  useEffect(() => {
+    const updateRole = () => {
+      const user = getCurrentRbacUser();
+      setRbacRole(user?.role || "public");
+    };
+    updateRole();
+    window.addEventListener("mpesa_rbac_changed", updateRole);
+    window.addEventListener("mpesa_role_changed", updateRole);
+    window.addEventListener("storage", updateRole);
+    return () => {
+      window.removeEventListener("mpesa_rbac_changed", updateRole);
+      window.removeEventListener("mpesa_role_changed", updateRole);
+      window.removeEventListener("storage", updateRole);
+    };
+  }, []);
+
+  const canAccessMatchCenter =
+    rbacRole === "admin" ||
+    rbacRole === "board" ||
+    isSuperAdmin ||
+    (currentRole !== "GUEST" && currentRole !== undefined);
 
   // Selected Division Filter for Standings & Fixtures
   const [selectedDivision, setSelectedDivision] = useState<string>("ALL");
@@ -490,7 +517,11 @@ export function PublicViewerHub({
             {[
               { id: "hub", label: "Home & Hub", icon: Sparkles },
               { id: "standings", label: "Standings & Table", icon: Trophy },
-              { id: "fixtures", label: "Schedule & Match Center", icon: Calendar },
+              {
+                id: "fixtures",
+                label: canAccessMatchCenter ? "Schedule & Match Center" : "Fixtures & Scores",
+                icon: Calendar,
+              },
               { id: "clubs", label: "Clubs & Squads", icon: Shield },
               { id: "leaderboards", label: "Golden Boot & Honors", icon: Award },
               { id: "desk", label: "Registration & Inquiries", icon: Send },
@@ -914,11 +945,14 @@ export function PublicViewerHub({
             <div>
               <h3 className="font-header text-lg font-black text-white uppercase flex items-center gap-2">
                 <Calendar className="w-5 h-5 text-cyan-400" />
-                Comprehensive Schedule & Live Match Center
+                {canAccessMatchCenter
+                  ? "Comprehensive Schedule & Live Match Center"
+                  : "Official Fixtures & Match Schedule"}
               </h3>
               <p className="text-xs text-gray-400 mt-0.5">
-                Filter fixtures by club, status, and click any fixture to open the full Match Center
-                timeline, lineups & spiritual report.
+                {canAccessMatchCenter
+                  ? "Filter fixtures by club, status, and click any fixture to open the full Match Center timeline, lineups & spiritual report."
+                  : "Filter fixtures by club and status to view upcoming dates, kickoff times, competing clubs, venues, and full-time scores."}
               </p>
             </div>
 
@@ -960,8 +994,12 @@ export function PublicViewerHub({
               return (
                 <div
                   key={fix.id}
-                  onClick={() => setSelectedMatchCenterId(fix.id)}
-                  className="p-4 bg-[#141029] hover:bg-[#181335] border border-[#2e2554] hover:border-cyan-400/50 rounded-2xl transition cursor-pointer flex flex-col md:flex-row md:items-center justify-between gap-4 group"
+                  onClick={
+                    canAccessMatchCenter ? () => setSelectedMatchCenterId(fix.id) : undefined
+                  }
+                  className={`p-4 bg-[#141029] hover:bg-[#181335] border border-[#2e2554] hover:border-cyan-400/50 rounded-2xl transition flex flex-col md:flex-row md:items-center justify-between gap-4 group ${
+                    canAccessMatchCenter ? "cursor-pointer" : "cursor-default"
+                  }`}
                 >
                   <div className="space-y-1.5 min-w-0">
                     <div className="flex flex-wrap items-center gap-2 text-[10px] font-mono text-gray-400">
@@ -1013,13 +1051,15 @@ export function PublicViewerHub({
                       {fix.status || "SCHEDULED"}
                     </span>
 
-                    <button
-                      type="button"
-                      className="px-3 py-1.5 rounded-xl bg-cyan-500/20 group-hover:bg-cyan-500 group-hover:text-black text-cyan-300 font-bold text-xs transition flex items-center gap-1"
-                    >
-                      <span>Match Center</span>
-                      <ChevronRight className="w-3.5 h-3.5" />
-                    </button>
+                    {canAccessMatchCenter && (
+                      <button
+                        type="button"
+                        className="px-3 py-1.5 rounded-xl bg-cyan-500/20 group-hover:bg-cyan-500 group-hover:text-black text-cyan-300 font-bold text-xs transition flex items-center gap-1 cursor-pointer"
+                      >
+                        <span>Match Center</span>
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
                 </div>
               );
@@ -1719,8 +1759,9 @@ export function PublicViewerHub({
       {/* ========================================================
           MODAL 1: DETAILED MATCH CENTER (PER FIXTURE)
           Header, Timeline Feed, Tactical Formations, Spiritual Report
+          Restricted to Board Members and Admin Only
           ======================================================== */}
-      {selectedMatch && (
+      {selectedMatch && canAccessMatchCenter && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in overflow-y-auto">
           <div className="bg-[#100c2a] border-2 border-cyan-400/50 rounded-3xl max-w-3xl w-full shadow-2xl p-6 space-y-5 my-8">
             <div className="flex items-center justify-between border-b border-[#2e2554] pb-3">
