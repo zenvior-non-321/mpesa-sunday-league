@@ -256,25 +256,25 @@ export function MatchMvpVoting({ initialMatchId, onClose }: MatchMvpVotingProps)
         isOpen: true,
         votes: {
           "Kevin Omondi": {
-            votesCount: 18,
+            votesCount: 0,
             teamName: homeTeam.name,
             position: "FWD",
             number: 9,
           },
           "Dan Kiprop": {
-            votesCount: 9,
+            votesCount: 0,
             teamName: homeTeam.name,
             position: "MID",
             number: 8,
           },
           "Eric Mwangi": {
-            votesCount: 5,
+            votesCount: 0,
             teamName: awayTeam.name,
             position: "FWD",
             number: 7,
           },
           "John Kamau": {
-            votesCount: 2,
+            votesCount: 0,
             teamName: awayTeam.name,
             position: "GK",
             number: 1,

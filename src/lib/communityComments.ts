@@ -10,42 +10,7 @@ export interface FanComment {
   isPinned?: boolean;
 }
 
-export const DEFAULT_COMMENTS: FanComment[] = [
-  {
-    id: "cmt-1",
-    author: "Pastor Samuel Mwangi",
-    role: "Youth Pastor",
-    clubSupported: "Royal Rangers",
-    message:
-      "Proud of the Rangers for reciting 1 Corinthians 9:24 before kickoff. Win or lose, Christ is glorified in our conduct!",
-    category: "PRAYER",
-    timestamp: "Sunday, Oct 25, 2026 • 3:45 PM",
-    status: "APPROVED",
-    isPinned: true,
-  },
-  {
-    id: "cmt-2",
-    author: "Grace Wanjiku",
-    role: "Parent",
-    clubSupported: "Samba Boys",
-    message:
-      "Great game from Kevin Omondi and the whole squad! Keep working hard and stay humble on the pitch.",
-    category: "CHEER",
-    timestamp: "Sunday, Oct 25, 2026 • 4:10 PM",
-    status: "APPROVED",
-  },
-  {
-    id: "cmt-3",
-    author: "Brother David Kiprop",
-    role: "Supporter",
-    clubSupported: "Mzinga Boyz",
-    message:
-      "Incredible defensive discipline. Respect to the referee and opposing team today. True Christian sportsmanship!",
-    category: "SPORTSMANSHIP",
-    timestamp: "Saturday, Oct 24, 2026 • 6:30 PM",
-    status: "APPROVED",
-  },
-];
+export const DEFAULT_COMMENTS: FanComment[] = [];
 
 const STORAGE_KEY = "mpesa_pes_comments_v1";
 
