@@ -10,7 +10,11 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AnthemRouteImport } from './routes/anthem'
 import { Route as CalendarRouteImport } from './routes/calendar'
+import { Route as ClubsRouteImport } from './routes/clubs'
+import { Route as CommunityRouteImport } from './routes/community'
+import { Route as DeskRouteImport } from './routes/desk'
 import { Route as FixturesRouteImport } from './routes/fixtures'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as MvpVotingRouteImport } from './routes/mvp-voting'
@@ -27,9 +31,29 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AnthemRoute = AnthemRouteImport.update({
+  id: '/anthem',
+  path: '/anthem',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CalendarRoute = CalendarRouteImport.update({
   id: '/calendar',
   path: '/calendar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClubsRoute = ClubsRouteImport.update({
+  id: '/clubs',
+  path: '/clubs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CommunityRoute = CommunityRouteImport.update({
+  id: '/community',
+  path: '/community',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DeskRoute = DeskRouteImport.update({
+  id: '/desk',
+  path: '/desk',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FixturesRoute = FixturesRouteImport.update({
@@ -85,7 +109,11 @@ const ApiPublicSongRoute = ApiPublicSongRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/anthem': typeof AnthemRoute
   '/calendar': typeof CalendarRoute
+  '/clubs': typeof ClubsRoute
+  '/community': typeof CommunityRoute
+  '/desk': typeof DeskRoute
   '/fixtures': typeof FixturesRoute
   '/leaderboard': typeof LeaderboardRoute
   '/mvp-voting': typeof MvpVotingRoute
@@ -99,7 +127,11 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/anthem': typeof AnthemRoute
   '/calendar': typeof CalendarRoute
+  '/clubs': typeof ClubsRoute
+  '/community': typeof CommunityRoute
+  '/desk': typeof DeskRoute
   '/fixtures': typeof FixturesRoute
   '/leaderboard': typeof LeaderboardRoute
   '/mvp-voting': typeof MvpVotingRoute
@@ -114,7 +146,11 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/anthem': typeof AnthemRoute
   '/calendar': typeof CalendarRoute
+  '/clubs': typeof ClubsRoute
+  '/community': typeof CommunityRoute
+  '/desk': typeof DeskRoute
   '/fixtures': typeof FixturesRoute
   '/leaderboard': typeof LeaderboardRoute
   '/mvp-voting': typeof MvpVotingRoute
@@ -130,7 +166,11 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/anthem'
     | '/calendar'
+    | '/clubs'
+    | '/community'
+    | '/desk'
     | '/fixtures'
     | '/leaderboard'
     | '/mvp-voting'
@@ -144,7 +184,11 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/anthem'
     | '/calendar'
+    | '/clubs'
+    | '/community'
+    | '/desk'
     | '/fixtures'
     | '/leaderboard'
     | '/mvp-voting'
@@ -158,7 +202,11 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/anthem'
     | '/calendar'
+    | '/clubs'
+    | '/community'
+    | '/desk'
     | '/fixtures'
     | '/leaderboard'
     | '/mvp-voting'
@@ -173,7 +221,11 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AnthemRoute: typeof AnthemRoute
   CalendarRoute: typeof CalendarRoute
+  ClubsRoute: typeof ClubsRoute
+  CommunityRoute: typeof CommunityRoute
+  DeskRoute: typeof DeskRoute
   FixturesRoute: typeof FixturesRoute
   LeaderboardRoute: typeof LeaderboardRoute
   MvpVotingRoute: typeof MvpVotingRoute
@@ -195,11 +247,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/anthem': {
+      id: '/anthem'
+      path: '/anthem'
+      fullPath: '/anthem'
+      preLoaderRoute: typeof AnthemRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/calendar': {
       id: '/calendar'
       path: '/calendar'
       fullPath: '/calendar'
       preLoaderRoute: typeof CalendarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/clubs': {
+      id: '/clubs'
+      path: '/clubs'
+      fullPath: '/clubs'
+      preLoaderRoute: typeof ClubsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/community': {
+      id: '/community'
+      path: '/community'
+      fullPath: '/community'
+      preLoaderRoute: typeof CommunityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/desk': {
+      id: '/desk'
+      path: '/desk'
+      fullPath: '/desk'
+      preLoaderRoute: typeof DeskRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/fixtures': {
@@ -277,7 +357,11 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AnthemRoute: AnthemRoute,
   CalendarRoute: CalendarRoute,
+  ClubsRoute: ClubsRoute,
+  CommunityRoute: CommunityRoute,
+  DeskRoute: DeskRoute,
   FixturesRoute: FixturesRoute,
   LeaderboardRoute: LeaderboardRoute,
   MvpVotingRoute: MvpVotingRoute,
