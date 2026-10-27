@@ -25,46 +25,7 @@ export interface MvpWinnerRecord {
 
 const STORAGE_KEY = "mpesa_pes_mvp_winners_history_v1";
 
-export const DEFAULT_MVP_WINNERS: MvpWinnerRecord[] = [
-  {
-    id: "mvp-win-1",
-    matchId: 1,
-    matchweek: 1,
-    fixtureTitle: "Samba Boys vs Young Stars City",
-    date: "Sunday, Oct 25, 2026",
-    winnerName: "Kevin Omondi",
-    teamName: "Samba Boys",
-    position: "FWD",
-    number: 9,
-    photoUrl:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
-    votesCount: 18,
-    votePercentage: 53,
-    totalBallotsCast: 34,
-    certifiedAt: "2026-10-25 18:00 EAT",
-    certifiedBy: "Supreme Council",
-    notes: "Netted a decisive brace with exceptional Christian sportsmanship recitation.",
-  },
-  {
-    id: "mvp-win-2",
-    matchId: 2,
-    matchweek: 2,
-    fixtureTitle: "Royal Rangers vs Mzinga Boyz",
-    date: "Sunday, Nov 01, 2026",
-    winnerName: "Dan Kiprop",
-    teamName: "Royal Rangers",
-    position: "MID",
-    number: 8,
-    photoUrl:
-      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80",
-    votesCount: 16,
-    votePercentage: 62,
-    totalBallotsCast: 26,
-    certifiedAt: "2026-11-01 18:30 EAT",
-    certifiedBy: "Supreme Council",
-    notes: "Controlled the midfield tempo with 2 key assists and zero fouls conceded.",
-  },
-];
+export const DEFAULT_MVP_WINNERS: MvpWinnerRecord[] = [];
 
 export function getMvpWinnersHistory(): MvpWinnerRecord[] {
   if (typeof window === "undefined") return DEFAULT_MVP_WINNERS;

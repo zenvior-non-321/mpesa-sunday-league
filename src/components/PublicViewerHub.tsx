@@ -56,50 +56,7 @@ export interface MatchTimelineEvent {
   detail?: string;
 }
 
-const DEFAULT_NEWS_ARTICLES: PublicNewsArticle[] = [
-  {
-    id: "news-1",
-    title: "Matchweek 1 Thriller: Samba Edges Young Stars City in 5-Goal Spectacular",
-    category: "MATCH_RECAP",
-    excerpt:
-      "Kevin Omondi nets a brace as Samba claims a 3-2 victory in the Sunday League season opener with fair play conduct points awarded to both clubs.",
-    content:
-      "Under radiant autumn skies at the Samba Arena, the 2026/27 M-Pesa Sunday League eFootball Championship kicked off with an electric contest. Both sides displayed exceptional Christian sportsmanship, reciting the opening scripture (1 Corinthians 9:24) in unison prior to kickoff. Kevin Omondi proved decisive with clinical finishing in the 14th and 68th minutes.",
-    author: "League Editorial Desk",
-    date: "Sunday, Oct 25, 2026",
-    imageUrl:
-      "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=600&auto=format&fit=crop&q=80",
-    readTime: "3 min read",
-  },
-  {
-    id: "news-2",
-    title: "Christian Sportsmanship Spotlight: Royal Rangers Zero-Card Milestone",
-    category: "SPOTLIGHT",
-    excerpt:
-      "Rangers captain Levis Wanyama commends defensive discipline and scripture memorization as squad leads Fair Play standings.",
-    content:
-      "The Royal Rangers have set the benchmark for league sportsmanship, completing consecutive matchweeks without a single disciplinary card while maintaining a 100% completion rate on Sunday school scripture memory verses. Head coach George Kibet highlighted the team's weekly devotionals as the foundation of their calm, disciplined play.",
-    author: "Spiritual Oversight Committee",
-    date: "Friday, Oct 23, 2026",
-    imageUrl:
-      "https://images.unsplash.com/photo-1517466787929-bc90951d0974?w=600&auto=format&fit=crop&q=80",
-    readTime: "2 min read",
-  },
-  {
-    id: "news-3",
-    title: "Official 15-Player Squad Cap and Admission Verification In Effect",
-    category: "ANNOUNCEMENT",
-    excerpt:
-      "All participating clubs confirm compliance with the executive registration directive and student eligibility standards.",
-    content:
-      "Regulations Manager Whitney Juma officially confirmed that all 4 active league clubs have successfully verified their 15-player squad limit rosters. Verified student admission cards, medical emergency numbers, and parental consent waivers are now secured in the digital league vault.",
-    author: "Registrar Office",
-    date: "Wednesday, Oct 21, 2026",
-    imageUrl:
-      "https://images.unsplash.com/photo-1526232761682-d26e03ac148e?w=600&auto=format&fit=crop&q=80",
-    readTime: "2 min read",
-  },
-];
+const DEFAULT_NEWS_ARTICLES: PublicNewsArticle[] = [];
 
 export function PublicViewerHub({
   initialSubTab = "hub",
