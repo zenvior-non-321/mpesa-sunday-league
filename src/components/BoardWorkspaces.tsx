@@ -54,6 +54,11 @@ import {
   Flame,
   CheckSquare,
 } from "lucide-react";
+import {
+  BOARD_ROLES_CATALOG,
+  type BoardRoleDefinition,
+  type BoardRoleFeature,
+} from "../lib/boardRolesCatalog";
 
 interface AdminSquadPlayer {
   name: string;
@@ -81,24 +86,54 @@ interface AdminTeam {
 export function BoardWorkspaces() {
   const { currentRole, isSuperAdmin } = useRoleAccess();
 
-  // Active workspace role selection (Defaults to user's assigned role or PRESIDENT)
-  const [activeWorkspaceRole, setActiveWorkspaceRole] = useState<LeagueRole>(
-    isSuperAdmin ? "SUPER_ADMIN" : currentRole === "GUEST" ? "PRESIDENT" : currentRole,
-  );
+  // Active workspace role selection (Super admin defaults to PRESIDENT, board members strictly locked to their assigned role)
+  const [activeWorkspaceRole, setActiveWorkspaceRole] = useState<LeagueRole>(() => {
+    if (isSuperAdmin) return "PRESIDENT";
+    if (currentRole && currentRole !== "GUEST") return currentRole;
+    return "PRESIDENT";
+  });
+
+  // Modal state when a board member tries to access another member's desk
+  const [restrictedRoleTarget, setRestrictedRoleTarget] = useState<LeagueRole | null>(null);
 
   useEffect(() => {
-    if (isSuperAdmin) {
-      setActiveWorkspaceRole("SUPER_ADMIN");
-    } else if (currentRole && currentRole !== "GUEST") {
+    if (!isSuperAdmin && currentRole && currentRole !== "GUEST") {
       setActiveWorkspaceRole(currentRole);
     }
   }, [currentRole, isSuperAdmin]);
+
+  const handleSwitchWorkspaceRole = (targetRole: LeagueRole) => {
+    if (isSuperAdmin) {
+      setActiveWorkspaceRole(targetRole);
+      return;
+    }
+    // Board member isolation rule:
+    if (currentRole && currentRole !== "GUEST") {
+      if (targetRole === currentRole) {
+        setActiveWorkspaceRole(targetRole);
+      } else {
+        // Access strictly locked to the assigned board member
+        setRestrictedRoleTarget(targetRole);
+      }
+    } else {
+      setRestrictedRoleTarget(targetRole);
+    }
+  };
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
   };
+
+  // 20+ Features Matrix State
+  const [featureSearchQuery, setFeatureSearchQuery] = useState("");
+  const [featureCategoryFilter, setFeatureCategoryFilter] = useState("ALL");
+  const [selectedFeature, setSelectedFeature] = useState<BoardRoleFeature | null>(null);
+  const [featureStatusMap, setFeatureStatusMap] = useState<
+    Record<string, "ACTIVE" | "PENDING" | "COMPLETED">
+  >({});
+  const [featureNotes, setFeatureNotes] = useState<Record<string, string>>({});
 
   // Shared state loaded from localStorage
   const [teams, setTeams] = useState<AdminTeam[]>(DEFAULT_TEAMS as unknown as AdminTeam[]);
@@ -129,7 +164,14 @@ export function BoardWorkspaces() {
       const customEvent = e as CustomEvent<{ role?: LeagueRole; tab: string }>;
       if (customEvent.detail) {
         const { role, tab } = customEvent.detail;
-        if (role) setActiveWorkspaceRole(role);
+        if (role) {
+          if (isSuperAdmin || currentRole === role) {
+            setActiveWorkspaceRole(role);
+          } else {
+            setRestrictedRoleTarget(role);
+            return;
+          }
+        }
         if (tab) {
           if (["overview", "hearings", "policy", "voting", "approvals", "meeting"].includes(tab)) {
             setPresidentTab(tab as typeof presidentTab);
@@ -202,28 +244,18 @@ export function BoardWorkspaces() {
     "overview" | "hearings" | "policy" | "voting" | "approvals" | "meeting"
   >("overview");
 
-  const [appeals, setAppeals] = useState([
-    {
-      id: "app-1",
-      club: "Young Stars City",
-      matchId: 1,
-      subject: "Protest regarding Matchweek 1 Pitch Condition & Added Time",
-      submittedBy: "Head Coach Kimani",
-      status: "UNDER_REVIEW",
-      evidenceSummary: "Referee report and timekeeper sheet submitted.",
-      ruling: "Pending final review by Supreme Council.",
-    },
-    {
-      id: "app-2",
-      club: "Royal Rangers",
-      matchId: 2,
-      subject: "Clarification on Conduct Bonus Points Allocation",
-      submittedBy: "Captain Levis Wanyama",
-      status: "RESOLVED",
-      evidenceSummary: "Scripture recitation confirmed by field chaplain.",
-      ruling: "Bonus points verified and recorded to official ledger.",
-    },
-  ]);
+  const [appeals, setAppeals] = useState<
+    Array<{
+      id: string;
+      club: string;
+      matchId?: number;
+      subject: string;
+      submittedBy: string;
+      status: "UNDER_REVIEW" | "RESOLVED" | "REJECTED";
+      evidenceSummary: string;
+      ruling?: string;
+    }>
+  >([]);
   const [hearingMinutes, setHearingMinutes] = useState("");
   const [hearingVerdict, setHearingVerdict] = useState("UPHELD");
 
@@ -237,10 +269,17 @@ export function BoardWorkspaces() {
     },
     {
       id: "amend-2",
-      title: "Christian Fellowship & Sportsmanship Conduct Pledge",
+      title: "Fair Play & Matchday Sportsmanship Charter",
       article: "Article II, Section 1",
-      text: "Every matchday shall commence with unified pastoral prayer and scripture reading.",
+      text: "Every matchday shall commence with unified pre-match fair play handshake protocol and captain declarations.",
       date: "2026-10-22",
+    },
+    {
+      id: "amend-3",
+      title: "Direct Quad-Crew Match Officiating Mandate",
+      article: "Article VII, Section 3",
+      text: "Every competitive fixture requires Center Referee, Senior Assistant, Assistant Referee, Fourth Official, and Match Commissioner certification.",
+      date: "2026-10-26",
     },
   ]);
   const [newAmendmentTitle, setNewAmendmentTitle] = useState("");
@@ -252,23 +291,11 @@ export function BoardWorkspaces() {
   const [activeMotions, setActiveMotions] = useState([
     {
       id: "motion-1",
-      title: "Motion to Approve Easter Knockout Cup Schedule & Venues",
-      deadline: "Sunday, Oct 25, 2026 at 23:59 EAT",
+      title: "Ratification of 2026 Sunday League Competition Venues & Schedules",
+      deadline: "Sunday, Nov 15, 2026 at 23:59 EAT",
       yesVotes: ["Alex Haro (President)", "Babra Nandako (Deputy)", "Tonnie Mark (Records)"],
       noVotes: [] as string[],
       status: "OPEN",
-    },
-    {
-      id: "motion-2",
-      title: "Ratification of Digital YouTube Studio Anthem Playlist",
-      deadline: "Friday, Oct 30, 2026 at 18:00 EAT",
-      yesVotes: [
-        "Alex Haro (President)",
-        "Victor Kiplagat (Tech)",
-        "Sturridge Ochongoi (Asst Tech)",
-      ],
-      noVotes: [] as string[],
-      status: "PASSED",
     },
   ]);
   const [newMotionTitle, setNewMotionTitle] = useState("");
@@ -276,24 +303,38 @@ export function BoardWorkspaces() {
   const [clubApprovals, setClubApprovals] = useState([
     {
       id: "ca-1",
-      name: "Bethany Warriors FC",
-      parish: "Bethany Youth Ministry",
-      status: "PENDING",
-      requestedBy: "Pastor Silas O.",
+      name: "Samba Boys",
+      division: "Youth Premier Division",
+      status: "APPROVED",
+      requestedBy: "Samba Club Secretary",
     },
     {
       id: "ca-2",
-      name: "Nazareth United",
-      parish: "St. Luke Parish",
+      name: "Royal Rangers",
+      division: "Youth Premier Division",
       status: "APPROVED",
-      requestedBy: "Coach Dan K.",
+      requestedBy: "Rangers Operations Officer",
+    },
+    {
+      id: "ca-3",
+      name: "Young Stars City",
+      division: "Youth Premier Division",
+      status: "APPROVED",
+      requestedBy: "Young Stars Technical Director",
+    },
+    {
+      id: "ca-4",
+      name: "Mzinga Boyz",
+      division: "Youth Premier Division",
+      status: "APPROVED",
+      requestedBy: "Mzinga Boyz Representative",
     },
   ]);
 
   const [boardMeetings, setBoardMeetings] = useState([
     {
       id: "bm-1",
-      title: "Quarterly Disciplinary Review & Trophy Planning",
+      title: "Supreme Council Executive Strategy & Match Operations Session",
       date: "Wednesday, Nov 04, 2026",
       time: "17:00 - 18:30 EAT",
       venue: "Executive Council Boardroom",
@@ -321,8 +362,8 @@ export function BoardWorkspaces() {
     },
     {
       id: "tf-2",
-      name: "Emergency First Aid & Medical Defibrillator Readiness",
-      assignedTo: "Parish Health Officers",
+      name: "Emergency First Aid & Sports Medical Readiness",
+      assignedTo: "League Medical & Health Stewards",
       progress: 100,
       status: "COMPLETED",
     },
@@ -337,24 +378,16 @@ export function BoardWorkspaces() {
   const [newTaskForceName, setNewTaskForceName] = useState("");
   const [newTaskForceAssignee, setNewTaskForceAssignee] = useState("");
 
-  const [escalations, setEscalations] = useState([
-    {
-      id: "esc-1",
-      department: "Match Officiating",
-      issue: "Assistant referee assignment pending for Samba Arena Pitch 2",
-      priority: "HIGH",
-      sentAt: "2026-10-23 11:20 EAT",
-      resolved: false,
-    },
-    {
-      id: "esc-2",
-      department: "Registration",
-      issue: "Duplicate student admission registration flagged in Young Stars",
-      priority: "MEDIUM",
-      sentAt: "2026-10-24 14:10 EAT",
-      resolved: true,
-    },
-  ]);
+  const [escalations, setEscalations] = useState<
+    Array<{
+      id: string;
+      department: string;
+      issue: string;
+      priority: "HIGH" | "MEDIUM" | "LOW";
+      sentAt: string;
+      resolved: boolean;
+    }>
+  >([]);
 
   // =========================================================================
   // 3. REGISTER & REGULATIONS — Whitney Juma State & Sub-Menu Tabs
@@ -363,98 +396,84 @@ export function BoardWorkspaces() {
     | "dashboard"
     | "licensing"
     | "player_verification"
+    | "transfers_desk"
     | "eligibility_violations"
     | "compliance_waivers"
   >("dashboard");
 
+  const [regTransferFromId, setRegTransferFromId] = useState<number>(1);
+  const [regTransferToId, setRegTransferToId] = useState<number>(6);
+  const [regTransferPlayer, setRegTransferPlayer] = useState<string>("");
+
   const [clubRegistrations, setClubRegistrations] = useState([
     {
       id: "reg-1",
-      clubName: "Royal Rangers",
-      parish: "St. Mark Parish",
+      clubName: "Samba Boys",
+      clubZone: "Academy East District",
       staffVerified: true,
       licenseIssued: true,
       status: "APPROVED",
     },
     {
       id: "reg-2",
-      clubName: "Bethany Warriors FC",
-      parish: "Bethany Youth Ministry",
+      clubName: "Royal Rangers",
+      clubZone: "Academy West District",
       staffVerified: true,
-      licenseIssued: false,
-      status: "PENDING_REVIEW",
+      licenseIssued: true,
+      status: "APPROVED",
+    },
+    {
+      id: "reg-3",
+      clubName: "Young Stars City",
+      clubZone: "Academy North District",
+      staffVerified: true,
+      licenseIssued: true,
+      status: "APPROVED",
+    },
+    {
+      id: "reg-4",
+      clubName: "Mzinga Boyz",
+      clubZone: "Academy South District",
+      staffVerified: true,
+      licenseIssued: true,
+      status: "APPROVED",
     },
   ]);
 
-  const [eligibilityAuditLogs, setEligibilityAuditLogs] = useState([
-    {
-      id: "ea-1",
-      player: "Kevin Omondi",
-      club: "Samba Boys",
-      age: 17,
-      division: "Youth Division",
-      status: "PASSED",
-      notes: "School ID and parental consent verified.",
-    },
-    {
-      id: "ea-2",
-      player: "Junior Kibet",
-      club: "Mzinga Boyz",
-      age: 19,
-      division: "Under-17 League",
-      status: "FLAGGED_OVERAGE",
-      notes: "Born 2007; exceeds division cutoff date.",
-    },
-    {
-      id: "ea-3",
-      player: "Dan Kiprop",
-      club: "Royal Rangers",
-      age: 16,
-      division: "Youth Division",
-      status: "PASSED",
-      notes: "Medical waiver signed by parish physician.",
-    },
-  ]);
+  const [eligibilityAuditLogs, setEligibilityAuditLogs] = useState<
+    Array<{
+      id: string;
+      player: string;
+      club: string;
+      age: number;
+      division: string;
+      status: "PASSED" | "FLAGGED_OVERAGE" | "FLAGGED_DOCUMENTS";
+      notes: string;
+    }>
+  >([]);
 
-  const [pendingPlayerApprovals, setPendingPlayerApprovals] = useState([
-    {
-      id: "pa-1",
-      name: "Moses Lengushuru",
-      club: "Young Stars City",
-      admissionNo: "ADM-9481",
-      age: 16,
-      docType: "Student ID Card",
-      approved: false,
-    },
-    {
-      id: "pa-2",
-      name: "Gabriel Kathele",
-      club: "Samba Boys",
-      admissionNo: "ADM-7729",
-      age: 17,
-      docType: "Birth Certificate",
-      approved: true,
-    },
-  ]);
+  const [pendingPlayerApprovals, setPendingPlayerApprovals] = useState<
+    Array<{
+      id: string;
+      name: string;
+      club: string;
+      admissionNo: string;
+      age: number;
+      docType: string;
+      approved: boolean;
+    }>
+  >([]);
 
-  const [waiversTracker, setWaiversTracker] = useState([
-    {
-      id: "wv-1",
-      athlete: "Kevin Omondi",
-      club: "Samba Boys",
-      consentSubmitted: true,
-      medicalClearance: true,
-      expiryDate: "2027-06-30",
-    },
-    {
-      id: "wv-2",
-      athlete: "Mark Musa",
-      club: "Young Stars City",
-      consentSubmitted: true,
-      medicalClearance: false,
-      expiryDate: "2026-12-31",
-    },
-  ]);
+  const [waiversTracker, setWaiversTracker] = useState<
+    Array<{
+      id: string;
+      athlete: string;
+      club: string;
+      consentSubmitted: boolean;
+      medicalClearance: boolean;
+      expiryDate: string;
+    }>
+  >([]);
 
   // =========================================================================
   // 4. MATCH OFFICIATING — Idi Sebantu State & Sub-Menu Tabs
@@ -463,55 +482,116 @@ export function BoardWorkspaces() {
     "overview" | "scheduler" | "ref_reports" | "performance" | "disputes"
   >("overview");
 
-  const [referees, setReferees] = useState([
-    {
-      id: "ref-bm",
-      name: "Bidan Mwaura",
-      badge: "Official League Referee",
-      assignedMatches: 5,
-      rating: 5.0,
-      active: true,
-    },
-    {
-      id: "ref-1",
-      name: "Ian Muli",
-      badge: "FIFA Center Referee",
-      assignedMatches: 4,
-      rating: 4.9,
-      active: true,
-    },
-    {
-      id: "ref-2",
-      name: "Francis Ndirangu",
-      badge: "Senior Assistant Referee",
-      assignedMatches: 3,
-      rating: 4.8,
-      active: true,
-    },
-    {
-      id: "ref-3",
-      name: "Peter Otieno",
-      badge: "Development Referee",
-      assignedMatches: 2,
-      rating: 4.6,
-      active: true,
-    },
-  ]);
+  const [referees, setReferees] = useState<
+    Array<{
+      id: string;
+      name: string;
+      badge: string;
+      phone?: string;
+      email?: string;
+      assignedMatches: number;
+      rating: number;
+      active: boolean;
+    }>
+  >(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("mpesa_pes_referees_v2");
+        if (stored) return JSON.parse(stored);
+      } catch {
+        // Ignore
+      }
+    }
+    return [
+      {
+        id: "ref-bm",
+        name: "Bidan Mwaura",
+        badge: "Center Referee",
+        phone: "+254 712 345 678",
+        email: "bidan.ref@mpesa.org",
+        assignedMatches: 5,
+        rating: 5.0,
+        active: true,
+      },
+      {
+        id: "ref-1",
+        name: "Ian Muli",
+        badge: "Center Referee",
+        phone: "+254 722 111 222",
+        email: "ian.ref@mpesa.org",
+        assignedMatches: 4,
+        rating: 4.9,
+        active: true,
+      },
+      {
+        id: "ref-2",
+        name: "Francis Ndirangu",
+        badge: "Linesman 1 (Senior Assistant)",
+        phone: "+254 733 444 555",
+        email: "francis.ref@mpesa.org",
+        assignedMatches: 3,
+        rating: 4.8,
+        active: true,
+      },
+      {
+        id: "ref-3",
+        name: "Peter Otieno",
+        badge: "Linesman 2 (Assistant Referee)",
+        phone: "+254 744 777 888",
+        email: "peter.ref@mpesa.org",
+        assignedMatches: 2,
+        rating: 4.6,
+        active: true,
+      },
+      {
+        id: "ref-4",
+        name: "Victor Kamau",
+        badge: "Fourth Official",
+        phone: "+254 755 999 000",
+        email: "victor.k@mpesa.org",
+        assignedMatches: 2,
+        rating: 4.7,
+        active: true,
+      },
+      {
+        id: "ref-5",
+        name: "Mitchelle Muthoni",
+        badge: "Match Commissioner (Technical Delegate)",
+        phone: "+254 711 222 333",
+        email: "commissioner.muthoni@mpesa.org",
+        assignedMatches: 3,
+        rating: 5.0,
+        active: true,
+      },
+    ];
+  });
+
+  const [newRefName, setNewRefName] = useState("");
+  const [newRefBadge, setNewRefBadge] = useState("Center Referee");
+  const [newRefPhone, setNewRefPhone] = useState("");
+  const [newRefEmail, setNewRefEmail] = useState("");
+
+  const [schedFixtureId, setSchedFixtureId] = useState<number>(1);
+  const [schedCenterRef, setSchedCenterRef] = useState("Bidan Mwaura");
+  const [schedLinesman1, setSchedLinesman1] = useState("Francis Ndirangu");
+  const [schedLinesman2, setSchedLinesman2] = useState("Peter Otieno");
+  const [schedFourthOfficial, setSchedFourthOfficial] = useState("Victor Kamau");
+  const [schedChaplain, setSchedChaplain] = useState("Mitchelle Muthoni (Match Commissioner)");
 
   const [chaplainAssignments, setChaplainAssignments] = useState([
     {
-      id: "chap-1",
+      id: "comm-1",
       matchweek: 1,
       fixture: "Samba Boys vs Young Stars City",
-      chaplain: "Pastor David M.",
-      prayerFocus: "Christian Brotherhood",
+      chaplain: "Mitchelle Muthoni",
+      prayerFocus: "FIFA Fair Play Handshake & Timekeeping",
     },
     {
-      id: "chap-2",
+      id: "comm-2",
       matchweek: 2,
       fixture: "Royal Rangers vs Mzinga Boyz",
-      chaplain: "Deaconess Grace W.",
-      prayerFocus: "Fair Play & Peacemaking",
+      chaplain: "Idi Sebantu",
+      prayerFocus: "Conduct Protocol & Pitch Safety",
     },
   ]);
 
@@ -630,7 +710,7 @@ export function BoardWorkspaces() {
   const [contentDrafts, setContentDrafts] = useState([
     {
       id: "draft-1",
-      title: "Player of the Week: Kevin Omondi's Opening Day Brace",
+      title: "Player of the Week: Wokabi's Opening Day Brace",
       status: "READY_FOR_APPROVAL",
       submittedBy: "Sturridge Ochongoi",
       type: "Match Recap",
@@ -644,10 +724,10 @@ export function BoardWorkspaces() {
     },
     {
       id: "draft-3",
-      title: "Midweek Devotional: 1 Cor 9:24 — Running for the Imperishable Crown",
+      title: "Tactical Breakdown: High-Press Systems in Youth Football",
       status: "READY_FOR_APPROVAL",
       submittedBy: "Sturridge Ochongoi",
-      type: "Devotional",
+      type: "Match Analysis",
     },
   ]);
   const [newDraftTitle, setNewDraftTitle] = useState("");
@@ -748,29 +828,38 @@ export function BoardWorkspaces() {
         {/* Role Navigation Switcher for Council & Admins */}
         <div className="flex flex-wrap items-center gap-1.5 bg-[#0a071b] p-1.5 rounded-2xl border border-[#2e2554]">
           {[
-            { id: "PRESIDENT", label: "1. President", icon: Crown },
-            { id: "DEPUTY_PRESIDENT", label: "2. Deputy", icon: Shield },
-            { id: "REGULATIONS_MANAGER", label: "3. Registrar", icon: FileText },
-            { id: "MATCH_OFFICIATING_MANAGER", label: "4. Officiating", icon: Flag },
-            { id: "RECORDS_MANAGER", label: "5. Records", icon: BookOpen },
-            { id: "TECH_MANAGER", label: "6. Tech Mgr", icon: Activity },
-            { id: "ASST_TECH_MANAGER", label: "7. Asst Tech", icon: Layers },
+            { id: "PRESIDENT", label: "1. President (Alex Haro)", icon: Crown },
+            { id: "DEPUTY_PRESIDENT", label: "2. Deputy (Babra Nandako)", icon: Shield },
+            { id: "REGULATIONS_MANAGER", label: "3. Registrar (Whitney Juma)", icon: FileText },
+            { id: "MATCH_OFFICIATING_MANAGER", label: "4. Officiating (Idi Sebantu)", icon: Flag },
+            { id: "RECORDS_MANAGER", label: "5. Records (Tonnie Odundo)", icon: BookOpen },
+            { id: "TECH_MANAGER", label: "6. Tech Mgr (Victor Kiplagat)", icon: Activity },
+            { id: "ASST_TECH_MANAGER", label: "7. Asst Tech (Sturridge)", icon: Layers },
           ].map((r) => {
             const Icon = r.icon;
             const isActive = activeWorkspaceRole === r.id;
+            const isAccessible = isSuperAdmin || currentRole === r.id;
             return (
               <button
                 key={r.id}
                 type="button"
-                onClick={() => setActiveWorkspaceRole(r.id as LeagueRole)}
+                onClick={() => handleSwitchWorkspaceRole(r.id as LeagueRole)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
                   isActive
                     ? "bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-black shadow-md"
-                    : "text-gray-400 hover:text-white"
+                    : isAccessible
+                      ? "text-gray-400 hover:text-white"
+                      : "text-gray-500 hover:text-amber-300 opacity-80"
                 }`}
+                title={
+                  isAccessible
+                    ? `Operate ${r.label}`
+                    : `Protected Desk: ${r.label} (Council Separation of Powers)`
+                }
               >
                 <Icon className="w-3.5 h-3.5" />
                 <span>{r.label}</span>
+                {!isAccessible && <Lock className="w-3 h-3 text-amber-400 shrink-0" />}
               </button>
             );
           })}
@@ -778,63 +867,289 @@ export function BoardWorkspaces() {
       </div>
 
       {/* =========================================================================
+          DYNAMIC ROLE PROFILE CARD & 20+ FEATURES CATALOG (BOARD_ROLES_CATALOG)
+          ========================================================================= */}
+      {(() => {
+        const roleKey = (
+          activeWorkspaceRole === "SUPER_ADMIN" ? "PRESIDENT" : activeWorkspaceRole
+        ) as Exclude<LeagueRole, "SUPER_ADMIN" | "GUEST">;
+        const roleDef = BOARD_ROLES_CATALOG[roleKey];
+        if (!roleDef) return null;
+
+        const categories = ["ALL", ...Array.from(new Set(roleDef.features.map((f) => f.category)))];
+        const filteredFeatures = roleDef.features.filter((f) => {
+          const matchesCat =
+            featureCategoryFilter === "ALL" || f.category === featureCategoryFilter;
+          const q = featureSearchQuery.toLowerCase().trim();
+          const matchesQ =
+            !q ||
+            f.title.toLowerCase().includes(q) ||
+            f.description.toLowerCase().includes(q) ||
+            f.category.toLowerCase().includes(q);
+          return matchesCat && matchesQ;
+        });
+
+        return (
+          <div className="space-y-4">
+            {/* Role Header Card */}
+            <div className="p-5 bg-gradient-to-r from-[#120d2d] via-[#18113c] to-[#0d0924] border-2 border-indigo-400/40 rounded-3xl shadow-xl space-y-3">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-white/10 pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-amber-400/20 border border-amber-400/40 flex items-center justify-center text-2xl shadow">
+                    {roleDef.iconSymbol}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30">
+                        {roleDef.tier} • {roleDef.department}
+                      </span>
+                      <span className="text-[10px] font-mono text-cyan-300 font-bold">
+                        Lead: {roleDef.officialLead}
+                      </span>
+                    </div>
+                    <h3 className="font-header text-lg sm:text-xl font-black text-white uppercase mt-0.5">
+                      {roleDef.title}
+                    </h3>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-xs px-3 py-1 rounded-xl bg-purple-500/20 border border-purple-400/30 text-purple-200 font-mono font-bold">
+                    {roleDef.features.length} Features Active
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                <div className="p-3 bg-[#0a071b] rounded-2xl border border-white/5 space-y-1">
+                  <span className="text-[10px] uppercase font-bold text-gray-400 block">
+                    Core Mandate & Function:
+                  </span>
+                  <p className="text-gray-300 leading-relaxed">{roleDef.roleDescription}</p>
+                </div>
+                <div className="p-3 bg-[#0a071b] rounded-2xl border border-emerald-500/20 space-y-1">
+                  <span className="text-[10px] uppercase font-bold text-emerald-400 block">
+                    ⚡ Web Flow & Public Impact:
+                  </span>
+                  <p className="text-emerald-200 leading-relaxed font-mono text-[11px]">
+                    {roleDef.webFlowImpact}
+                  </p>
+                </div>
+              </div>
+
+              {/* 20+ Features Matrix Drawer / Quick Browser */}
+              <div className="pt-2 border-t border-white/10 space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-amber-400" />
+                    <span className="text-xs font-black uppercase tracking-wider text-white">
+                      Assigned 20+ Functional Features & Workspaces ({filteredFeatures.length}/
+                      {roleDef.features.length})
+                    </span>
+                  </div>
+
+                  <div className="relative w-full sm:w-64">
+                    <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Search features..."
+                      value={featureSearchQuery}
+                      onChange={(e) => setFeatureSearchQuery(e.target.value)}
+                      className="w-full bg-[#0a071b] border border-[#2e2554] rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder-gray-500 outline-none focus:border-amber-400"
+                    />
+                  </div>
+                </div>
+
+                {/* Category Pills */}
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+                  {categories.map((cat) => (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => setFeatureCategoryFilter(cat)}
+                      className={`px-2.5 py-1 rounded-xl text-[10px] font-bold tracking-wide transition cursor-pointer whitespace-nowrap ${
+                        featureCategoryFilter === cat
+                          ? "bg-amber-400 text-black font-black shadow"
+                          : "bg-[#0a071b] text-gray-400 hover:text-white border border-[#2e2554]"
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Features Mini-Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 max-h-60 overflow-y-auto pr-1">
+                  {filteredFeatures.map((feat) => {
+                    const status = featureStatusMap[feat.id] || "ACTIVE";
+                    return (
+                      <div
+                        key={feat.id}
+                        onClick={() => setSelectedFeature(feat)}
+                        className="p-3 bg-[#0e0926] hover:bg-[#150f38] border border-[#2e2554] hover:border-amber-400/40 rounded-2xl transition cursor-pointer flex flex-col justify-between gap-1 group shadow"
+                      >
+                        <div className="flex items-start justify-between gap-1.5">
+                          <span className="text-[10px] px-1.5 py-0.5 rounded font-mono font-bold bg-[#1d1645] text-amber-300 border border-amber-400/20">
+                            {feat.category}
+                          </span>
+                          <span
+                            className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase ${
+                              status === "ACTIVE"
+                                ? "bg-emerald-400/20 text-emerald-300"
+                                : "bg-cyan-400/20 text-cyan-300"
+                            }`}
+                          >
+                            {status}
+                          </span>
+                        </div>
+                        <h5 className="text-xs font-black text-white group-hover:text-amber-300 transition line-clamp-1 mt-1">
+                          {feat.title}
+                        </h5>
+                        <p className="text-[10px] text-gray-400 line-clamp-2 leading-tight">
+                          {feat.description}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Selected Feature Interactive Drawer/Modal */}
+            {selectedFeature && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
+                <div className="bg-[#100c2a] border-2 border-amber-400/50 rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4">
+                  <div className="flex items-center justify-between border-b border-[#2e2554] pb-3">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-5 h-5 text-amber-400" />
+                      <div>
+                        <span className="text-[10px] font-mono text-amber-300 font-bold uppercase">
+                          {selectedFeature.category} • {roleDef.officialLead}
+                        </span>
+                        <h4 className="text-sm font-black text-white uppercase">
+                          {selectedFeature.title}
+                        </h4>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedFeature(null)}
+                      className="text-gray-400 hover:text-white p-1 rounded-xl"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  <p className="text-xs text-gray-300 leading-relaxed bg-[#0a071b] p-3 rounded-2xl border border-white/5">
+                    {selectedFeature.description}
+                  </p>
+
+                  <div className="space-y-2">
+                    <label className="block text-[10px] font-bold uppercase text-gray-400">
+                      Module Execution Notes / Decision Record:
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={featureNotes[selectedFeature.id] || ""}
+                      onChange={(e) =>
+                        setFeatureNotes({ ...featureNotes, [selectedFeature.id]: e.target.value })
+                      }
+                      placeholder="Add executive comments, verification stamps, or audit references..."
+                      className="w-full bg-[#161138] border border-[#2e2554] rounded-xl p-2.5 text-xs text-white outline-none"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-[#2e2554]">
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFeatureStatusMap({
+                            ...featureStatusMap,
+                            [selectedFeature.id]: "ACTIVE",
+                          });
+                          showToast(`✓ ${selectedFeature.title} marked ACTIVE`);
+                        }}
+                        className="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 text-[10px] font-bold border border-emerald-500/30 cursor-pointer"
+                      >
+                        Set Active
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFeatureStatusMap({
+                            ...featureStatusMap,
+                            [selectedFeature.id]: "COMPLETED",
+                          });
+                          showToast(`✓ ${selectedFeature.title} marked CERTIFIED / COMPLETED`);
+                        }}
+                        className="px-2.5 py-1 rounded-lg bg-cyan-500/20 text-cyan-300 text-[10px] font-bold border border-cyan-500/30 cursor-pointer"
+                      >
+                        Certify Module
+                      </button>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        showToast(
+                          `✓ Executed task for "${selectedFeature.title}"! Changes synchronized.`,
+                        );
+                        setSelectedFeature(null);
+                      }}
+                      className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-black text-xs uppercase hover:brightness-110 shadow cursor-pointer"
+                    >
+                      Execute Module
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
+      {/* =========================================================================
           ROLE 1: PRESIDENT — BRAMUEL AMIRAH
           Sidebar Menu: Executive Overview, Dispute & Hearing Center, Policy & Constitution Portal,
                         Board Voting & Motions, Executive Approvals, Board Meeting Planner
           ========================================================================= */}
       {activeWorkspaceRole === "PRESIDENT" && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-in fade-in">
-          {/* Dedicated Left Sidebar Navigation Menu */}
-          <div className="lg:col-span-3 bg-[#0a071b] border border-amber-400/30 rounded-3xl p-4 space-y-2 shadow-xl">
-            <div className="px-3 py-2 border-b border-[#2e2554]">
-              <span className="text-[10px] uppercase font-black tracking-wider text-amber-300 block">
-                Sidebar Navigation Menu
-              </span>
-              <h4 className="text-sm font-black text-white uppercase mt-0.5">
-                Presidential Portal
-              </h4>
-            </div>
-
-            <nav className="space-y-1">
-              {[
-                { id: "overview", label: "📊 Executive Overview", sub: "KPIs & League Summary" },
-                {
-                  id: "hearings",
-                  label: "⚖️ Dispute & Hearing Center",
-                  sub: "Protests, Hearings, Rulings",
-                },
-                {
-                  id: "policy",
-                  label: "📜 Policy & Constitution",
-                  sub: "Rulebook & Conduct Amendments",
-                },
-                {
-                  id: "voting",
-                  label: "🗳️ Board Voting & Motions",
-                  sub: "Motions & 7-Member Quorum",
-                },
-                { id: "approvals", label: "🤝 Executive Approvals", sub: "New Clubs & Budgets" },
-                { id: "meeting", label: "📅 Board Meeting Planner", sub: "Executive Sessions" },
-              ].map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => setPresidentTab(item.id as typeof presidentTab)}
-                  className={`w-full text-left p-3 rounded-2xl transition cursor-pointer flex flex-col ${
-                    presidentTab === item.id
-                      ? "bg-amber-400/20 border border-amber-400/50 text-white shadow-lg shadow-amber-500/10"
-                      : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
+        <div className="w-full space-y-6 animate-in fade-in">
+          {/* Top Desk Pill Navigation */}
+          <div className="flex flex-wrap items-center gap-1.5 p-2 bg-[#0a071b] border border-amber-400/30 rounded-2xl shadow-lg">
+            {[
+              { id: "overview", label: "📊 Executive Overview", count: "KPIs" },
+              { id: "hearings", label: "⚖️ Dispute & Hearing Center", count: appeals.length },
+              { id: "policy", label: "📜 Policy & Constitution", count: publishedAmendments.length },
+              { id: "voting", label: "🗳️ Board Voting & Motions", count: activeMotions.length },
+              { id: "approvals", label: "🤝 Executive Approvals", count: clubApprovals.length },
+              { id: "meeting", label: "📅 Board Meeting Planner", count: boardMeetings.length },
+            ].map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setPresidentTab(item.id as typeof presidentTab)}
+                className={`px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-2 ${
+                  presidentTab === item.id
+                    ? "bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-black shadow-md"
+                    : "text-gray-300 hover:text-white hover:bg-white/5"
+                }`}
+              >
+                <span>{item.label}</span>
+                <span
+                  className={`text-[9px] px-1.5 py-0.5 rounded-full font-mono font-bold ${
+                    presidentTab === item.id ? "bg-black/20 text-black" : "bg-white/10 text-gray-400"
                   }`}
                 >
-                  <span className="text-xs font-black">{item.label}</span>
-                  <span className="text-[10px] text-gray-400 mt-0.5">{item.sub}</span>
-                </button>
-              ))}
-            </nav>
+                  {item.count}
+                </span>
+              </button>
+            ))}
           </div>
 
-          {/* Right Main Content Area */}
-          <div className="lg:col-span-9 space-y-6">
+          {/* Full Width Main Workspace Content */}
+          <div className="space-y-6">
             {presidentTab === "overview" && (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -1332,59 +1647,44 @@ export function BoardWorkspaces() {
                         Inter-Departmental Escalations
           ========================================================================= */}
       {activeWorkspaceRole === "DEPUTY_PRESIDENT" && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-in fade-in">
-          {/* Dedicated Left Sidebar Navigation Menu */}
-          <div className="lg:col-span-3 bg-[#0a071b] border border-cyan-400/30 rounded-3xl p-4 space-y-2 shadow-xl">
-            <div className="px-3 py-2 border-b border-[#2e2554]">
-              <span className="text-[10px] uppercase font-black tracking-wider text-cyan-300 block">
-                Sidebar Navigation Menu
-              </span>
-              <h4 className="text-sm font-black text-white uppercase mt-0.5">Deputy Operations</h4>
-            </div>
-
-            <nav className="space-y-1">
-              {[
-                { id: "overview", label: "📊 Operations Hub", sub: "Supervision & Readiness" },
-                {
-                  id: "monitoring",
-                  label: "📈 Departmental Progress",
-                  sub: "Registration, Officiating, Records",
-                },
-                {
-                  id: "acting_override",
-                  label: "⚡ Executive Acting Override",
-                  sub: "Emergency Approval Controls",
-                },
-                {
-                  id: "task_force",
-                  label: "🎯 Task Force Manager",
-                  sub: "Inspections & Deadlines",
-                },
-                {
-                  id: "escalations",
-                  label: "⚠️ Escalations Desk",
-                  sub: "Inter-Departmental Issues",
-                },
-              ].map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => setDeputyTab(item.id as typeof deputyTab)}
-                  className={`w-full text-left p-3 rounded-2xl transition cursor-pointer flex flex-col ${
-                    deputyTab === item.id
-                      ? "bg-cyan-400/20 border border-cyan-400/50 text-white shadow-lg shadow-cyan-500/10"
-                      : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
+        <div className="w-full space-y-6 animate-in fade-in">
+          {/* Top Desk Pill Navigation */}
+          <div className="flex flex-wrap items-center gap-1.5 p-2 bg-[#0a071b] border border-cyan-400/30 rounded-2xl shadow-lg">
+            {[
+              { id: "overview", label: "📊 Operations Hub", count: "Readiness" },
+              { id: "monitoring", label: "📈 Department Progress", count: "4 Depts" },
+              {
+                id: "acting_override",
+                label: "⚡ Acting Presidential Override",
+                count: actingPresidentOverride ? "ACTIVE" : "STANDBY",
+              },
+              { id: "task_force", label: "🎯 Task Force Manager", count: taskForces.length },
+              { id: "escalations", label: "⚠️ Escalations Desk", count: escalations.length },
+            ].map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setDeputyTab(item.id as typeof deputyTab)}
+                className={`px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-2 ${
+                  deputyTab === item.id
+                    ? "bg-gradient-to-r from-cyan-400 to-blue-500 text-black font-black shadow-md"
+                    : "text-gray-300 hover:text-white hover:bg-white/5"
+                }`}
+              >
+                <span>{item.label}</span>
+                <span
+                  className={`text-[9px] px-1.5 py-0.5 rounded-full font-mono font-bold ${
+                    deputyTab === item.id ? "bg-black/20 text-black" : "bg-white/10 text-gray-400"
                   }`}
                 >
-                  <span className="text-xs font-black">{item.label}</span>
-                  <span className="text-[10px] text-gray-400 mt-0.5">{item.sub}</span>
-                </button>
-              ))}
-            </nav>
+                  {item.count}
+                </span>
+              </button>
+            ))}
           </div>
 
-          {/* Right Main Content Area */}
-          <div className="lg:col-span-9 space-y-6">
+          {/* Full Width Main Workspace Content */}
+          <div className="space-y-6">
             {deputyTab === "overview" && (
               <div className="bg-[#0b0821] border border-cyan-400/30 rounded-3xl p-6 shadow-xl space-y-4">
                 <h4 className="font-header text-base font-black text-white uppercase flex items-center gap-2">
@@ -1675,65 +1975,53 @@ export function BoardWorkspaces() {
                         Eligibility & Violations Engine, Compliance & Waivers
           ========================================================================= */}
       {activeWorkspaceRole === "REGULATIONS_MANAGER" && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-in fade-in">
-          {/* Dedicated Left Sidebar Navigation Menu */}
-          <div className="lg:col-span-3 bg-[#0a071b] border border-blue-400/30 rounded-3xl p-4 space-y-2 shadow-xl">
-            <div className="px-3 py-2 border-b border-[#2e2554]">
-              <span className="text-[10px] uppercase font-black tracking-wider text-blue-300 block">
-                Sidebar Navigation Menu
-              </span>
-              <h4 className="text-sm font-black text-white uppercase mt-0.5">
-                Registration & Rules
-              </h4>
-            </div>
-
-            <nav className="space-y-1">
-              {[
-                {
-                  id: "dashboard",
-                  label: "📋 Registration Dashboard",
-                  sub: "Overview & Roster Audits",
-                },
-                {
-                  id: "licensing",
-                  label: "🛡️ Club & Staff Licensing",
-                  sub: "Club & Coach Approvals",
-                },
-                {
-                  id: "player_verification",
-                  label: "⚽ Player Verification Desk",
-                  sub: "Approvals & Digital Passes",
-                },
-                {
-                  id: "eligibility_violations",
-                  label: "🚨 Eligibility & Violations",
-                  sub: "Age Flags & Suspensions",
-                },
-                {
-                  id: "compliance_waivers",
-                  label: "📑 Compliance & Waivers",
-                  sub: "Parental & Medical Slips",
-                },
-              ].map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => setRegulationsTab(item.id as typeof regulationsTab)}
-                  className={`w-full text-left p-3 rounded-2xl transition cursor-pointer flex flex-col ${
-                    regulationsTab === item.id
-                      ? "bg-blue-400/20 border border-blue-400/50 text-white shadow-lg shadow-blue-500/10"
-                      : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
+        <div className="w-full space-y-6 animate-in fade-in">
+          {/* Top Desk Pill Navigation */}
+          <div className="flex flex-wrap items-center gap-1.5 p-2 bg-[#0a071b] border border-blue-400/30 rounded-2xl shadow-lg">
+            {[
+              { id: "dashboard", label: "📋 Registration Dashboard", count: `${teams.length} Clubs` },
+              { id: "licensing", label: "🛡️ Club & Staff Licensing", count: clubRegistrations.length },
+              {
+                id: "player_verification",
+                label: "⚽ Player Verification Desk",
+                count: pendingPlayerApprovals.length,
+              },
+              { id: "transfers_desk", label: "🔄 Squad Transfers & 15-Cap", count: "15-Cap" },
+              {
+                id: "eligibility_violations",
+                label: "🚨 Eligibility & Violations",
+                count: eligibilityAuditLogs.length,
+              },
+              {
+                id: "compliance_waivers",
+                label: "📑 Compliance & Waivers",
+                count: waiversTracker.length,
+              },
+            ].map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setRegulationsTab(item.id as typeof regulationsTab)}
+                className={`px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-2 ${
+                  regulationsTab === item.id
+                    ? "bg-gradient-to-r from-blue-400 to-indigo-500 text-black font-black shadow-md"
+                    : "text-gray-300 hover:text-white hover:bg-white/5"
+                }`}
+              >
+                <span>{item.label}</span>
+                <span
+                  className={`text-[9px] px-1.5 py-0.5 rounded-full font-mono font-bold ${
+                    regulationsTab === item.id ? "bg-black/20 text-black" : "bg-white/10 text-gray-400"
                   }`}
                 >
-                  <span className="text-xs font-black">{item.label}</span>
-                  <span className="text-[10px] text-gray-400 mt-0.5">{item.sub}</span>
-                </button>
-              ))}
-            </nav>
+                  {item.count}
+                </span>
+              </button>
+            ))}
           </div>
 
-          {/* Right Main Content Area */}
-          <div className="lg:col-span-9 space-y-6">
+          {/* Full Width Main Workspace Content */}
+          <div className="space-y-6">
             {regulationsTab === "dashboard" && (
               <div className="bg-[#0b0821] border border-blue-400/30 rounded-3xl p-6 shadow-xl space-y-4">
                 <h4 className="font-header text-base font-black text-white uppercase flex items-center gap-2">
@@ -1861,6 +2149,207 @@ export function BoardWorkspaces() {
                             ✓ Pass Active
                           </span>
                         )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {regulationsTab === "transfers_desk" && (
+              <div className="bg-[#0b0821] border border-blue-400/30 rounded-3xl p-6 shadow-xl space-y-5">
+                <div className="border-b border-[#2e2554] pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <h4 className="font-header text-base font-black text-white uppercase flex items-center gap-2">
+                      <Shield className="w-5 h-5 text-blue-400" />
+                      Inter-Club Squad Transfers & 15-Player Cap Regulator
+                    </h4>
+                    <p className="text-xs text-gray-300 mt-0.5">
+                      Enforce strict 15-player squad limits (Article IV, Section 2) and process
+                      certified athlete transfer clearances.
+                    </p>
+                  </div>
+                  <span className="px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 font-mono font-bold text-xs border border-blue-500/30">
+                    Regulation Desk Active
+                  </span>
+                </div>
+
+                {/* Transfer Form Card */}
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (!regTransferPlayer || regTransferFromId === regTransferToId) {
+                      showToast("⚠ Please choose a player and two different clubs.");
+                      return;
+                    }
+                    const destTeam = teams.find((t) => t.id === Number(regTransferToId));
+                    if (destTeam && (destTeam.squad?.length || 0) >= 15) {
+                      showToast(
+                        `⚠ TRANSFER BLOCKED: ${destTeam.name} already has 15 players (Max Cap Reached).`,
+                      );
+                      return;
+                    }
+                    const sourceTeam = teams.find((t) => t.id === Number(regTransferFromId));
+                    const playerObj = sourceTeam?.squad?.find((p) => p.name === regTransferPlayer);
+                    if (!playerObj) {
+                      showToast("⚠ Athlete not found in source club squad.");
+                      return;
+                    }
+
+                    const updatedTeams = teams.map((t) => {
+                      if (t.id === Number(regTransferFromId)) {
+                        return {
+                          ...t,
+                          squad: (t.squad || []).filter((p) => p.name !== regTransferPlayer),
+                        };
+                      }
+                      if (t.id === Number(regTransferToId)) {
+                        return {
+                          ...t,
+                          squad: [...(t.squad || []), playerObj],
+                        };
+                      }
+                      return t;
+                    });
+
+                    setTeams(updatedTeams);
+                    localStorage.setItem("mpesa_pes_teams_v6", JSON.stringify(updatedTeams));
+                    window.dispatchEvent(new Event("storage"));
+                    showToast(`✓ Player ${regTransferPlayer} transferred to ${destTeam?.name}!`);
+                    setRegTransferPlayer("");
+                  }}
+                  className="bg-[#141029] border border-[#2e2554] rounded-2xl p-5 space-y-4"
+                >
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-gray-400 font-bold uppercase text-[10px] mb-1.5">
+                        Origin Club
+                      </label>
+                      <select
+                        value={regTransferFromId}
+                        onChange={(e) => {
+                          const newFrom = Number(e.target.value);
+                          setRegTransferFromId(newFrom);
+                          const firstP = teams.find((t) => t.id === newFrom)?.squad?.[0]?.name;
+                          if (firstP) setRegTransferPlayer(firstP);
+                        }}
+                        className="w-full bg-[#0a071b] border border-[#2e2554] focus:border-blue-400 rounded-xl px-3 py-2 text-xs font-bold text-white outline-none"
+                      >
+                        {teams.map((t) => (
+                          <option key={`reg-from-${t.id}`} value={t.id}>
+                            {t.name} ({t.squad?.length || 0}/15)
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-gray-400 font-bold uppercase text-[10px] mb-1.5">
+                        Select Athlete
+                      </label>
+                      <select
+                        value={regTransferPlayer}
+                        onChange={(e) => setRegTransferPlayer(e.target.value)}
+                        className="w-full bg-[#0a071b] border border-[#2e2554] focus:border-blue-400 rounded-xl px-3 py-2 text-xs font-bold text-white outline-none"
+                      >
+                        <option value="">-- Choose Athlete --</option>
+                        {(teams.find((t) => t.id === Number(regTransferFromId))?.squad || []).map(
+                          (p, pIdx) => (
+                            <option key={`reg-p-${p.name}-${pIdx}`} value={p.name}>
+                              #{p.number || pIdx + 1} - {p.name} ({p.position || "MID"})
+                            </option>
+                          ),
+                        )}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-gray-400 font-bold uppercase text-[10px] mb-1.5">
+                        Destination Club
+                      </label>
+                      <select
+                        value={regTransferToId}
+                        onChange={(e) => setRegTransferToId(Number(e.target.value))}
+                        className="w-full bg-[#0a071b] border border-[#2e2554] focus:border-blue-400 rounded-xl px-3 py-2 text-xs font-bold text-white outline-none"
+                      >
+                        {teams.map((t) => (
+                          <option key={`reg-to-${t.id}`} value={t.id}>
+                            {t.name} ({t.squad?.length || 0}/15){" "}
+                            {(t.squad?.length || 0) >= 15 ? "⚠ FULL" : "✓ Cap OK"}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* 15-Player Cap Warning Indicator */}
+                  {(() => {
+                    const dest = teams.find((t) => t.id === Number(regTransferToId));
+                    const isFull = (dest?.squad?.length || 0) >= 15;
+                    if (isFull) {
+                      return (
+                        <div className="p-3 bg-rose-500/20 border border-rose-500/40 rounded-xl text-xs text-rose-300 flex items-center gap-2">
+                          <AlertCircle className="w-4 h-4 shrink-0" />
+                          <span>
+                            <strong>Squad Cap Warning:</strong> {dest?.name} has reached the maximum
+                            15-player roster limit. Transfer will be blocked by system regulations.
+                          </span>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
+
+                  <div className="flex items-center justify-between pt-2 border-t border-[#2e2554]">
+                    <span className="text-[11px] text-gray-400 font-mono">
+                      Target Cap:{" "}
+                      {teams.find((t) => t.id === Number(regTransferToId))?.squad?.length || 0}/15
+                      Players
+                    </span>
+                    <button
+                      type="submit"
+                      disabled={!regTransferPlayer || regTransferFromId === regTransferToId}
+                      className="px-5 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:brightness-110 text-white font-black text-xs uppercase tracking-wide transition shadow-lg shadow-blue-500/20 cursor-pointer disabled:opacity-50"
+                    >
+                      Authorize & Execute Transfer
+                    </button>
+                  </div>
+                </form>
+
+                {/* Clubs Squad Roster Status */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                  {teams.map((t) => (
+                    <div
+                      key={`reg-team-squad-${t.id}`}
+                      className="p-4 bg-[#141029] rounded-2xl border border-[#2e2554] space-y-2"
+                    >
+                      <div className="flex items-center justify-between border-b border-[#2e2554] pb-2">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="w-2.5 h-2.5 rounded-full"
+                            style={{ backgroundColor: t.color || "#00f0ff" }}
+                          />
+                          <span className="font-bold text-white text-xs">{t.name}</span>
+                        </div>
+                        <span
+                          className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold ${
+                            (t.squad?.length || 0) >= 15
+                              ? "bg-rose-500/20 text-rose-300"
+                              : "bg-emerald-500/20 text-emerald-300"
+                          }`}
+                        >
+                          {t.squad?.length || 0} / 15 Players
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap gap-1 max-h-32 overflow-y-auto">
+                        {(t.squad || []).map((p, idx) => (
+                          <span
+                            key={`p-tag-${t.id}-${p.name}-${idx}`}
+                            className="text-[10px] px-2 py-0.5 rounded-lg bg-[#0a071b] text-gray-300 border border-[#261f4d]"
+                          >
+                            #{p.number || idx + 1} {p.name}
+                          </span>
+                        ))}
                       </div>
                     </div>
                   ))}
@@ -2032,31 +2521,410 @@ export function BoardWorkspaces() {
             )}
 
             {officiatingTab === "scheduler" && (
-              <div className="bg-[#0b0821] border border-purple-400/30 rounded-3xl p-6 shadow-xl space-y-4">
-                <h4 className="font-header text-base font-black text-white uppercase flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-purple-400" />
-                  Referee Match Scheduler & Chaplain Assignments
-                </h4>
-                <div className="space-y-3">
-                  <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider block">
-                    Pitch Chaplain Schedules (Pastoral Prayer Protocol)
+              <div className="bg-[#0b0821] border border-purple-400/30 rounded-3xl p-6 shadow-xl space-y-6">
+                <div className="border-b border-[#2e2554] pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <h4 className="font-header text-base font-black text-white uppercase flex items-center gap-2">
+                      <Calendar className="w-5 h-5 text-purple-400" />
+                      Match Officiating Programmes Manager & Quad-Crew Allocator
+                    </h4>
+                    <p className="text-xs text-gray-300 mt-0.5">
+                      Register certified referees and assign complete quad-crews (Center Ref,
+                      Linesman 1, Linesman 2, 4th Official & Chaplain) to match fixtures.
+                    </p>
+                  </div>
+                  <span className="px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 font-mono font-bold text-xs border border-purple-500/30">
+                    Idi Sebantu • Officiating Lead
                   </span>
-                  {chaplainAssignments.map((ca) => (
-                    <div
-                      key={ca.id}
-                      className="p-4 bg-[#141029] rounded-2xl border border-[#2e2554] flex items-center justify-between"
-                    >
-                      <div>
-                        <span className="text-xs font-bold text-white">{ca.fixture}</span>
-                        <span className="text-[11px] text-purple-300 block font-mono">
-                          Chaplain: {ca.chaplain} • Theme: {ca.prayerFocus}
-                        </span>
-                      </div>
-                      <span className="px-2.5 py-1 rounded-full bg-purple-500/20 text-purple-300 text-[10px] font-bold">
-                        Matchweek {ca.matchweek}
-                      </span>
+                </div>
+
+                {/* 1. Register New Referee Form */}
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (!newRefName.trim()) return;
+                    const createdRef = {
+                      id: `ref-${Date.now()}`,
+                      name: newRefName.trim(),
+                      badge: newRefBadge,
+                      phone: newRefPhone.trim() || "+254 700 000 000",
+                      email:
+                        newRefEmail.trim() ||
+                        `${newRefName.toLowerCase().replace(/\s+/g, ".")}@mpesa.org`,
+                      assignedMatches: 0,
+                      rating: 5.0,
+                      active: true,
+                    };
+                    const updated = [createdRef, ...referees];
+                    setReferees(updated);
+                    localStorage.setItem("mpesa_pes_referees_v2", JSON.stringify(updated));
+                    setNewRefName("");
+                    setNewRefPhone("");
+                    setNewRefEmail("");
+                    showToast(
+                      `✓ Registered match official: ${createdRef.name} (${createdRef.badge})!`,
+                    );
+                  }}
+                  className="bg-[#141029] border border-[#2e2554] rounded-2xl p-5 space-y-4"
+                >
+                  <div className="flex items-center justify-between border-b border-[#2e2554] pb-2">
+                    <h5 className="text-xs font-black uppercase text-purple-300 flex items-center gap-1.5">
+                      <Plus className="w-4 h-4 text-purple-400" />
+                      Register New Certified Match Referee
+                    </h5>
+                    <span className="text-[10px] text-gray-400 font-mono">
+                      Total Roster: {referees.length} Certified Officials
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div>
+                      <label className="block text-gray-400 font-bold uppercase text-[10px] mb-1">
+                        Official's Full Name *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Samuel Karanja"
+                        value={newRefName}
+                        onChange={(e) => setNewRefName(e.target.value)}
+                        className="w-full bg-[#0a071b] border border-[#2e2554] focus:border-purple-400 rounded-xl px-3 py-2 text-xs text-white outline-none"
+                      />
                     </div>
-                  ))}
+
+                    <div>
+                      <label className="block text-gray-400 font-bold uppercase text-[10px] mb-1">
+                        Primary Certification / Badge
+                      </label>
+                      <select
+                        value={newRefBadge}
+                        onChange={(e) => setNewRefBadge(e.target.value)}
+                        className="w-full bg-[#0a071b] border border-[#2e2554] focus:border-purple-400 rounded-xl px-3 py-2 text-xs font-bold text-white outline-none"
+                      >
+                        <option value="Center Referee">Center Referee (Main)</option>
+                        <option value="Linesman 1 (Senior Assistant)">
+                          Linesman 1 (Senior Assistant)
+                        </option>
+                        <option value="Linesman 2 (Assistant Referee)">
+                          Linesman 2 (Assistant Referee)
+                        </option>
+                        <option value="Fourth Official">Fourth Official (Table & Subs)</option>
+                        <option value="Match Commissioner (Technical Delegate)">
+                          Match Commissioner (Technical Delegate)
+                        </option>
+                        <option value="Senior VAR / Reviewer">Senior VAR / Reviewer</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-gray-400 font-bold uppercase text-[10px] mb-1">
+                        Phone Contact
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. +254 712 999 888"
+                        value={newRefPhone}
+                        onChange={(e) => setNewRefPhone(e.target.value)}
+                        className="w-full bg-[#0a071b] border border-[#2e2554] focus:border-purple-400 rounded-xl px-3 py-2 text-xs text-white outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-gray-400 font-bold uppercase text-[10px] mb-1">
+                        Email Address
+                      </label>
+                      <input
+                        type="email"
+                        placeholder="e.g. official@mpesa.org"
+                        value={newRefEmail}
+                        onChange={(e) => setNewRefEmail(e.target.value)}
+                        className="w-full bg-[#0a071b] border border-[#2e2554] focus:border-purple-400 rounded-xl px-3 py-2 text-xs text-white outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end pt-1">
+                    <button
+                      type="submit"
+                      className="px-5 py-2 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 hover:brightness-110 text-white font-black text-xs uppercase tracking-wide transition shadow cursor-pointer"
+                    >
+                      Register Match Official
+                    </button>
+                  </div>
+                </form>
+
+                {/* 2. Quad-Crew Fixture Officiating Allocator */}
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const updatedFixtures = fixtures.map((f) => {
+                      if (f.id === schedFixtureId) {
+                        return {
+                          ...f,
+                          referee: `Center: ${schedCenterRef} • Linesmen: ${schedLinesman1} & ${schedLinesman2} • 4th Official: ${schedFourthOfficial}`,
+                          chaplain: schedChaplain,
+                        };
+                      }
+                      return f;
+                    });
+
+                    setFixtures(updatedFixtures);
+                    localStorage.setItem("mpesa_pes_matches_v6", JSON.stringify(updatedFixtures));
+                    window.dispatchEvent(new Event("storage"));
+
+                    // Increment assigned counts for the assigned officials
+                    const assignedNames = [
+                      schedCenterRef,
+                      schedLinesman1,
+                      schedLinesman2,
+                      schedFourthOfficial,
+                      schedChaplain,
+                    ];
+                    const updatedRefs = referees.map((r) =>
+                      assignedNames.includes(r.name)
+                        ? { ...r, assignedMatches: (r.assignedMatches || 0) + 1 }
+                        : r,
+                    );
+                    setReferees(updatedRefs);
+                    localStorage.setItem("mpesa_pes_referees_v2", JSON.stringify(updatedRefs));
+
+                    const fixObj = fixtures.find((f) => f.id === schedFixtureId);
+                    showToast(
+                      `✓ Published complete Quad-Crew to MW ${fixObj?.matchweek || 1} fixture!`,
+                    );
+                  }}
+                  className="bg-[#141029] border border-[#2e2554] rounded-2xl p-5 space-y-4"
+                >
+                  <div className="flex items-center justify-between border-b border-[#2e2554] pb-2">
+                    <h5 className="text-xs font-black uppercase text-purple-300 flex items-center gap-1.5">
+                      <Flag className="w-4 h-4 text-purple-400" />
+                      Deploy Quad-Crew Match Officials to Fixture
+                    </h5>
+                    <span className="text-[10px] text-gray-400 font-mono">
+                      Center Ref + 2 Linesmen + 4th Official + Chaplain
+                    </span>
+                  </div>
+
+                  {/* Target Fixture Select */}
+                  <div>
+                    <label className="block text-gray-400 font-bold uppercase text-[10px] mb-1.5">
+                      Select Match Fixture to Assign *
+                    </label>
+                    <select
+                      value={schedFixtureId}
+                      onChange={(e) => {
+                        const newId = Number(e.target.value);
+                        setSchedFixtureId(newId);
+                        const match = fixtures.find((f) => f.id === newId);
+                        if (match?.chaplain) setSchedChaplain(match.chaplain);
+                      }}
+                      className="w-full bg-[#0a071b] border border-[#2e2554] focus:border-purple-400 rounded-xl px-3 py-2.5 text-xs font-bold text-white outline-none"
+                    >
+                      {fixtures.map((f, fIdx) => {
+                        const h = teams.find((t) => t.id === f.homeId)?.name || `#${f.homeId}`;
+                        const a = teams.find((t) => t.id === f.awayId)?.name || `#${f.awayId}`;
+                        return (
+                          <option key={f.id ?? `sched-f-${fIdx}`} value={f.id}>
+                            Matchweek {f.matchweek}: {h} vs {a} ({f.date || "Nov 2026"} @{" "}
+                            {f.venue || "Academy Stadium"})
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+
+                  {/* 4 Officials + Chaplain Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                    {/* Center Referee */}
+                    <div className="p-3 bg-[#0a071b] rounded-xl border border-purple-500/30 space-y-1">
+                      <label className="block text-purple-300 font-bold uppercase text-[10px]">
+                        1. Center Referee
+                      </label>
+                      <select
+                        value={schedCenterRef}
+                        onChange={(e) => setSchedCenterRef(e.target.value)}
+                        className="w-full bg-[#141029] border border-[#2e2554] focus:border-purple-400 rounded-lg px-2.5 py-1.5 text-xs font-bold text-white outline-none"
+                      >
+                        {referees.map((r) => (
+                          <option key={`c-ref-${r.id}`} value={r.name}>
+                            {r.name} ({r.badge})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Linesman 1 */}
+                    <div className="p-3 bg-[#0a071b] rounded-xl border border-cyan-500/30 space-y-1">
+                      <label className="block text-cyan-300 font-bold uppercase text-[10px]">
+                        2. Linesman 1 (Senior Asst)
+                      </label>
+                      <select
+                        value={schedLinesman1}
+                        onChange={(e) => setSchedLinesman1(e.target.value)}
+                        className="w-full bg-[#141029] border border-[#2e2554] focus:border-cyan-400 rounded-lg px-2.5 py-1.5 text-xs font-bold text-white outline-none"
+                      >
+                        {referees.map((r) => (
+                          <option key={`l1-ref-${r.id}`} value={r.name}>
+                            {r.name} ({r.badge})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Linesman 2 */}
+                    <div className="p-3 bg-[#0a071b] rounded-xl border border-cyan-500/30 space-y-1">
+                      <label className="block text-cyan-300 font-bold uppercase text-[10px]">
+                        3. Linesman 2 (Assistant)
+                      </label>
+                      <select
+                        value={schedLinesman2}
+                        onChange={(e) => setSchedLinesman2(e.target.value)}
+                        className="w-full bg-[#141029] border border-[#2e2554] focus:border-cyan-400 rounded-lg px-2.5 py-1.5 text-xs font-bold text-white outline-none"
+                      >
+                        {referees.map((r) => (
+                          <option key={`l2-ref-${r.id}`} value={r.name}>
+                            {r.name} ({r.badge})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* 4th Official */}
+                    <div className="p-3 bg-[#0a071b] rounded-xl border border-amber-500/30 space-y-1">
+                      <label className="block text-amber-300 font-bold uppercase text-[10px]">
+                        4. Fourth Official
+                      </label>
+                      <select
+                        value={schedFourthOfficial}
+                        onChange={(e) => setSchedFourthOfficial(e.target.value)}
+                        className="w-full bg-[#141029] border border-[#2e2554] focus:border-amber-400 rounded-lg px-2.5 py-1.5 text-xs font-bold text-white outline-none"
+                      >
+                        {referees.map((r) => (
+                          <option key={`fo-ref-${r.id}`} value={r.name}>
+                            {r.name} ({r.badge})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Match Commissioner */}
+                    <div className="p-3 bg-[#0a071b] rounded-xl border border-emerald-500/30 space-y-1">
+                      <label className="block text-emerald-300 font-bold uppercase text-[10px]">
+                        5. Match Commissioner
+                      </label>
+                      <input
+                        type="text"
+                        value={schedChaplain}
+                        onChange={(e) => setSchedChaplain(e.target.value)}
+                        placeholder="e.g. Mitchelle Muthoni (Technical Delegate)"
+                        className="w-full bg-[#141029] border border-[#2e2554] focus:border-emerald-400 rounded-lg px-2.5 py-1.5 text-xs font-bold text-white outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-[#2e2554]">
+                    <span className="text-[11px] text-gray-400 font-mono">
+                      Current:{" "}
+                      {fixtures.find((f) => f.id === schedFixtureId)?.referee ||
+                        "Pending Crew Assignment"}
+                    </span>
+                    <button
+                      type="submit"
+                      className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-500 via-indigo-600 to-purple-600 hover:brightness-110 text-white font-black text-xs uppercase tracking-wide transition shadow-lg shadow-purple-500/20 cursor-pointer"
+                    >
+                      Confirm & Deploy Quad-Crew to Fixture
+                    </button>
+                  </div>
+                </form>
+
+                {/* 3. Published Quad-Crew Assignments for All Fixtures */}
+                <div className="space-y-3 pt-2">
+                  <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider block">
+                    Published Fixture Quad-Crew Assignments
+                  </span>
+                  <div className="space-y-2.5">
+                    {fixtures.map((f, fIdx) => {
+                      const h = teams.find((t) => t.id === f.homeId)?.name || `#${f.homeId}`;
+                      const a = teams.find((t) => t.id === f.awayId)?.name || `#${f.awayId}`;
+                      return (
+                        <div
+                          key={f.id ?? `crew-f-${fIdx}`}
+                          className="p-4 bg-[#141029] rounded-2xl border border-[#2e2554] space-y-2"
+                        >
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#261f4d] pb-2">
+                            <div className="flex items-center gap-2">
+                              <span className="px-2 py-0.5 rounded-lg bg-purple-500/20 text-purple-300 font-mono text-[10px] font-bold">
+                                MW {f.matchweek}
+                              </span>
+                              <span className="text-xs font-black text-white">
+                                {h} vs {a}
+                              </span>
+                              <span className="text-[10px] text-gray-400 font-mono">
+                                ({f.date || "Nov 2026"} @ {f.venue || "Academy Stadium"})
+                              </span>
+                            </div>
+                            <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono font-bold">
+                              {f.status || "SCHEDULED"}
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                            <div className="p-2 bg-[#0a071b] rounded-xl border border-[#261f4d]">
+                              <span className="text-[10px] text-purple-300 uppercase font-bold block">
+                                Officiating Crew:
+                              </span>
+                              <span className="text-gray-200 text-xs font-mono">
+                                {f.referee ||
+                                  "Center: Bidan Mwaura • Linesmen: Francis Ndirangu & Peter Otieno"}
+                              </span>
+                            </div>
+                            <div className="p-2 bg-[#0a071b] rounded-xl border border-[#261f4d]">
+                              <span className="text-[10px] text-emerald-300 uppercase font-bold block">
+                                Pitch Chaplain:
+                              </span>
+                              <span className="text-gray-200 text-xs font-mono">
+                                {f.chaplain || "Pastor David M."}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* 4. Registered Match Officials Roster Directory */}
+                <div className="space-y-3 pt-2">
+                  <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider block">
+                    Certified Match Officials Directory & Contact Roster
+                  </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {referees.map((r, rIdx) => (
+                      <div
+                        key={r.id ?? `ref-dir-${rIdx}`}
+                        className="p-3.5 bg-[#141029] rounded-2xl border border-[#2e2554] space-y-2"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <h6 className="text-xs font-black text-white">{r.name}</h6>
+                            <span className="text-[10px] text-purple-300 font-bold block">
+                              {r.badge}
+                            </span>
+                          </div>
+                          <span className="px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 font-mono text-[10px] font-bold">
+                            ★ {r.rating}
+                          </span>
+                        </div>
+                        <div className="text-[10px] text-gray-400 font-mono space-y-0.5">
+                          <div>Phone: {r.phone || "+254 700 000 000"}</div>
+                          <div>Email: {r.email || "official@mpesa.org"}</div>
+                          <div className="text-cyan-400 font-bold">
+                            Matches Officiated: {r.assignedMatches || 0}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
@@ -2821,6 +3689,121 @@ export function BoardWorkspaces() {
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          COUNCIL SEPARATION OF POWERS & ISOLATED WORKSPACE MODAL
+          ========================================================================= */}
+      {restrictedRoleTarget && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-[#0e0a26] border-2 border-amber-400/50 rounded-3xl max-w-xl w-full p-6 sm:p-7 shadow-2xl space-y-5 animate-in fade-in zoom-in-95">
+            <div className="flex items-start justify-between border-b border-[#2e2554] pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-amber-400/20 border border-amber-400/40 flex items-center justify-center text-amber-300 shadow">
+                  <ShieldAlert className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30">
+                      Council Separation of Powers
+                    </span>
+                    <span className="text-[10px] font-mono text-rose-400 font-bold">
+                      Operational Access Restricted
+                    </span>
+                  </div>
+                  <h4 className="text-lg font-black text-white uppercase mt-0.5">
+                    {ROLE_HIERARCHY_DATA[restrictedRoleTarget]?.title || "Board Workspace"}
+                  </h4>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setRestrictedRoleTarget(null)}
+                className="text-gray-400 hover:text-white p-1 rounded-xl hover:bg-white/5 transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="bg-amber-400/10 border border-amber-400/20 rounded-2xl p-4 text-xs text-amber-200 leading-relaxed space-y-2">
+              <p className="font-bold flex items-center gap-2 text-amber-300">
+                <Lock className="w-4 h-4 text-amber-400 shrink-0" />
+                <span>Department Operational Autonomy Enforced</span>
+              </p>
+              <p className="text-gray-300 text-xs">
+                Under the M-Pesa Sunday League Governance Charter, individual council members hold
+                sovereign jurisdiction over their assigned department. You are currently
+                authenticated with the role of{" "}
+                <span className="text-white font-bold font-mono">
+                  {ROLE_HIERARCHY_DATA[currentRole]?.title || currentRole}
+                </span>
+                .
+              </p>
+              <p className="text-gray-300 text-xs">
+                To prevent conflicts of interest and unauthorized policy modifications, board
+                members cannot access or execute tools within another official's workspace. Only the
+                designated lead{" "}
+                <span className="text-amber-300 font-bold">
+                  ({ROLE_HIERARCHY_DATA[restrictedRoleTarget]?.officialName})
+                </span>{" "}
+                or the Supreme Admin may operate this desk.
+              </p>
+            </div>
+
+            {/* Department Overview for Council Transparency */}
+            {BOARD_ROLES_CATALOG[
+              restrictedRoleTarget as Exclude<LeagueRole, "SUPER_ADMIN" | "GUEST">
+            ] && (
+              <div className="bg-[#14102c] border border-white/10 rounded-2xl p-4 space-y-2">
+                <span className="text-[10px] font-black uppercase text-gray-400 font-mono block">
+                  Designated Official & Department Mandate
+                </span>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-white font-bold">Official Lead:</span>
+                  <span className="text-[#00f0ff] font-mono font-bold">
+                    {
+                      BOARD_ROLES_CATALOG[
+                        restrictedRoleTarget as Exclude<LeagueRole, "SUPER_ADMIN" | "GUEST">
+                      ].officialLead
+                    }
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-white font-bold">Department:</span>
+                  <span className="text-yellow-400 font-mono">
+                    {
+                      BOARD_ROLES_CATALOG[
+                        restrictedRoleTarget as Exclude<LeagueRole, "SUPER_ADMIN" | "GUEST">
+                      ].department
+                    }
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-white font-bold">Governed Modules:</span>
+                  <span className="text-cyan-300 font-mono">
+                    {
+                      BOARD_ROLES_CATALOG[
+                        restrictedRoleTarget as Exclude<LeagueRole, "SUPER_ADMIN" | "GUEST">
+                      ].features.length
+                    }{" "}
+                    Specialized Desks
+                  </span>
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center justify-end gap-3 pt-2 border-t border-[#2e2554]">
+              <button
+                type="button"
+                onClick={() => setRestrictedRoleTarget(null)}
+                className="w-full sm:w-auto px-6 py-2.5 rounded-2xl bg-gradient-to-r from-amber-400 to-yellow-500 hover:brightness-110 text-black font-black text-xs uppercase tracking-wider transition cursor-pointer shadow-lg"
+              >
+                Understood • Return to My Desk
+              </button>
+            </div>
           </div>
         </div>
       )}

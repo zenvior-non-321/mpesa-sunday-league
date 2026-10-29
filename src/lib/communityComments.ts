@@ -1,16 +1,51 @@
 export interface FanComment {
   id: string;
   author: string;
-  role: "Supporter" | "Parent" | "Student Athlete" | "Youth Pastor" | "Church Member";
+  role: "Supporter" | "Parent" | "Student Athlete" | "Club Staff" | "Alumni Supporter";
   clubSupported: string;
   message: string;
-  category: "CHEER" | "PRAYER" | "SPORTSMANSHIP";
+  category: "CHEER" | "TACTICAL" | "SPORTSMANSHIP";
   timestamp: string;
   status: "APPROVED" | "PENDING" | "REJECTED";
   isPinned?: boolean;
 }
 
-export const DEFAULT_COMMENTS: FanComment[] = [];
+export const DEFAULT_COMMENTS: FanComment[] = [
+  {
+    id: "cmt-1",
+    author: "Samuel Mwangi",
+    role: "Club Staff",
+    clubSupported: "Royal Rangers",
+    message:
+      "Proud of the Rangers for executing our high-press tactical game plan today. Superb teamwork and discipline across 90 minutes!",
+    category: "TACTICAL",
+    timestamp: "Sunday, Oct 25, 2026 • 3:45 PM",
+    status: "APPROVED",
+    isPinned: true,
+  },
+  {
+    id: "cmt-2",
+    author: "Grace Wanjiku",
+    role: "Parent",
+    clubSupported: "Samba Boys",
+    message:
+      "Great game from Wokabi and the whole squad! Keep working hard and stay disciplined on the pitch.",
+    category: "CHEER",
+    timestamp: "Sunday, Oct 25, 2026 • 4:10 PM",
+    status: "APPROVED",
+  },
+  {
+    id: "cmt-3",
+    author: "David Kiprop",
+    role: "Supporter",
+    clubSupported: "Mzinga Boyz",
+    message:
+      "Incredible defensive discipline. Respect to the referee and opposing team today. Top tier sportsmanship!",
+    category: "SPORTSMANSHIP",
+    timestamp: "Saturday, Oct 24, 2026 • 6:30 PM",
+    status: "APPROVED",
+  },
+];
 
 const STORAGE_KEY = "mpesa_pes_comments_v1";
 

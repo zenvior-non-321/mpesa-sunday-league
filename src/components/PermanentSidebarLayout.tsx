@@ -299,10 +299,10 @@ export function PermanentSidebarLayout({ children }: PermanentSidebarLayoutProps
       {
         to: "/workspaces",
         adminSection: "seasons_leagues",
-        label: "Seasons & Curriculum",
-        subLabel: "Divisions & Bible Verses",
+        label: "Seasons & Rulebook",
+        subLabel: "Divisions & Competition Rules",
         icon: BookOpen,
-        badge: "Curriculum",
+        badge: "Rules",
         badgeColor: "bg-cyan-400/20 text-cyan-300 border-cyan-400/30",
       },
       {
@@ -318,7 +318,7 @@ export function PermanentSidebarLayout({ children }: PermanentSidebarLayoutProps
         to: "/workspaces",
         adminSection: "fixtures_scores",
         label: "Fixtures & Live Scoring",
-        subLabel: "Referees & Conduct Points",
+        subLabel: "Referees & Score Certification",
         icon: Calendar,
         badge: "Scores",
         badgeColor: "bg-blue-400/20 text-blue-300 border-blue-400/30",
@@ -343,15 +343,6 @@ export function PermanentSidebarLayout({ children }: PermanentSidebarLayoutProps
       },
       {
         to: "/workspaces",
-        adminSection: "finances_fees",
-        label: "Finances & Fee Tracking",
-        subLabel: "MPESA Invoices & Expenses",
-        icon: DollarSign,
-        badge: "M-PESA",
-        badgeColor: "bg-emerald-400/20 text-emerald-300 border-emerald-400/30",
-      },
-      {
-        to: "/workspaces",
         adminSection: "broadcasts_alerts",
         label: "Mass Alerts & Broadcasts",
         subLabel: "Instant SMS & Email Blasts",
@@ -372,7 +363,7 @@ export function PermanentSidebarLayout({ children }: PermanentSidebarLayoutProps
         to: "/workspaces",
         adminSection: "fan_comments",
         label: "Fan Cheers & Community",
-        subLabel: "Moderation, Pinning & Prayers",
+        subLabel: "Moderation, Pinning & Stadium Cheers",
         icon: MessageSquare,
         badge: "Admin Only",
         badgeColor: "bg-teal-400/20 text-teal-300 border-teal-400/30",
@@ -613,7 +604,7 @@ export function PermanentSidebarLayout({ children }: PermanentSidebarLayoutProps
           boardRole: "MATCH_OFFICIATING_MANAGER" as LeagueRole,
           boardSubTab: "scheduler",
           label: "Referee Match Scheduler",
-          subLabel: "Ref Bidan Mwaura & Pitch Chaplains",
+          subLabel: "Quad-Crews & Match Commissioners",
           icon: Calendar,
           badge: "Appointments",
           badgeColor: "bg-blue-400/20 text-blue-300 border-blue-400/30",
@@ -778,7 +769,7 @@ export function PermanentSidebarLayout({ children }: PermanentSidebarLayoutProps
         boardRole: "ASST_TECH_MANAGER" as LeagueRole,
         boardSubTab: "content_queue",
         label: "Content Queue & Previews",
-        subLabel: "Match Recaps & Devotionals Drafts",
+        subLabel: "Match Recaps & Fair Play Notes",
         icon: FileText,
         badge: "Drafts",
         badgeColor: "bg-cyan-400/20 text-cyan-300 border-cyan-400/30",
@@ -899,7 +890,7 @@ export function PermanentSidebarLayout({ children }: PermanentSidebarLayoutProps
               </span>
               <span className="text-[9px] px-2 py-0.5 rounded-full font-mono font-bold bg-[#141029] text-gray-400 border border-[#2e2554]">
                 {activeRbacRole === "admin"
-                  ? "14 Modules"
+                  ? "13 Modules"
                   : activeRbacRole === "board"
                     ? "Executive"
                     : "View Only"}
@@ -1006,20 +997,22 @@ export function PermanentSidebarLayout({ children }: PermanentSidebarLayoutProps
               </div>
             )}
 
-            {/* Public League Officials Directory Button */}
-            <button
-              type="button"
-              onClick={() => setShowOfficialsModal(true)}
-              className="w-full flex items-center justify-between px-3 py-2 rounded-2xl text-gray-300 hover:text-white hover:bg-white/5 font-semibold transition cursor-pointer text-xs mt-1"
-            >
-              <div className="flex items-center gap-2.5">
-                <Users className="w-4 h-4 text-purple-400 shrink-0" />
-                <span>League Officials Directory</span>
-              </div>
-              <span className="text-[9px] px-2 py-0.5 rounded-full font-bold border bg-purple-500/20 text-purple-300 border-purple-500/30">
-                Council
-              </span>
-            </button>
+            {/* League Officials Directory Button (Restricted to Board & Admin) */}
+            {activeRbacRole !== "public" && (
+              <button
+                type="button"
+                onClick={() => setShowOfficialsModal(true)}
+                className="w-full flex items-center justify-between px-3 py-2 rounded-2xl text-gray-300 hover:text-white hover:bg-white/5 font-semibold transition cursor-pointer text-xs mt-1"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Users className="w-4 h-4 text-purple-400 shrink-0" />
+                  <span>League Officials Directory</span>
+                </div>
+                <span className="text-[9px] px-2 py-0.5 rounded-full font-bold border bg-purple-500/20 text-purple-300 border-purple-500/30">
+                  Council
+                </span>
+              </button>
+            )}
           </div>
 
           {/* DOCKED STADIUM ANTHEM & SONG PLAYER WIDGET */}

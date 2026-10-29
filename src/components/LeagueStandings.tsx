@@ -72,7 +72,7 @@ export interface TeamStanding {
   drawn?: number;
   lost?: number;
   points?: number;
-  spiritualBonus?: number;
+  fairPlayBonus?: number;
 }
 
 export const DEFAULT_STANDINGS: TeamStanding[] = [
@@ -543,17 +543,19 @@ export function LeagueStandings() {
               history: t.history,
               squad: t.squad,
               logoUrl: t.logoUrl,
-              mp: Number.isFinite(t.mp) ? t.mp : Number(t.played) || 5,
-              w: Number.isFinite(t.w) ? t.w : Number(t.won) || 0,
-              d: Number.isFinite(t.d) ? t.d : Number(t.drawn) || 0,
-              l: Number.isFinite(t.l) ? t.l : Number(t.lost) || 0,
+              mp: Number.isFinite(t.mp) ? t.mp : Number.isFinite(t.played) ? Number(t.played) : 0,
+              w: Number.isFinite(t.w) ? t.w : Number.isFinite(t.won) ? Number(t.won) : 0,
+              d: Number.isFinite(t.d) ? t.d : Number.isFinite(t.drawn) ? Number(t.drawn) : 0,
+              l: Number.isFinite(t.l) ? t.l : Number.isFinite(t.lost) ? Number(t.lost) : 0,
               gf: Number.isFinite(t.gf) ? t.gf : 0,
               ga: Number.isFinite(t.ga) ? t.ga : 0,
               gd: Number.isFinite(t.gd) ? t.gd : (Number(t.gf) || 0) - (Number(t.ga) || 0),
               pts: Number.isFinite(t.pts)
                 ? t.pts
-                : Number(t.points) || (Number(t.w) || 0) * 3 + (Number(t.d) || 0),
-              form: Array.isArray(t.form) ? t.form : ["W", "D", "W", "L", "W"],
+                : Number.isFinite(t.points)
+                  ? Number(t.points)
+                  : (Number(t.w) || 0) * 3 + (Number(t.d) || 0),
+              form: Array.isArray(t.form) ? t.form : [],
             }));
           }
         }
@@ -600,6 +602,144 @@ export function LeagueStandings() {
     setSelectedTeam(null);
     setToastMessage(`✓ Club "${teamName}" permanently deleted from league.`);
     setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  const handleResetTableToZero = () => {
+    const reset = standings.map((t) => ({
+      ...t,
+      mp: 0,
+      played: 0,
+      w: 0,
+      won: 0,
+      d: 0,
+      drawn: 0,
+      l: 0,
+      lost: 0,
+      gf: 0,
+      ga: 0,
+      gd: 0,
+      pts: 0,
+      points: 0,
+      form: [],
+    }));
+    setStandings(reset);
+    try {
+      localStorage.setItem("mpesa_pes_teams_v6", JSON.stringify(reset));
+      localStorage.setItem("mpesa_pes_standings_v6", JSON.stringify(reset));
+      window.dispatchEvent(new Event("storage"));
+    } catch {
+      // Ignore
+    }
+    setToastMessage("✓ Standings table reset to 0-0-0-0 (0 Points). Fresh season ready!");
+    setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  const handleRecalculateFromFixtures = () => {
+    try {
+      const storedMatches = localStorage.getItem("mpesa_pes_matches_v6");
+      const fixtures = storedMatches ? JSON.parse(storedMatches) : [];
+      const teamStatsMap: Record<
+        number,
+        {
+          mp: number;
+          w: number;
+          d: number;
+          l: number;
+          gf: number;
+          ga: number;
+          pts: number;
+          form: string[];
+        }
+      > = {};
+      standings.forEach((t) => {
+        teamStatsMap[t.id] = { mp: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, pts: 0, form: [] };
+      });
+      if (Array.isArray(fixtures)) {
+        fixtures.forEach(
+          (f: {
+            status?: string;
+            homeId: number;
+            awayId: number;
+            homeScore?: number;
+            awayScore?: number;
+          }) => {
+            if (
+              (f.status === "FINISHED" || f.status === "COMPLETED") &&
+              typeof f.homeScore === "number" &&
+              typeof f.awayScore === "number"
+            ) {
+              const hId = f.homeId;
+              const aId = f.awayId;
+              if (teamStatsMap[hId] && teamStatsMap[aId]) {
+                teamStatsMap[hId].mp += 1;
+                teamStatsMap[aId].mp += 1;
+                teamStatsMap[hId].gf += f.homeScore;
+                teamStatsMap[hId].ga += f.awayScore;
+                teamStatsMap[aId].gf += f.awayScore;
+                teamStatsMap[aId].ga += f.homeScore;
+                if (f.homeScore > f.awayScore) {
+                  teamStatsMap[hId].w += 1;
+                  teamStatsMap[hId].pts += 3;
+                  teamStatsMap[hId].form.unshift("W");
+                  teamStatsMap[aId].l += 1;
+                  teamStatsMap[aId].form.unshift("L");
+                } else if (f.homeScore < f.awayScore) {
+                  teamStatsMap[aId].w += 1;
+                  teamStatsMap[aId].pts += 3;
+                  teamStatsMap[aId].form.unshift("W");
+                  teamStatsMap[hId].l += 1;
+                  teamStatsMap[hId].form.unshift("L");
+                } else {
+                  teamStatsMap[hId].d += 1;
+                  teamStatsMap[hId].pts += 1;
+                  teamStatsMap[hId].form.unshift("D");
+                  teamStatsMap[aId].d += 1;
+                  teamStatsMap[aId].pts += 1;
+                  teamStatsMap[aId].form.unshift("D");
+                }
+              }
+            }
+          },
+        );
+      }
+      const updated = standings.map((t) => {
+        const stats = teamStatsMap[t.id] || {
+          mp: 0,
+          w: 0,
+          d: 0,
+          l: 0,
+          gf: 0,
+          ga: 0,
+          pts: 0,
+          form: [],
+        };
+        return {
+          ...t,
+          mp: stats.mp,
+          played: stats.mp,
+          w: stats.w,
+          won: stats.w,
+          d: stats.d,
+          drawn: stats.d,
+          l: stats.l,
+          lost: stats.l,
+          gf: stats.gf,
+          ga: stats.ga,
+          gd: stats.gf - stats.ga,
+          pts: stats.pts,
+          points: stats.pts,
+          form: stats.form.slice(0, 5),
+        };
+      });
+      setStandings(updated);
+      localStorage.setItem("mpesa_pes_teams_v6", JSON.stringify(updated));
+      localStorage.setItem("mpesa_pes_standings_v6", JSON.stringify(updated));
+      window.dispatchEvent(new Event("storage"));
+      setToastMessage("✓ Standings automatically calculated from completed fixtures!");
+      setTimeout(() => setToastMessage(null), 3500);
+    } catch {
+      // fallback
+    }
   };
 
   const handleSort = (col: SortColumn) => {
@@ -752,6 +892,28 @@ export function LeagueStandings() {
               Played
             </button>
           </div>
+
+          {canDeleteTeam && (
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleRecalculateFromFixtures}
+                title="Recalculate standings table automatically from recorded match fixtures"
+                className="px-3 py-1.5 rounded-2xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-400/40 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow"
+              >
+                <span>⚡ Auto-Calculate</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleResetTableToZero}
+                title="Clear all standings stats to 0-0-0-0 (0 Points) for a clean season launch"
+                className="px-3 py-1.5 rounded-2xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-400/40 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Clear Table to 0</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

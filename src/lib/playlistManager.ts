@@ -13,7 +13,7 @@ export const DEFAULT_PLAYLIST: AnthemSong[] = [
   {
     id: "anthem-1",
     title: "M-Pesa Sunday League Official Stadium Anthem",
-    artist: "eFootball Championship Band & Choir",
+    artist: "eFootball Championship Band & Arena Orchestra",
     youtubeId: "2yJgwwDcgV8",
     category: "ANTHEM",
     duration: "3:45",
@@ -22,10 +22,10 @@ export const DEFAULT_PLAYLIST: AnthemSong[] = [
   },
   {
     id: "anthem-2",
-    title: "Victory In The Cross (Gospel Celebration Chants)",
-    artist: "M-Pesa Academy Youth Ministry Choir",
+    title: "Champions Arena Kickoff March (High Energy Fanfare)",
+    artist: "Sunday League Philharmonic",
     youtubeId: "kXYiU_JCYtU",
-    category: "CELEBRATION",
+    category: "KICKOFF",
     duration: "4:12",
     addedAt: "2026-10-10",
   },
@@ -144,9 +144,27 @@ export function reorderPlaylist(startIndex: number, endIndex: number): void {
 
 export function setPrimaryAnthem(id: string): void {
   const current = getPlaylist();
+  const target = current.find((s) => s.id === id);
   const updated = current.map((s) => ({
     ...s,
     isOfficialAnthem: s.id === id,
   }));
   savePlaylist(updated);
+
+  if (target && typeof window !== "undefined") {
+    try {
+      const anthemConfig = {
+        title: target.title,
+        artist: target.artist,
+        youtubeId: target.youtubeId,
+        volume: 0.7,
+        mode: "audio",
+        autoPlay: true,
+      };
+      localStorage.setItem("mpesa_pes_anthem_v3", JSON.stringify(anthemConfig));
+      window.dispatchEvent(new CustomEvent("mpesa_anthem_changed"));
+    } catch {
+      // Ignore
+    }
+  }
 }

@@ -89,7 +89,11 @@ export function AnthemPlayerWidget({ isCompact = false }: { isCompact?: boolean 
 
     syncAnthemConfig();
     window.addEventListener("storage", syncAnthemConfig);
-    return () => window.removeEventListener("storage", syncAnthemConfig);
+    window.addEventListener("mpesa_anthem_changed", syncAnthemConfig);
+    return () => {
+      window.removeEventListener("storage", syncAnthemConfig);
+      window.removeEventListener("mpesa_anthem_changed", syncAnthemConfig);
+    };
   }, []);
 
   // Web Audio Stadium Fanfare & Rhythm Engine
@@ -236,6 +240,7 @@ export function AnthemPlayerWidget({ isCompact = false }: { isCompact?: boolean 
     setConfig(updated);
     try {
       localStorage.setItem("mpesa_pes_anthem_v3", JSON.stringify(updated));
+      window.dispatchEvent(new CustomEvent("mpesa_anthem_changed"));
     } catch {
       // Ignore
     }

@@ -45,6 +45,8 @@ import {
   Upload,
   HardDrive,
   MessageSquare,
+  LayoutGrid,
+  List,
 } from "lucide-react";
 import { BoardMemberManager } from "./BoardMemberManager";
 import { AnthemStudioAndPlaylist } from "./AnthemStudioAndPlaylist";
@@ -348,11 +350,12 @@ export function MasterAdminDashboard({
   const [newFixMatchweek, setNewFixMatchweek] = useState<number>(1);
   const [newFixHomeId, setNewFixHomeId] = useState<number>(1);
   const [newFixAwayId, setNewFixAwayId] = useState<number>(7);
-  const [newFixDate, setNewFixDate] = useState("Sunday, Oct 25, 2026");
+  const [newFixDate, setNewFixDate] = useState("Sunday, Nov 1, 2026");
   const [newFixTime, setNewFixTime] = useState("3:00 PM");
   const [newFixVenue, setNewFixVenue] = useState("Academy Main Stadium Ground");
-  const [newFixReferee, setNewFixReferee] = useState("Ian Muli (FIFA Badge)");
-  const [newFixChaplain, setNewFixChaplain] = useState("Pastor David M.");
+  const [newFixReferee, setNewFixReferee] = useState("Center Ref: Bidan Mwaura");
+  const [newFixChaplain, setNewFixChaplain] = useState("Match Commissioner: Mitchelle Muthoni");
+  const [editingFixture, setEditingFixture] = useState<AdminFixture | null>(null);
 
   // Score Certification State
   const [certifyingFixture, setCertifyingFixture] = useState<AdminFixture | null>(null);
@@ -362,10 +365,11 @@ export function MasterAdminDashboard({
     "SCHEDULED" | "LIVE" | "COMPLETED" | "POSTPONED" | "CANCELLED"
   >("COMPLETED");
   const [certScorers, setCertScorers] = useState("");
-  const [certSpiritualHome, setCertSpiritualHome] = useState<number>(1);
-  const [certSpiritualAway, setCertSpiritualAway] = useState<number>(1);
+  const [certAssists, setCertAssists] = useState("");
+  const [certYellowCards, setCertYellowCards] = useState("");
+  const [certRedCards, setCertRedCards] = useState("");
   const [certConductNotes, setCertConductNotes] = useState(
-    "Fair play maintained. Scripture recitation conducted.",
+    "FIFA Fair play verified. Pre-match handshake protocol completed.",
   );
 
   // Standings State
@@ -429,6 +433,9 @@ export function MasterAdminDashboard({
   const [selectedPhotoTeamId, setSelectedPhotoTeamId] = useState<number>(6);
   const [selectedPhotoPlayer, setSelectedPhotoPlayer] = useState<string>("Jaycrack");
   const [photoPreview, setPhotoPreview] = useState<string>("");
+  const [photoGalleryView, setPhotoGalleryView] = useState<"grid" | "table">("grid");
+  const [photoFilterTeamId, setPhotoFilterTeamId] = useState<string>("ALL");
+  const [photoSearchQuery, setPhotoSearchQuery] = useState<string>("");
 
   // Decrees State
   const [decrees, setDecrees] = useState<
@@ -924,6 +931,13 @@ export function MasterAdminDashboard({
     const destTeam = teams.find((t) => t.id === transferToTeamId);
     if (!sourceTeam || !destTeam) return;
 
+    if ((destTeam.squad || []).length >= 15) {
+      showToast(
+        `⚠ Transfer blocked: ${destTeam.name} already has reached the strict 15-player squad limit!`,
+      );
+      return;
+    }
+
     const player = (sourceTeam.squad || []).find((p) => p.name === transferPlayerName);
     if (!player) {
       showToast(`Player ${transferPlayerName} not found in source club.`);
@@ -942,8 +956,105 @@ export function MasterAdminDashboard({
     });
 
     saveTeams(updatedTeams);
+
+    // Synchronize playerStats club reference
+    const updatedStats = playerStats.map((st) => {
+      if (st.name.toLowerCase() === transferPlayerName.toLowerCase()) {
+        return { ...st, team: destTeam.name, teamId: destTeam.id };
+      }
+      return st;
+    });
+    savePlayerStats(updatedStats);
+
     setShowTransferModal(false);
-    showToast(`✓ Transferred ${transferPlayerName} from ${sourceTeam.name} to ${destTeam.name}!`);
+    showToast(
+      `✓ Transferred ${transferPlayerName} from ${sourceTeam.name} to ${destTeam.name}! (Roster: ${updatedDestSquad.length}/15)`,
+    );
+  };
+
+  const handleClearTableToZero = () => {
+    const zeroed = standings.map((st) => ({
+      ...st,
+      played: 0,
+      mp: 0,
+      won: 0,
+      w: 0,
+      drawn: 0,
+      d: 0,
+      lost: 0,
+      l: 0,
+      gf: 0,
+      ga: 0,
+      gd: 0,
+      points: 0,
+      pts: 0,
+      form: [],
+    }));
+    saveStandings(zeroed);
+    showToast("✓ Standings table cleared to 0 (0-0-0-0, 0 Points) for launch!");
+  };
+
+  const handleRecalculateStandingsFromMatches = () => {
+    const statsMap: Record<
+      number,
+      { mp: number; w: number; d: number; l: number; gf: number; ga: number; pts: number }
+    > = {};
+    standings.forEach((st) => {
+      statsMap[st.id] = { mp: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, pts: 0 };
+    });
+    fixtures.forEach((f) => {
+      if (
+        (f.status === "COMPLETED" || f.status === "FINISHED") &&
+        typeof f.homeScore === "number" &&
+        typeof f.awayScore === "number"
+      ) {
+        if (statsMap[f.homeId] && statsMap[f.awayId]) {
+          statsMap[f.homeId].mp += 1;
+          statsMap[f.awayId].mp += 1;
+          statsMap[f.homeId].gf += f.homeScore;
+          statsMap[f.homeId].ga += f.awayScore;
+          statsMap[f.awayId].gf += f.awayScore;
+          statsMap[f.awayId].ga += f.homeScore;
+          if (f.homeScore > f.awayScore) {
+            statsMap[f.homeId].w += 1;
+            statsMap[f.homeId].pts += 3;
+            statsMap[f.awayId].l += 1;
+          } else if (f.homeScore < f.awayScore) {
+            statsMap[f.awayId].w += 1;
+            statsMap[f.awayId].pts += 3;
+            statsMap[f.homeId].l += 1;
+          } else {
+            statsMap[f.homeId].d += 1;
+            statsMap[f.homeId].pts += 1;
+            statsMap[f.awayId].d += 1;
+            statsMap[f.awayId].pts += 1;
+          }
+        }
+      }
+    });
+    const updated = standings
+      .map((st) => {
+        const s = statsMap[st.id] || { mp: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, pts: 0 };
+        return {
+          ...st,
+          played: s.mp,
+          mp: s.mp,
+          won: s.w,
+          w: s.w,
+          drawn: s.d,
+          d: s.d,
+          lost: s.l,
+          l: s.l,
+          gf: s.gf,
+          ga: s.ga,
+          gd: s.gf - s.ga,
+          points: s.pts,
+          pts: s.pts,
+        };
+      })
+      .sort((a, b) => b.points - a.points || b.gd - a.gd);
+    saveStandings(updated);
+    showToast("✓ Standings automatically recalculated from certified match fixtures!");
   };
 
   // -------------------------------------------------------------
@@ -975,6 +1086,15 @@ export function MasterAdminDashboard({
       saveFixtures(updated);
       showToast("✓ Fixture deleted.");
     }
+  };
+
+  const handleSaveEditedFixture = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingFixture) return;
+    const updated = fixtures.map((f) => (f.id === editingFixture.id ? editingFixture : f));
+    saveFixtures(updated);
+    setEditingFixture(null);
+    showToast(`✓ Matchweek ${editingFixture.matchweek} fixture updated successfully!`);
   };
 
   const handleGenerateRoundRobin = () => {
@@ -1113,6 +1233,15 @@ export function MasterAdminDashboard({
     e.preventDefault();
     if (!certifyingFixture) return;
 
+    const fullScorersText = [
+      certScorers.trim() ? `Goals: ${certScorers.trim()}` : "",
+      certAssists.trim() ? `Assists: ${certAssists.trim()}` : "",
+      certYellowCards.trim() ? `Yellow Cards: ${certYellowCards.trim()}` : "",
+      certRedCards.trim() ? `Red Cards: ${certRedCards.trim()}` : "",
+    ]
+      .filter(Boolean)
+      .join(" • ");
+
     const updatedFixtures = fixtures.map((f) =>
       f.id === certifyingFixture.id
         ? {
@@ -1120,9 +1249,7 @@ export function MasterAdminDashboard({
             homeScore: Number(certHomeScore),
             awayScore: Number(certAwayScore),
             status: certStatus,
-            scorers: certScorers.trim(),
-            spiritualBonusHome: Number(certSpiritualHome),
-            spiritualBonusAway: Number(certSpiritualAway),
+            scorers: fullScorersText || certScorers.trim(),
             conductNotes: certConductNotes.trim(),
           }
         : f,
@@ -1136,13 +1263,13 @@ export function MasterAdminDashboard({
         certifyingFixture.awayId,
         Number(certHomeScore),
         Number(certAwayScore),
-        Number(certSpiritualHome),
-        Number(certSpiritualAway),
       );
     }
 
     setCertifyingFixture(null);
-    showToast(`✓ Match scorecard certified: ${certHomeScore} - ${certAwayScore}`);
+    showToast(
+      `✓ Match scorecard certified: ${certHomeScore} - ${certAwayScore} & Standings updated!`,
+    );
   };
 
   const updateStandingsFromMatch = (
@@ -1150,8 +1277,6 @@ export function MasterAdminDashboard({
     awayId: number,
     homeScore: number,
     awayScore: number,
-    spiritualBonusHome = 0,
-    spiritualBonusAway = 0,
   ) => {
     const updated = standings.map((st: TeamStanding) => {
       const curPlayed = Number(st.played ?? st.mp) || 0;
@@ -1174,7 +1299,7 @@ export function MasterAdminDashboard({
         const newGf = curGf + homeScore;
         const newGa = curGa + awayScore;
         const newGd = newGf - newGa;
-        const newPoints = curPoints + matchPoints + spiritualBonusHome;
+        const newPoints = curPoints + matchPoints;
 
         return {
           ...st,
@@ -1205,7 +1330,7 @@ export function MasterAdminDashboard({
         const newGf = curGf + awayScore;
         const newGa = curGa + homeScore;
         const newGd = newGf - newGa;
-        const newPoints = curPoints + matchPoints + spiritualBonusAway;
+        const newPoints = curPoints + matchPoints;
 
         return {
           ...st,
@@ -1419,652 +1544,320 @@ export function MasterAdminDashboard({
         </div>
       )}
 
-      {/* Top Super Admin Header */}
-      <div className="bg-gradient-to-r from-amber-950/60 via-[#160f33] to-[#080517] border-2 border-amber-400/40 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-amber-400/20 pb-4">
-          <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-400 via-yellow-400 to-amber-500 flex items-center justify-center text-black font-black shadow-lg shadow-amber-500/25 shrink-0">
-              <Crown className="w-6 h-6" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30">
-                  Master Super Admin Nexus • Supreme League Control
-                </span>
+      {/* Top Super Admin Header — Only shown on main dashboard overview */}
+      {activeSection === "board_members" && (
+        <div className="bg-gradient-to-r from-amber-950/60 via-[#160f33] to-[#080517] border-2 border-amber-400/40 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-amber-400/20 pb-4">
+            <div className="flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-400 via-yellow-400 to-amber-500 flex items-center justify-center text-black font-black shadow-lg shadow-amber-500/25 shrink-0">
+                <Crown className="w-6 h-6" />
               </div>
-              <h2 className="font-header text-xl sm:text-2xl font-black text-white uppercase tracking-wider mt-0.5">
-                M-Pesa Sunday League Supreme Council Command Center
-              </h2>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30">
+                    Master Super Admin Nexus • Supreme League Control
+                  </span>
+                </div>
+                <h2 className="font-header text-xl sm:text-2xl font-black text-white uppercase tracking-wider mt-0.5">
+                  M-Pesa Sunday League Supreme Council Command Center
+                </h2>
+              </div>
             </div>
-          </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            {onExitToViewer && (
+            <div className="flex flex-wrap items-center gap-2">
+              {onExitToViewer && (
+                <button
+                  type="button"
+                  onClick={onExitToViewer}
+                  className="px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs uppercase tracking-wider transition cursor-pointer flex items-center gap-1.5"
+                >
+                  <span>View Public Spectator Page</span>
+                </button>
+              )}
+
               <button
                 type="button"
-                onClick={onExitToViewer}
-                className="px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs uppercase tracking-wider transition cursor-pointer flex items-center gap-1.5"
+                onClick={() => {
+                  switchRole("GUEST");
+                  if (onExitToViewer) onExitToViewer();
+                }}
+                className="px-4 py-2 rounded-2xl bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white font-bold text-xs uppercase tracking-wider transition cursor-pointer flex items-center gap-1.5"
               >
-                <span>View Public Spectator Page</span>
+                <span>Logout Admin</span>
               </button>
-            )}
+            </div>
+          </div>
 
-            <button
-              type="button"
-              onClick={() => {
-                switchRole("GUEST");
-                if (onExitToViewer) onExitToViewer();
-              }}
-              className="px-4 py-2 rounded-2xl bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white font-bold text-xs uppercase tracking-wider transition cursor-pointer flex items-center gap-1.5"
-            >
-              <span>Logout Admin</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Quick KPI Counters */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 pt-1">
-          <div className="bg-[#0e0924] p-3 rounded-2xl border border-amber-400/20">
-            <span className="text-[10px] text-gray-400 uppercase font-bold block">Clubs</span>
-            <div className="text-lg font-black text-white font-mono">{teams.length} Active</div>
-          </div>
-          <div className="bg-[#0e0924] p-3 rounded-2xl border border-cyan-400/20">
-            <span className="text-[10px] text-gray-400 uppercase font-bold block">Fixtures</span>
-            <div className="text-lg font-black text-cyan-300 font-mono">
-              {fixtures.length} Total
+          {/* Quick KPI Counters */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 pt-1">
+            <div className="bg-[#0e0924] p-3 rounded-2xl border border-amber-400/20">
+              <span className="text-[10px] text-gray-400 uppercase font-bold block">Clubs</span>
+              <div className="text-lg font-black text-white font-mono">{teams.length} Active</div>
             </div>
-          </div>
-          <div className="bg-[#0e0924] p-3 rounded-2xl border border-emerald-400/20">
-            <span className="text-[10px] text-gray-400 uppercase font-bold block">Certified</span>
-            <div className="text-lg font-black text-emerald-400 font-mono">
-              {fixtures.filter((f) => f.status === "COMPLETED").length} Results
+            <div className="bg-[#0e0924] p-3 rounded-2xl border border-cyan-400/20">
+              <span className="text-[10px] text-gray-400 uppercase font-bold block">Fixtures</span>
+              <div className="text-lg font-black text-cyan-300 font-mono">
+                {fixtures.length} Total
+              </div>
             </div>
-          </div>
-          <div className="bg-[#0e0924] p-3 rounded-2xl border border-emerald-400/20">
-            <span className="text-[10px] text-gray-400 uppercase font-bold block">Treasury</span>
-            <div className="text-lg font-black text-emerald-400 font-mono truncate">
-              KES {netBalance.toLocaleString()}
+            <div className="bg-[#0e0924] p-3 rounded-2xl border border-emerald-400/20">
+              <span className="text-[10px] text-gray-400 uppercase font-bold block">Certified</span>
+              <div className="text-lg font-black text-emerald-400 font-mono">
+                {fixtures.filter((f) => f.status === "COMPLETED").length} Results
+              </div>
             </div>
-          </div>
-          <div className="bg-[#0e0924] p-3 rounded-2xl border border-purple-400/20">
-            <span className="text-[10px] text-gray-400 uppercase font-bold block">Soundtrack</span>
-            <div className="text-lg font-black text-purple-300 font-mono truncate">
-              {anthem.autoPlay ? "Auto-Play ON" : "Manual"}
+            <div className="bg-[#0e0924] p-3 rounded-2xl border border-indigo-400/20">
+              <span className="text-[10px] text-gray-400 uppercase font-bold block">
+                Quad-Crews
+              </span>
+              <div className="text-lg font-black text-indigo-300 font-mono truncate">
+                Active & Certified
+              </div>
             </div>
-          </div>
-          <div className="bg-[#0e0924] p-3 rounded-2xl border border-pink-400/20">
-            <span className="text-[10px] text-gray-400 uppercase font-bold block">Decrees</span>
-            <div className="text-lg font-black text-pink-300 font-mono">
-              {decrees.length} Sealed
+            <div className="bg-[#0e0924] p-3 rounded-2xl border border-purple-400/20">
+              <span className="text-[10px] text-gray-400 uppercase font-bold block">
+                Soundtrack
+              </span>
+              <div className="text-lg font-black text-purple-300 font-mono truncate">
+                {anthem.autoPlay ? "Auto-Play ON" : "Manual"}
+              </div>
+            </div>
+            <div className="bg-[#0e0924] p-3 rounded-2xl border border-pink-400/20">
+              <span className="text-[10px] text-gray-400 uppercase font-bold block">Decrees</span>
+              <div className="text-lg font-black text-pink-300 font-mono">
+                {decrees.length} Sealed
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Main Admin Console Layout: Dedicated Sidebar + Active Feature Panel */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Admin Navigation Sidebar */}
-        <div className="lg:col-span-1 space-y-2">
-          <div className="bg-[#0b0821] border border-[#2e2554] rounded-3xl p-3 sm:p-4 shadow-xl space-y-1">
-            <span className="text-[10px] uppercase font-black text-gray-400 tracking-wider px-3 block mb-2">
-              Supreme Admin Hub
-            </span>
-
-            {[
-              {
-                id: "board_members",
-                label: "Council Board Members",
-                sublabel: "Add, Edit, Suspend & RBAC",
-                icon: Users,
-                color: "text-amber-400",
-              },
-              {
-                id: "seasons_leagues",
-                label: "Seasons & Curriculum",
-                sublabel: "Divisions & Bible Verses",
-                icon: BookOpen,
-                color: "text-indigo-400",
-              },
-              {
-                id: "teams_clubs",
-                label: "Clubs & Squad Rosters",
-                sublabel: "15-Player Cap & Transfers",
-                icon: Shield,
-                color: "text-emerald-400",
-              },
-              {
-                id: "fixtures_scores",
-                label: "Fixtures & Live Scoring",
-                sublabel: "Referees & Conduct Points",
-                icon: Calendar,
-                color: "text-cyan-400",
-              },
-              {
-                id: "standings_ledger",
-                label: "Standings & Points Ledger",
-                sublabel: "Tiebreakers & Overrides",
-                icon: Trophy,
-                color: "text-yellow-400",
-              },
-              {
-                id: "player_stats",
-                label: "Golden Boot & Player Stats",
-                sublabel: "Goals, Assists & MVP Count",
-                icon: Award,
-                color: "text-amber-300",
-              },
-              {
-                id: "finances_fees",
-                label: "Finances & Fee Tracking",
-                sublabel: "MPESA Invoices & Expenses",
-                icon: DollarSign,
-                color: "text-emerald-400",
-              },
-              {
-                id: "broadcasts_alerts",
-                label: "Mass Alerts & Broadcasts",
-                sublabel: "Instant SMS & Email Blasts",
-                icon: Send,
-                color: "text-blue-400",
-              },
-              {
-                id: "anthem_studio",
-                label: "Stadium Soundtrack Studio",
-                sublabel: "YouTube Songs & Auto-Play",
-                icon: Music,
-                color: "text-purple-400",
-              },
-              {
-                id: "fan_comments",
-                label: "Fan Cheers & Community",
-                sublabel: "Moderation, Pinning & Prayers",
-                icon: MessageSquare,
-                color: "text-emerald-400",
-              },
-              {
-                id: "voting_center",
-                label: "MVP Balloting Dispatcher",
-                sublabel: "Voting Links & Ballot Tallies",
-                icon: Vote,
-                color: "text-pink-400",
-              },
-              {
-                id: "media_photos",
-                label: "Athlete Photos & Media",
-                sublabel: "Direct Upload & Share Links",
-                icon: Camera,
-                color: "text-blue-400",
-              },
-              {
-                id: "decrees_minutes",
-                label: "Decrees & Council Minutes",
-                sublabel: "Directives & Formal Minutes",
-                icon: FileText,
-                color: "text-indigo-400",
-              },
-              {
-                id: "system_backup",
-                label: "Database Backup & Audit",
-                sublabel: "JSON/CSV Export & Disaster Recovery",
-                icon: Database,
-                color: "text-emerald-400",
-              },
-            ].map((nav) => {
-              const Icon = nav.icon;
-              const isActive = activeSection === nav.id;
-
-              return (
-                <button
-                  key={nav.id}
-                  type="button"
-                  onClick={() => handleSectionSelect(nav.id as AdminSection)}
-                  className={`w-full flex items-center justify-between p-3 rounded-2xl transition duration-200 cursor-pointer text-left ${
-                    isActive
-                      ? "bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-black shadow-lg shadow-amber-500/20"
-                      : "text-gray-300 hover:text-white hover:bg-white/5 font-semibold"
-                  }`}
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-black" : nav.color}`} />
-                    <div className="min-w-0">
-                      <div className="text-xs truncate">{nav.label}</div>
-                      <div
-                        className={`text-[10px] truncate ${isActive ? "text-black/80 font-bold" : "text-gray-500"}`}
-                      >
-                        {nav.sublabel}
-                      </div>
-                    </div>
-                  </div>
-                  <ArrowRight
-                    className={`w-3.5 h-3.5 shrink-0 ${isActive ? "text-black" : "text-gray-500"}`}
-                  />
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Feature Panel */}
-        <div className="lg:col-span-3 space-y-6">
-          {/* =========================================================
+      {/* Main Admin Console Layout: Full-Width Active Feature Panel Controlled via Main Sidebar */}
+      <div className="w-full space-y-6">
+        {/* =========================================================
               PANEL 1: BOARD MEMBERS REGISTRY (FULL CRUD + RBAC)
               ========================================================= */}
-          {activeSection === "board_members" && (
-            <div>
-              <BoardMemberManager />
-            </div>
-          )}
+        {activeSection === "board_members" && (
+          <div>
+            <BoardMemberManager />
+          </div>
+        )}
 
-          {/* =========================================================
+        {/* =========================================================
               PANEL 2: SEASONS & LEAGUE CONFIGURATION
               ========================================================= */}
-          {activeSection === "seasons_leagues" && (
-            <div className="bg-[#0b0821] border-2 border-indigo-400/30 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-5">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#2e2554] pb-4">
-                <div>
-                  <h3 className="font-header text-lg font-black text-white uppercase flex items-center gap-2">
-                    <BookOpen className="w-5 h-5 text-indigo-400" />
-                    Season Setup, Age Divisions & Rulebook Curriculum
-                  </h3>
-                  <p className="text-xs text-gray-400 mt-0.5">
-                    Configure active championship seasons, division categories (U-10, U-15, Youth),
-                    and official scripture memory requirements.
-                  </p>
+        {activeSection === "seasons_leagues" && (
+          <div className="bg-[#0b0821] border-2 border-indigo-400/30 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#2e2554] pb-4">
+              <div>
+                <h3 className="font-header text-lg font-black text-white uppercase flex items-center gap-2">
+                  <BookOpen className="w-5 h-5 text-indigo-400" />
+                  Season Setup, Age Divisions & Rulebook Curriculum
+                </h3>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  Configure active championship seasons, division categories (U-10, U-15, Youth),
+                  and official scripture memory requirements.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowAddSeasonModal(true)}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:brightness-110 text-white font-black text-xs uppercase tracking-wide transition shadow-lg shadow-indigo-500/20 cursor-pointer shrink-0"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Setup New Season</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {seasons.map((season, sIdx) => (
+                <div
+                  key={season.id || `season-${sIdx}`}
+                  className="p-5 bg-[#141029] rounded-2xl border border-[#2e2554] hover:border-indigo-400/40 transition space-y-3"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-mono font-bold uppercase">
+                        {season.year} Season
+                      </span>
+                      <h4 className="text-sm font-black text-white mt-1">{season.name}</h4>
+                      <span className="text-xs text-cyan-300 font-semibold">{season.division}</span>
+                    </div>
+                    <span
+                      className={`text-[9px] px-2.5 py-0.5 rounded-full font-bold uppercase ${
+                        season.status === "ACTIVE"
+                          ? "bg-emerald-400/20 text-emerald-300 border border-emerald-400/30"
+                          : "bg-gray-500/20 text-gray-300"
+                      }`}
+                    >
+                      {season.status}
+                    </span>
+                  </div>
+
+                  <div className="p-3 bg-[#0a071b] rounded-xl border border-[#261f4d] space-y-1.5 text-xs">
+                    <span className="text-[10px] text-gray-400 uppercase font-bold block">
+                      Official Rulebook & Fair Play Guidelines:
+                    </span>
+                    <p className="text-gray-300 text-xs leading-relaxed">
+                      {season.rulebookExcerpt}
+                    </p>
+                  </div>
+
+                  <div className="p-3 bg-amber-950/20 rounded-xl border border-amber-500/20 space-y-1.5 text-xs">
+                    <span className="text-[10px] text-amber-400 uppercase font-bold block">
+                      Spiritual Curriculum & Memory Verse:
+                    </span>
+                    <p className="text-amber-200 text-xs font-serif italic">
+                      {season.bibleVerseCurriculum}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-[#261f4d] text-xs">
+                    <span className="text-[10px] text-gray-500 font-mono">ID: {season.id}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (window.confirm(`Delete season ${season.name}?`)) {
+                          const updated = seasons.filter((s) => s.id !== season.id);
+                          saveSeasons(updated);
+                          showToast("✓ Season removed.");
+                        }
+                      }}
+                      className="text-rose-400 hover:text-rose-300 font-bold flex items-center gap-1 cursor-pointer text-xs"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Remove</span>
+                    </button>
+                  </div>
                 </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* =========================================================
+              PANEL 3: TEAMS & CLUBS MASTER MANAGER (CRUD + 15-PLAYER ROSTER CAP + TRANSFERS)
+              ========================================================= */}
+        {activeSection === "teams_clubs" && (
+          <div className="bg-[#0b0821] border-2 border-emerald-400/30 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#2e2554] pb-4">
+              <div>
+                <h3 className="font-header text-lg font-black text-white uppercase flex items-center gap-2">
+                  <Shield className="w-5 h-5 text-emerald-400" />
+                  Parish Clubs & Squad Roster Master
+                </h3>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  Register parish ministries, enforce strict 15-player limits, audit student
+                  admission IDs, and execute player transfers.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowTransferModal(true)}
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 font-bold text-xs uppercase tracking-wide transition border border-cyan-500/30 cursor-pointer"
+                >
+                  <UserCheck className="w-3.5 h-3.5" />
+                  <span>Transfer Player</span>
+                </button>
 
                 <button
                   type="button"
-                  onClick={() => setShowAddSeasonModal(true)}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:brightness-110 text-white font-black text-xs uppercase tracking-wide transition shadow-lg shadow-indigo-500/20 cursor-pointer shrink-0"
+                  onClick={() => setShowAddTeamModal(true)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-500 hover:brightness-110 text-black font-black text-xs uppercase tracking-wide transition shadow-lg shadow-emerald-500/20 cursor-pointer shrink-0"
                 >
                   <Plus className="w-4 h-4" />
-                  <span>Setup New Season</span>
+                  <span>Create New Club</span>
                 </button>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {seasons.map((season, sIdx) => (
-                  <div
-                    key={season.id || `season-${sIdx}`}
-                    className="p-5 bg-[#141029] rounded-2xl border border-[#2e2554] hover:border-indigo-400/40 transition space-y-3"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-mono font-bold uppercase">
-                          {season.year} Season
-                        </span>
-                        <h4 className="text-sm font-black text-white mt-1">{season.name}</h4>
-                        <span className="text-xs text-cyan-300 font-semibold">
-                          {season.division}
-                        </span>
-                      </div>
-                      <span
-                        className={`text-[9px] px-2.5 py-0.5 rounded-full font-bold uppercase ${
-                          season.status === "ACTIVE"
-                            ? "bg-emerald-400/20 text-emerald-300 border border-emerald-400/30"
-                            : "bg-gray-500/20 text-gray-300"
-                        }`}
-                      >
-                        {season.status}
-                      </span>
-                    </div>
-
-                    <div className="p-3 bg-[#0a071b] rounded-xl border border-[#261f4d] space-y-1.5 text-xs">
-                      <span className="text-[10px] text-gray-400 uppercase font-bold block">
-                        Official Rulebook & Fair Play Guidelines:
-                      </span>
-                      <p className="text-gray-300 text-xs leading-relaxed">
-                        {season.rulebookExcerpt}
-                      </p>
-                    </div>
-
-                    <div className="p-3 bg-amber-950/20 rounded-xl border border-amber-500/20 space-y-1.5 text-xs">
-                      <span className="text-[10px] text-amber-400 uppercase font-bold block">
-                        Spiritual Curriculum & Memory Verse:
-                      </span>
-                      <p className="text-amber-200 text-xs font-serif italic">
-                        {season.bibleVerseCurriculum}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center justify-between pt-2 border-t border-[#261f4d] text-xs">
-                      <span className="text-[10px] text-gray-500 font-mono">ID: {season.id}</span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (window.confirm(`Delete season ${season.name}?`)) {
-                            const updated = seasons.filter((s) => s.id !== season.id);
-                            saveSeasons(updated);
-                            showToast("✓ Season removed.");
-                          }
-                        }}
-                        className="text-rose-400 hover:text-rose-300 font-bold flex items-center gap-1 cursor-pointer text-xs"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        <span>Remove</span>
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
             </div>
-          )}
 
-          {/* =========================================================
-              PANEL 3: TEAMS & CLUBS MASTER MANAGER (CRUD + 15-PLAYER ROSTER CAP + TRANSFERS)
-              ========================================================= */}
-          {activeSection === "teams_clubs" && (
-            <div className="bg-[#0b0821] border-2 border-emerald-400/30 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-5">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#2e2554] pb-4">
-                <div>
-                  <h3 className="font-header text-lg font-black text-white uppercase flex items-center gap-2">
-                    <Shield className="w-5 h-5 text-emerald-400" />
-                    Parish Clubs & Squad Roster Master
-                  </h3>
-                  <p className="text-xs text-gray-400 mt-0.5">
-                    Register parish ministries, enforce strict 15-player limits, audit student
-                    admission IDs, and execute player transfers.
-                  </p>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-2">
+            {/* Global Master Athlete Search Input */}
+            <div className="p-3 bg-[#141029] rounded-2xl border border-[#2e2554] space-y-3">
+              <div className="flex items-center gap-3">
+                <Search className="w-4 h-4 text-emerald-400 shrink-0" />
+                <input
+                  type="text"
+                  placeholder="Search master athlete database (name, admission #, emergency phone, position)..."
+                  value={globalPlayerSearch}
+                  onChange={(e) => setGlobalPlayerSearch(e.target.value)}
+                  className="w-full bg-transparent text-xs text-white placeholder-gray-500 outline-none"
+                />
+                {globalPlayerSearch && (
                   <button
                     type="button"
-                    onClick={() => setShowTransferModal(true)}
-                    className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 font-bold text-xs uppercase tracking-wide transition border border-cyan-500/30 cursor-pointer"
+                    onClick={() => setGlobalPlayerSearch("")}
+                    className="text-gray-400 hover:text-white p-1 text-xs"
                   >
-                    <UserCheck className="w-3.5 h-3.5" />
-                    <span>Transfer Player</span>
+                    <X className="w-3.5 h-3.5" />
                   </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setShowAddTeamModal(true)}
-                    className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-500 hover:brightness-110 text-black font-black text-xs uppercase tracking-wide transition shadow-lg shadow-emerald-500/20 cursor-pointer shrink-0"
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span>Create New Club</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Global Master Athlete Search Input */}
-              <div className="p-3 bg-[#141029] rounded-2xl border border-[#2e2554] space-y-3">
-                <div className="flex items-center gap-3">
-                  <Search className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <input
-                    type="text"
-                    placeholder="Search master athlete database (name, admission #, emergency phone, position)..."
-                    value={globalPlayerSearch}
-                    onChange={(e) => setGlobalPlayerSearch(e.target.value)}
-                    className="w-full bg-transparent text-xs text-white placeholder-gray-500 outline-none"
-                  />
-                  {globalPlayerSearch && (
-                    <button
-                      type="button"
-                      onClick={() => setGlobalPlayerSearch("")}
-                      className="text-gray-400 hover:text-white p-1 text-xs"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                </div>
-
-                {/* Instant Search Results across ALL clubs */}
-                {globalPlayerSearch.trim() !== "" && (
-                  <div className="pt-2 border-t border-[#261f4d] space-y-2 max-h-60 overflow-y-auto">
-                    <span className="text-[10px] uppercase font-bold text-gray-400 block">
-                      Matching Registered Athletes across all clubs:
-                    </span>
-                    {(() => {
-                      const q = globalPlayerSearch.toLowerCase().trim();
-                      const matches: Array<{
-                        team: AdminTeam;
-                        player: AdminSquadPlayer;
-                        index: number;
-                      }> = [];
-                      teams.forEach((t) => {
-                        (t.squad || []).forEach((p, idx) => {
-                          if (
-                            p.name.toLowerCase().includes(q) ||
-                            (p.admissionNumber && p.admissionNumber.toLowerCase().includes(q)) ||
-                            (p.position && p.position.toLowerCase().includes(q)) ||
-                            (p.emergencyPhone && p.emergencyPhone.includes(q))
-                          ) {
-                            matches.push({ team: t, player: p, index: idx });
-                          }
-                        });
-                      });
-
-                      if (matches.length === 0) {
-                        return (
-                          <div className="text-xs text-gray-400 italic py-2">
-                            No athletes found matching "{globalPlayerSearch}".
-                          </div>
-                        );
-                      }
-
-                      return (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                          {matches.map(({ team: t, player: p, index: idx }) => (
-                            <div
-                              key={`search-match-${t.id}-${p.name}-${idx}`}
-                              className="p-2.5 bg-[#0a071b] border border-[#2e2554] hover:border-emerald-400/40 rounded-xl flex items-center justify-between text-xs"
-                            >
-                              <div className="min-w-0">
-                                <div className="flex items-center gap-2">
-                                  <span className="font-bold text-white truncate">{p.name}</span>
-                                  <span className="px-1.5 py-0.2 rounded font-mono text-[9px] bg-emerald-400/20 text-emerald-300 font-bold">
-                                    #{p.number || "—"} {p.position || "MID"}
-                                  </span>
-                                </div>
-                                <div className="text-[10px] text-gray-400 truncate flex items-center gap-1.5 mt-0.5">
-                                  <span
-                                    style={{ color: t.color || "#00f0ff" }}
-                                    className="font-bold"
-                                  >
-                                    {t.name}
-                                  </span>
-                                  <span>•</span>
-                                  <span>Adm: {p.admissionNumber || "Pending"}</span>
-                                  <span>•</span>
-                                  <span>{p.emergencyPhone || "No emergency #"}</span>
-                                </div>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setSelectedTeamId(t.id);
-                                  setEditingPlayerIndex(idx);
-                                  setPlayerName(p.name);
-                                  setPlayerNumber(p.number || 10);
-                                  setPlayerPosition(p.position || "MID");
-                                  setPlayerAdmission(p.admissionNumber || "");
-                                  setPlayerPhoto(p.photoUrl || "");
-                                  setPlayerEmergencyPhone(p.emergencyPhone || "");
-                                  setPlayerMedical(p.medicalNotes || "None reported");
-                                  setPlayerDocVerified(p.documentsVerified ?? true);
-                                  setShowAddPlayerModal(true);
-                                }}
-                                className="px-2 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-[10px] font-bold shrink-0 ml-2 cursor-pointer"
-                              >
-                                Edit Athlete
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      );
-                    })()}
-                  </div>
                 )}
               </div>
 
-              {/* Clubs Selection Pills */}
-              <div className="flex items-center gap-2 overflow-x-auto pb-2">
-                {teams.map((t, tIdx) => (
-                  <button
-                    key={t.id ?? `team-pill-${tIdx}`}
-                    onClick={() => setSelectedTeamId(t.id)}
-                    className={`px-4 py-2 rounded-2xl text-xs font-black transition flex items-center gap-2 whitespace-nowrap cursor-pointer ${
-                      selectedTeamId === t.id
-                        ? "bg-gradient-to-r from-emerald-400 to-teal-400 text-black shadow-lg shadow-emerald-500/20"
-                        : "bg-[#141029] text-gray-300 hover:text-white border border-[#2e2554]"
-                    }`}
-                  >
-                    <span
-                      className="w-2.5 h-2.5 rounded-full"
-                      style={{ backgroundColor: t.color || "#00f0ff" }}
-                    />
-                    <span>{t.name}</span>
-                    <span className="text-[10px] opacity-75 font-mono">
-                      ({t.squad?.length || 0}/15)
-                    </span>
-                  </button>
-                ))}
-              </div>
+              {/* Instant Search Results across ALL clubs */}
+              {globalPlayerSearch.trim() !== "" && (
+                <div className="pt-2 border-t border-[#261f4d] space-y-2 max-h-60 overflow-y-auto">
+                  <span className="text-[10px] uppercase font-bold text-gray-400 block">
+                    Matching Registered Athletes across all clubs:
+                  </span>
+                  {(() => {
+                    const q = globalPlayerSearch.toLowerCase().trim();
+                    const matches: Array<{
+                      team: AdminTeam;
+                      player: AdminSquadPlayer;
+                      index: number;
+                    }> = [];
+                    teams.forEach((t) => {
+                      (t.squad || []).forEach((p, idx) => {
+                        if (
+                          p.name.toLowerCase().includes(q) ||
+                          (p.admissionNumber && p.admissionNumber.toLowerCase().includes(q)) ||
+                          (p.position && p.position.toLowerCase().includes(q)) ||
+                          (p.emergencyPhone && p.emergencyPhone.includes(q))
+                        ) {
+                          matches.push({ team: t, player: p, index: idx });
+                        }
+                      });
+                    });
 
-              {/* Selected Club Details Card */}
-              {selectedTeamData && (
-                <div className="bg-[#141029] border border-[#2e2554] rounded-2xl p-5 space-y-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#2e2554] pb-3">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="w-10 h-10 rounded-2xl flex items-center justify-center font-black text-black text-sm shadow"
-                        style={{ backgroundColor: selectedTeamData.color || "#00f0ff" }}
-                      >
-                        {selectedTeamData.shortCode || selectedTeamData.name.slice(0, 3)}
-                      </div>
-                      <div>
-                        <h4 className="text-base font-black text-white">{selectedTeamData.name}</h4>
-                        <span className="text-xs text-gray-400">
-                          {selectedTeamData.homePitch || "Official Home Ground"} •{" "}
-                          {selectedTeamData.parishOrMinistry || "Parish Ministry"}
-                        </span>
-                      </div>
-                    </div>
+                    if (matches.length === 0) {
+                      return (
+                        <div className="text-xs text-gray-400 italic py-2">
+                          No athletes found matching "{globalPlayerSearch}".
+                        </div>
+                      );
+                    }
 
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setEditingTeam(selectedTeamData)}
-                        className="px-3 py-1.5 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
-                      >
-                        <Edit3 className="w-3.5 h-3.5" />
-                        <span>Edit Club Profile</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteTeam(selectedTeamData.id, selectedTeamData.name)}
-                        className="px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        <span>Delete Club</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Club Quick Specs */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                    <div className="p-2.5 bg-[#090615] rounded-xl border border-[#261f4d]">
-                      <span className="text-[10px] text-gray-500 uppercase block font-bold">
-                        Head Coach
-                      </span>
-                      <span className="font-black text-white truncate block">
-                        {selectedTeamData.coach?.name || "Assigned Coach"}
-                      </span>
-                    </div>
-                    <div className="p-2.5 bg-[#090615] rounded-xl border border-[#261f4d]">
-                      <span className="text-[10px] text-gray-500 uppercase block font-bold">
-                        Captain
-                      </span>
-                      <span className="font-black text-amber-300 truncate block">
-                        {selectedTeamData.captain || "Team Captain"}
-                      </span>
-                    </div>
-                    <div className="p-2.5 bg-[#090615] rounded-xl border border-[#261f4d]">
-                      <span className="text-[10px] text-gray-500 uppercase block font-bold">
-                        Squad Limit Cap
-                      </span>
-                      <span className="font-black text-emerald-400 block font-mono">
-                        {selectedTeamData.squad?.length || 0} / 15 Athletes
-                      </span>
-                    </div>
-                    <div className="p-2.5 bg-[#090615] rounded-xl border border-[#261f4d]">
-                      <span className="text-[10px] text-gray-500 uppercase block font-bold">
-                        Kit Color
-                      </span>
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <span
-                          className="w-3.5 h-3.5 rounded-full border border-white/20"
-                          style={{ backgroundColor: selectedTeamData.color || "#00f0ff" }}
-                        />
-                        <span className="font-mono text-gray-300">{selectedTeamData.color}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Squad Members Section */}
-                  <div className="space-y-3 pt-2">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h5 className="text-xs font-black uppercase text-gray-300">
-                          Official Certified Squad Roster
-                        </h5>
-                        <p className="text-[11px] text-gray-500">
-                          Maximum 15 players per team. Student admission and emergency details
-                          audited.
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditingPlayerIndex(null);
-                          setPlayerName("");
-                          setPlayerNumber(10);
-                          setPlayerPosition("MID");
-                          setPlayerAdmission("");
-                          setPlayerPhoto("");
-                          setPlayerEmergencyPhone("");
-                          setPlayerMedical("None reported");
-                          setPlayerDocVerified(true);
-                          setShowAddPlayerModal(true);
-                        }}
-                        className="px-3.5 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold text-xs flex items-center gap-1 transition cursor-pointer"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                        <span>Add Athlete to Squad</span>
-                      </button>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
-                      {(selectedTeamData.squad || []).map((p, idx) => (
-                        <div
-                          key={`${p.name}-${p.number || idx}-${idx}`}
-                          className="p-3 bg-[#0a071b] rounded-xl border border-[#2e2554] flex items-center justify-between gap-2"
-                        >
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <span className="w-7 h-7 rounded-lg bg-white/10 text-emerald-300 font-mono font-black text-xs flex items-center justify-center shrink-0">
-                              #{p.number || idx + 1}
-                            </span>
+                    return (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {matches.map(({ team: t, player: p, index: idx }) => (
+                          <div
+                            key={`search-match-${t.id}-${p.name}-${idx}`}
+                            className="p-2.5 bg-[#0a071b] border border-[#2e2554] hover:border-emerald-400/40 rounded-xl flex items-center justify-between text-xs"
+                          >
                             <div className="min-w-0">
-                              <h6 className="text-xs font-black text-white truncate">{p.name}</h6>
-                              <div className="flex items-center gap-1.5 text-[10px] text-gray-400 font-mono">
-                                <span className="text-cyan-400 font-bold">
-                                  {p.position || "MID"}
-                                </span>
-                                <span>•</span>
-                                <span className="truncate">
-                                  {p.admissionNumber || "ADM verified"}
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-white truncate">{p.name}</span>
+                                <span className="px-1.5 py-0.2 rounded font-mono text-[9px] bg-emerald-400/20 text-emerald-300 font-bold">
+                                  #{p.number || "—"} {p.position || "MID"}
                                 </span>
                               </div>
+                              <div className="text-[10px] text-gray-400 truncate flex items-center gap-1.5 mt-0.5">
+                                <span style={{ color: t.color || "#00f0ff" }} className="font-bold">
+                                  {t.name}
+                                </span>
+                                <span>•</span>
+                                <span>Adm: {p.admissionNumber || "Pending"}</span>
+                                <span>•</span>
+                                <span>{p.emergencyPhone || "No emergency #"}</span>
+                              </div>
                             </div>
-                          </div>
-
-                          <div className="flex items-center gap-1 shrink-0">
                             <button
                               type="button"
                               onClick={() => {
+                                setSelectedTeamId(t.id);
                                 setEditingPlayerIndex(idx);
                                 setPlayerName(p.name);
                                 setPlayerNumber(p.number || 10);
@@ -2076,1057 +1869,1564 @@ export function MasterAdminDashboard({
                                 setPlayerDocVerified(p.documentsVerified ?? true);
                                 setShowAddPlayerModal(true);
                               }}
-                              className="p-1.5 text-gray-400 hover:text-white rounded hover:bg-white/10 cursor-pointer"
-                              title="Edit Athlete"
+                              className="px-2 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-[10px] font-bold shrink-0 ml-2 cursor-pointer"
                             >
-                              <Edit3 className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleDeleteSquadPlayer(selectedTeamData.id, idx, p.name)
-                              }
-                              className="p-1.5 text-gray-400 hover:text-rose-400 rounded hover:bg-white/10 cursor-pointer"
-                              title="Delete Athlete"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
+                              Edit Athlete
                             </button>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
             </div>
-          )}
 
-          {/* =========================================================
-              PANEL 4: FIXTURES & LIVE SCORECARD CERTIFIER
-              ========================================================= */}
-          {activeSection === "fixtures_scores" && (
-            <div className="bg-[#0b0821] border-2 border-cyan-400/30 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-5">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#2e2554] pb-4">
-                <div>
-                  <h3 className="font-header text-lg font-black text-white uppercase flex items-center gap-2">
-                    <Calendar className="w-5 h-5 text-cyan-400" />
-                    Match Center, Live Scoring & Spiritual Bonus Certification
-                  </h3>
-                  <p className="text-xs text-gray-400 mt-0.5">
-                    Schedule matchweeks, assign referees & chaplains, and certify scores with
-                    spiritual conduct bonuses.
-                  </p>
-                </div>
+            {/* Clubs Selection Pills */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-2">
+              {teams.map((t, tIdx) => (
+                <button
+                  key={t.id ?? `team-pill-${tIdx}`}
+                  onClick={() => setSelectedTeamId(t.id)}
+                  className={`px-4 py-2 rounded-2xl text-xs font-black transition flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                    selectedTeamId === t.id
+                      ? "bg-gradient-to-r from-emerald-400 to-teal-400 text-black shadow-lg shadow-emerald-500/20"
+                      : "bg-[#141029] text-gray-300 hover:text-white border border-[#2e2554]"
+                  }`}
+                >
+                  <span
+                    className="w-2.5 h-2.5 rounded-full"
+                    style={{ backgroundColor: t.color || "#00f0ff" }}
+                  />
+                  <span>{t.name}</span>
+                  <span className="text-[10px] opacity-75 font-mono">
+                    ({t.squad?.length || 0}/15)
+                  </span>
+                </button>
+              ))}
+            </div>
 
-                <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={handleGenerateRoundRobin}
-                    className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 font-bold text-xs border border-cyan-400/30 transition shadow cursor-pointer shrink-0"
-                    title="Generate balanced fixtures pairing every active team"
-                  >
-                    <Sparkles className="w-4 h-4 text-cyan-400" />
-                    <span>Auto Round-Robin</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setShowAddFixtureModal(true)}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-500 hover:brightness-110 text-black font-black text-xs uppercase tracking-wide transition shadow-lg shadow-cyan-500/20 cursor-pointer shrink-0"
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span>Create Fixture</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Fixtures List */}
-              <div className="space-y-3">
-                {fixtures.map((fix, fIdx) => {
-                  const homeTeam = teams.find((t) => t.id === fix.homeId);
-                  const awayTeam = teams.find((t) => t.id === fix.awayId);
-
-                  return (
+            {/* Selected Club Details Card */}
+            {selectedTeamData && (
+              <div className="bg-[#141029] border border-[#2e2554] rounded-2xl p-5 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#2e2554] pb-3">
+                  <div className="flex items-center gap-3">
                     <div
-                      key={fix.id ?? `fix-${fIdx}`}
-                      className="p-4 bg-[#141029] rounded-2xl border border-[#2e2554] hover:border-cyan-400/40 transition flex flex-col md:flex-row md:items-center justify-between gap-4"
+                      className="w-10 h-10 rounded-2xl flex items-center justify-center font-black text-black text-sm shadow"
+                      style={{ backgroundColor: selectedTeamData.color || "#00f0ff" }}
                     >
-                      <div className="space-y-1.5 min-w-0">
-                        <div className="flex flex-wrap items-center gap-2 text-[10px] font-mono text-gray-400">
-                          <span className="px-2 py-0.5 rounded-full bg-cyan-400/20 text-cyan-300 font-bold">
-                            Matchweek {fix.matchweek}
+                      {selectedTeamData.shortCode || selectedTeamData.name.slice(0, 3)}
+                    </div>
+                    <div>
+                      <h4 className="text-base font-black text-white">{selectedTeamData.name}</h4>
+                      <span className="text-xs text-gray-400">
+                        {selectedTeamData.homePitch || "Official Home Ground"} •{" "}
+                        {selectedTeamData.parishOrMinistry || "Parish Ministry"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setEditingTeam(selectedTeamData)}
+                      className="px-3 py-1.5 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                      <span>Edit Club Profile</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteTeam(selectedTeamData.id, selectedTeamData.name)}
+                      className="px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Delete Club</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Club Quick Specs */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                  <div className="p-2.5 bg-[#090615] rounded-xl border border-[#261f4d]">
+                    <span className="text-[10px] text-gray-500 uppercase block font-bold">
+                      Head Coach
+                    </span>
+                    <span className="font-black text-white truncate block">
+                      {selectedTeamData.coach?.name || "Assigned Coach"}
+                    </span>
+                  </div>
+                  <div className="p-2.5 bg-[#090615] rounded-xl border border-[#261f4d]">
+                    <span className="text-[10px] text-gray-500 uppercase block font-bold">
+                      Captain
+                    </span>
+                    <span className="font-black text-amber-300 truncate block">
+                      {selectedTeamData.captain || "Team Captain"}
+                    </span>
+                  </div>
+                  <div className="p-2.5 bg-[#090615] rounded-xl border border-[#261f4d]">
+                    <span className="text-[10px] text-gray-500 uppercase block font-bold">
+                      Squad Limit Cap
+                    </span>
+                    <span className="font-black text-emerald-400 block font-mono">
+                      {selectedTeamData.squad?.length || 0} / 15 Athletes
+                    </span>
+                  </div>
+                  <div className="p-2.5 bg-[#090615] rounded-xl border border-[#261f4d]">
+                    <span className="text-[10px] text-gray-500 uppercase block font-bold">
+                      Kit Color
+                    </span>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span
+                        className="w-3.5 h-3.5 rounded-full border border-white/20"
+                        style={{ backgroundColor: selectedTeamData.color || "#00f0ff" }}
+                      />
+                      <span className="font-mono text-gray-300">{selectedTeamData.color}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Squad Members Section */}
+                <div className="space-y-3 pt-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h5 className="text-xs font-black uppercase text-gray-300">
+                        Official Certified Squad Roster
+                      </h5>
+                      <p className="text-[11px] text-gray-500">
+                        Maximum 15 players per team. Student admission and emergency details
+                        audited.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingPlayerIndex(null);
+                        setPlayerName("");
+                        setPlayerNumber(10);
+                        setPlayerPosition("MID");
+                        setPlayerAdmission("");
+                        setPlayerPhoto("");
+                        setPlayerEmergencyPhone("");
+                        setPlayerMedical("None reported");
+                        setPlayerDocVerified(true);
+                        setShowAddPlayerModal(true);
+                      }}
+                      className="px-3.5 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold text-xs flex items-center gap-1 transition cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Add Athlete to Squad</span>
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                    {(selectedTeamData.squad || []).map((p, idx) => (
+                      <div
+                        key={`${p.name}-${p.number || idx}-${idx}`}
+                        className="p-3 bg-[#0a071b] rounded-xl border border-[#2e2554] flex items-center justify-between gap-2"
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <span className="w-7 h-7 rounded-lg bg-white/10 text-emerald-300 font-mono font-black text-xs flex items-center justify-center shrink-0">
+                            #{p.number || idx + 1}
                           </span>
-                          <span>•</span>
-                          <span>{fix.date}</span>
-                          <span>•</span>
-                          <span className="text-white font-bold">{fix.time}</span>
-                          <span>•</span>
-                          <span>{fix.venue}</span>
+                          <div className="min-w-0">
+                            <h6 className="text-xs font-black text-white truncate">{p.name}</h6>
+                            <div className="flex items-center gap-1.5 text-[10px] text-gray-400 font-mono">
+                              <span className="text-cyan-400 font-bold">{p.position || "MID"}</span>
+                              <span>•</span>
+                              <span className="truncate">
+                                {p.admissionNumber || "ADM verified"}
+                              </span>
+                            </div>
+                          </div>
                         </div>
 
-                        <div className="flex items-center gap-3">
-                          <span className="text-sm font-black text-white">
-                            {homeTeam?.name || `Team #${fix.homeId}`}
-                          </span>
-                          <span className="px-2.5 py-1 rounded-xl bg-[#090615] font-mono font-black text-xs text-amber-300 border border-[#261f4d]">
-                            {fix.status === "COMPLETED"
-                              ? `${fix.homeScore ?? 0} - ${fix.awayScore ?? 0}`
-                              : fix.status || "VS"}
-                          </span>
-                          <span className="text-sm font-black text-white">
-                            {awayTeam?.name || `Team #${fix.awayId}`}
-                          </span>
-                        </div>
-
-                        <div className="flex flex-wrap items-center gap-3 text-[11px] text-gray-400 font-mono">
-                          {fix.referee && <span>👤 Ref: {fix.referee}</span>}
-                          {fix.chaplain && <span>🕊️ Chaplain: {fix.chaplain}</span>}
-                          {fix.scorers && <span>⚽ Goals: {fix.scorers}</span>}
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2 self-start md:self-auto shrink-0">
-                        {fix.status !== "COMPLETED" && fix.status !== "FINISHED" ? (
+                        <div className="flex items-center gap-1 shrink-0">
                           <button
                             type="button"
                             onClick={() => {
-                              const updated = fixtures.map((f) =>
-                                f.id === fix.id
-                                  ? {
-                                      ...f,
-                                      status: "COMPLETED",
-                                      homeScore: f.homeScore ?? 0,
-                                      awayScore: f.awayScore ?? 0,
-                                    }
-                                  : f,
-                              );
-                              saveFixtures(updated);
-                              showToast(
-                                `✓ Matchweek ${fix.matchweek}: Match closed & official score certified!`,
-                              );
+                              setEditingPlayerIndex(idx);
+                              setPlayerName(p.name);
+                              setPlayerNumber(p.number || 10);
+                              setPlayerPosition(p.position || "MID");
+                              setPlayerAdmission(p.admissionNumber || "");
+                              setPlayerPhoto(p.photoUrl || "");
+                              setPlayerEmergencyPhone(p.emergencyPhone || "");
+                              setPlayerMedical(p.medicalNotes || "None reported");
+                              setPlayerDocVerified(p.documentsVerified ?? true);
+                              setShowAddPlayerModal(true);
                             }}
-                            className="px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500 text-emerald-300 hover:text-black font-extrabold text-xs transition flex items-center gap-1 border border-emerald-500/30 cursor-pointer"
-                            title="Conclude and close this match immediately"
+                            className="p-1.5 text-gray-400 hover:text-white rounded hover:bg-white/10 cursor-pointer"
+                            title="Edit Athlete"
                           >
-                            <CheckCircle2 className="w-3.5 h-3.5" />
-                            <span>Close Match</span>
+                            <Edit3 className="w-3.5 h-3.5" />
                           </button>
-                        ) : (
-                          <span className="px-2 py-0.5 rounded-lg bg-emerald-500/15 text-emerald-400 text-[10px] font-bold border border-emerald-500/30 flex items-center gap-1">
-                            <CheckCircle2 className="w-2.5 h-2.5" />
-                            <span>Closed</span>
-                          </span>
-                        )}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleDeleteSquadPlayer(selectedTeamData.id, idx, p.name)
+                            }
+                            className="p-1.5 text-gray-400 hover:text-rose-400 rounded hover:bg-white/10 cursor-pointer"
+                            title="Delete Athlete"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* =========================================================
+              PANEL 4: FIXTURES & LIVE SCORECARD CERTIFIER
+              ========================================================= */}
+        {activeSection === "fixtures_scores" && (
+          <div className="bg-[#0b0821] border-2 border-cyan-400/30 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#2e2554] pb-4">
+              <div>
+                <h3 className="font-header text-lg font-black text-white uppercase flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-cyan-400" />
+                  Match Center, Live Scoring & Spiritual Bonus Certification
+                </h3>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  Schedule matchweeks, assign referees & chaplains, and certify scores with
+                  spiritual conduct bonuses.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleGenerateRoundRobin}
+                  className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 font-bold text-xs border border-cyan-400/30 transition shadow cursor-pointer shrink-0"
+                  title="Generate balanced fixtures pairing every active team"
+                >
+                  <Sparkles className="w-4 h-4 text-cyan-400" />
+                  <span>Auto Round-Robin</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowAddFixtureModal(true)}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-500 hover:brightness-110 text-black font-black text-xs uppercase tracking-wide transition shadow-lg shadow-cyan-500/20 cursor-pointer shrink-0"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Create Fixture</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Fixtures List */}
+            <div className="space-y-3">
+              {fixtures.map((fix, fIdx) => {
+                const homeTeam = teams.find((t) => t.id === fix.homeId);
+                const awayTeam = teams.find((t) => t.id === fix.awayId);
+
+                return (
+                  <div
+                    key={fix.id ?? `fix-${fIdx}`}
+                    className="p-4 bg-[#141029] rounded-2xl border border-[#2e2554] hover:border-cyan-400/40 transition flex flex-col md:flex-row md:items-center justify-between gap-4"
+                  >
+                    <div className="space-y-1.5 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2 text-[10px] font-mono text-gray-400">
+                        <span className="px-2 py-0.5 rounded-full bg-cyan-400/20 text-cyan-300 font-bold">
+                          Matchweek {fix.matchweek}
+                        </span>
+                        <span>•</span>
+                        <span>{fix.date}</span>
+                        <span>•</span>
+                        <span className="text-white font-bold">{fix.time}</span>
+                        <span>•</span>
+                        <span>{fix.venue}</span>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm font-black text-white">
+                          {homeTeam?.name || `Team #${fix.homeId}`}
+                        </span>
+                        <span className="px-2.5 py-1 rounded-xl bg-[#090615] font-mono font-black text-xs text-amber-300 border border-[#261f4d]">
+                          {fix.status === "COMPLETED"
+                            ? `${fix.homeScore ?? 0} - ${fix.awayScore ?? 0}`
+                            : fix.status || "VS"}
+                        </span>
+                        <span className="text-sm font-black text-white">
+                          {awayTeam?.name || `Team #${fix.awayId}`}
+                        </span>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-3 text-[11px] text-gray-400 font-mono">
+                        {fix.referee && <span>👤 Ref: {fix.referee}</span>}
+                        {fix.chaplain && <span>🕊️ Chaplain: {fix.chaplain}</span>}
+                        {fix.scorers && <span>⚽ Goals: {fix.scorers}</span>}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 self-start md:self-auto shrink-0">
+                      {fix.status !== "COMPLETED" && fix.status !== "FINISHED" ? (
                         <button
                           type="button"
                           onClick={() => {
-                            setCertifyingFixture(fix);
-                            setCertHomeScore(fix.homeScore || 0);
-                            setCertAwayScore(fix.awayScore || 0);
-                            setCertStatus(fix.status || "COMPLETED");
-                            setCertScorers(fix.scorers || "");
-                            setCertSpiritualHome(fix.spiritualBonusHome ?? 1);
-                            setCertSpiritualAway(fix.spiritualBonusAway ?? 1);
-                            setCertConductNotes(fix.conductNotes || "Fair play verified.");
+                            const updated = fixtures.map((f) =>
+                              f.id === fix.id
+                                ? {
+                                    ...f,
+                                    status: "COMPLETED",
+                                    homeScore: f.homeScore ?? 0,
+                                    awayScore: f.awayScore ?? 0,
+                                  }
+                                : f,
+                            );
+                            saveFixtures(updated);
+                            updateStandingsFromMatch(
+                              fix.homeId,
+                              fix.awayId,
+                              fix.homeScore ?? 0,
+                              fix.awayScore ?? 0,
+                            );
+                            showToast(
+                              `✓ Matchweek ${fix.matchweek}: Match concluded & standings automatically updated!`,
+                            );
                           }}
-                          className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 text-black font-black text-xs uppercase transition shadow cursor-pointer"
+                          className="px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500 text-emerald-300 hover:text-black font-extrabold text-xs transition flex items-center gap-1 border border-emerald-500/30 cursor-pointer"
+                          title="Conclude match and update table immediately"
                         >
-                          Certify Score
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span>Close Match</span>
                         </button>
-
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteFixture(fix.id)}
-                          className="p-2 text-gray-400 hover:text-rose-400 rounded-xl hover:bg-white/10 transition cursor-pointer"
-                          title="Delete Fixture"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* =========================================================
-              PANEL 5: LEAGUE STANDINGS & POINTS OVERRIDE
-              ========================================================= */}
-          {activeSection === "standings_ledger" && (
-            <div className="bg-[#0b0821] border-2 border-yellow-400/30 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-5">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#2e2554] pb-4">
-                <div>
-                  <h3 className="font-header text-lg font-black text-white uppercase flex items-center gap-2">
-                    <Trophy className="w-5 h-5 text-yellow-400" />
-                    Championship Table & Points Override Ledger
-                  </h3>
-                  <p className="text-xs text-gray-400 mt-0.5">
-                    Live championship standings table. Apply manual disciplinary points deductions
-                    or fair play conduct bonuses.
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    const sorted = [...standings].sort(
-                      (a, b) => b.points - a.points || b.gd - a.gd,
-                    );
-                    saveStandings(sorted);
-                    showToast("✓ Standings sorted by Points and Goal Difference!");
-                  }}
-                  className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition cursor-pointer"
-                >
-                  Recalculate Table
-                </button>
-              </div>
-
-              {/* Standings Table Editor */}
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs font-mono">
-                  <thead>
-                    <tr className="border-b border-[#2e2554] text-gray-400 text-[10px] uppercase">
-                      <th className="py-2.5 px-3">Pos</th>
-                      <th className="py-2.5 px-3">Club</th>
-                      <th className="py-2.5 px-2 text-center">P</th>
-                      <th className="py-2.5 px-2 text-center">W</th>
-                      <th className="py-2.5 px-2 text-center">D</th>
-                      <th className="py-2.5 px-2 text-center">L</th>
-                      <th className="py-2.5 px-2 text-center">GF</th>
-                      <th className="py-2.5 px-2 text-center">GA</th>
-                      <th className="py-2.5 px-2 text-center">GD</th>
-                      <th className="py-2.5 px-3 text-center">Pts</th>
-                      <th className="py-2.5 px-3 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#261f4d]">
-                    {standings.map((st, pos) => (
-                      <tr key={st.id ?? `standing-${pos}`} className="hover:bg-white/5 transition">
-                        <td className="py-3 px-3 font-black text-white">#{pos + 1}</td>
-                        <td className="py-3 px-3 font-bold text-white flex items-center gap-2">
-                          <span
-                            className="w-2.5 h-2.5 rounded-full shrink-0"
-                            style={{ backgroundColor: st.color || "#00f0ff" }}
-                          />
-                          <span className="truncate">{st.name}</span>
-                        </td>
-                        <td className="py-3 px-2 text-center text-gray-300">
-                          {st.played ?? st.mp ?? 0}
-                        </td>
-                        <td className="py-3 px-2 text-center text-emerald-400 font-bold">
-                          {st.won ?? st.w ?? 0}
-                        </td>
-                        <td className="py-3 px-2 text-center text-gray-400">
-                          {st.drawn ?? st.d ?? 0}
-                        </td>
-                        <td className="py-3 px-2 text-center text-rose-400">
-                          {st.lost ?? st.l ?? 0}
-                        </td>
-                        <td className="py-3 px-2 text-center text-gray-300">{st.gf ?? 0}</td>
-                        <td className="py-3 px-2 text-center text-gray-400">{st.ga ?? 0}</td>
-                        <td className="py-3 px-2 text-center text-cyan-300 font-bold">
-                          {st.gd > 0 ? `+${st.gd}` : (st.gd ?? 0)}
-                        </td>
-                        <td className="py-3 px-3 text-center font-black text-amber-300 text-sm">
-                          {st.points ?? st.pts ?? 0}
-                        </td>
-                        <td className="py-3 px-3 text-right">
-                          <button
-                            type="button"
-                            onClick={() => setEditingStanding(st)}
-                            className="px-2.5 py-1 rounded-lg bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 font-bold text-[11px] transition cursor-pointer"
-                          >
-                            Edit Points
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {/* =========================================================
-              PANEL 6: PLAYER LEADERBOARD & GOLDEN BOOT
-              ========================================================= */}
-          {activeSection === "player_stats" && (
-            <div className="bg-[#0b0821] border-2 border-amber-400/30 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-5">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#2e2554] pb-4">
-                <div>
-                  <h3 className="font-header text-lg font-black text-white uppercase flex items-center gap-2">
-                    <Award className="w-5 h-5 text-amber-400" />
-                    Golden Boot & Player Leaderboard Records
-                  </h3>
-                  <p className="text-xs text-gray-400 mt-0.5">
-                    Update goals, assists, clean sheets, match ratings, and MVP accolades.
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setShowAddStatModal(true)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-gradient-to-r from-amber-400 to-yellow-500 hover:brightness-110 text-black font-black text-xs uppercase tracking-wide transition shadow cursor-pointer"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Add Player Stat Entry</span>
-                </button>
-              </div>
-
-              {/* Player Stats Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                {playerStats.map((stat, sIdx) => (
-                  <div
-                    key={stat.id || `${stat.name}-${sIdx}`}
-                    className="p-4 bg-[#141029] rounded-2xl border border-[#2e2554] hover:border-amber-400/40 transition space-y-3"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h5 className="text-sm font-black text-white">{stat.name}</h5>
-                        <span className="text-[11px] text-gray-400 font-mono">{stat.team}</span>
-                      </div>
-                      <span className="px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 font-mono font-bold text-xs">
-                        {stat.rating} Rating
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-1.5 text-center text-xs font-mono">
-                      <div className="p-1.5 bg-[#0a071b] rounded-xl border border-[#261f4d]">
-                        <span className="text-[9px] text-gray-500 block uppercase font-bold">
-                          Goals
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-lg bg-emerald-500/15 text-emerald-400 text-[10px] font-bold border border-emerald-500/30 flex items-center gap-1">
+                          <CheckCircle2 className="w-2.5 h-2.5" />
+                          <span>Closed</span>
                         </span>
-                        <span className="font-black text-emerald-400">{stat.goals}</span>
-                      </div>
-                      <div className="p-1.5 bg-[#0a071b] rounded-xl border border-[#261f4d]">
-                        <span className="text-[9px] text-gray-500 block uppercase font-bold">
-                          Assists
-                        </span>
-                        <span className="font-black text-cyan-300">{stat.assists}</span>
-                      </div>
-                      <div className="p-1.5 bg-[#0a071b] rounded-xl border border-[#261f4d]">
-                        <span className="text-[9px] text-gray-500 block uppercase font-bold">
-                          MVP
-                        </span>
-                        <span className="font-black text-amber-300">{stat.mvpAwards}</span>
-                      </div>
-                    </div>
+                      )}
 
-                    <div className="flex items-center justify-between pt-2 border-t border-[#261f4d] text-xs">
                       <button
                         type="button"
-                        onClick={() => setEditingStat(stat)}
-                        className="text-cyan-400 hover:text-cyan-300 font-bold flex items-center gap-1 cursor-pointer"
+                        onClick={() => setEditingFixture(fix)}
+                        className="px-2.5 py-1.5 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 font-bold text-xs flex items-center gap-1 border border-indigo-500/30 transition cursor-pointer"
+                        title="Edit Fixture Details"
                       >
                         <Edit3 className="w-3.5 h-3.5" />
-                        <span>Edit Stats</span>
+                        <span>Edit</span>
                       </button>
 
                       <button
                         type="button"
                         onClick={() => {
-                          if (window.confirm(`Delete stat entry for ${stat.name}?`)) {
-                            const updated = playerStats.filter((_, idx) => idx !== sIdx);
-                            savePlayerStats(updated);
-                            showToast(`✓ Removed stats for ${stat.name}`);
-                          }
+                          setCertifyingFixture(fix);
+                          setCertHomeScore(fix.homeScore || 0);
+                          setCertAwayScore(fix.awayScore || 0);
+                          setCertStatus(fix.status || "COMPLETED");
+                          setCertScorers(fix.scorers || "");
+                          setCertAssists("");
+                          setCertYellowCards("");
+                          setCertRedCards("");
+                          setCertConductNotes(
+                            fix.conductNotes ||
+                              "FIFA Fair play verified. Pre-match protocol honored.",
+                          );
                         }}
-                        className="text-rose-400 hover:text-rose-300 font-bold flex items-center gap-1 cursor-pointer"
+                        className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 text-black font-black text-xs uppercase transition shadow cursor-pointer"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        <span>Delete</span>
+                        Certify Score
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteFixture(fix.id)}
+                        className="p-2 text-gray-400 hover:text-rose-400 rounded-xl hover:bg-white/10 transition cursor-pointer"
+                        title="Delete Fixture"
+                      >
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
-                ))}
-              </div>
+                );
+              })}
             </div>
-          )}
+          </div>
+        )}
 
-          {/* =========================================================
-              PANEL 7: FINANCIAL & FEE MANAGEMENT (MPESA, CASH, BANK, EXPENSES)
+        {/* =========================================================
+              PANEL 5: LEAGUE STANDINGS & POINTS OVERRIDE
               ========================================================= */}
-          {activeSection === "finances_fees" && (
-            <div className="bg-[#0b0821] border-2 border-emerald-400/30 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-5">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#2e2554] pb-4">
-                <div>
-                  <h3 className="font-header text-lg font-black text-white uppercase flex items-center gap-2">
-                    <DollarSign className="w-5 h-5 text-emerald-400" />
-                    Treasury, Registration Fees & Expense Ledger
-                  </h3>
-                  <p className="text-xs text-gray-400 mt-0.5">
-                    Audit MPESA affiliation payments, referee allowances, pitch rentals, and net
-                    treasury balance.
-                  </p>
-                </div>
+        {activeSection === "standings_ledger" && (
+          <div className="bg-[#0b0821] border-2 border-yellow-400/30 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#2e2554] pb-4">
+              <div>
+                <h3 className="font-header text-lg font-black text-white uppercase flex items-center gap-2">
+                  <Trophy className="w-5 h-5 text-yellow-400" />
+                  Championship Table & Points Override Ledger
+                </h3>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  Live championship standings table. Apply manual disciplinary points deductions or
+                  fair play conduct bonuses.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={handleRecalculateStandingsFromMatches}
+                  className="px-3.5 py-2 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-400/30 font-bold text-xs transition cursor-pointer flex items-center gap-1.5 shadow"
+                  title="Automatically calculate played, wins, draws, losses, GD and points from certified fixtures"
+                >
+                  <span>⚡ Auto-Calculate</span>
+                </button>
 
                 <button
                   type="button"
-                  onClick={() => setShowAddFinanceModal(true)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-500 hover:brightness-110 text-black font-black text-xs uppercase tracking-wide transition shadow cursor-pointer shrink-0"
+                  onClick={handleClearTableToZero}
+                  className="px-3.5 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-400/30 font-bold text-xs transition cursor-pointer flex items-center gap-1.5 shadow"
+                  title="Reset all standings to 0-0-0-0 (0 Points) for a fresh season start"
                 >
-                  <Plus className="w-4 h-4" />
-                  <span>Record Transaction</span>
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Clear Table to 0</span>
                 </button>
               </div>
+            </div>
 
-              {/* Treasury Balance Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="p-4 bg-[#141029] rounded-2xl border border-emerald-400/30 space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-gray-400">
-                    Total Income (Receipts)
-                  </span>
-                  <div className="text-xl font-black text-emerald-400 font-mono">
-                    KES {totalIncome.toLocaleString()}
-                  </div>
-                  <span className="text-[10px] text-gray-500 block">
-                    Registration & Affiliation Dues
-                  </span>
-                </div>
-
-                <div className="p-4 bg-[#141029] rounded-2xl border border-rose-400/30 space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-gray-400">
-                    Total Disbursed Expenses
-                  </span>
-                  <div className="text-xl font-black text-rose-400 font-mono">
-                    KES {totalExpense.toLocaleString()}
-                  </div>
-                  <span className="text-[10px] text-gray-500 block">
-                    Referees, Pitches & Equipment
-                  </span>
-                </div>
-
-                <div className="p-4 bg-[#141029] rounded-2xl border border-amber-400/30 space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-gray-400">
-                    Net Treasury Surplus
-                  </span>
-                  <div className="text-xl font-black text-amber-300 font-mono">
-                    KES {netBalance.toLocaleString()}
-                  </div>
-                  <span className="text-[10px] text-gray-500 block">
-                    Solvent & Verified Balance
-                  </span>
-                </div>
-              </div>
-
-              {/* Transactions Ledger Table */}
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs font-mono">
-                  <thead>
-                    <tr className="border-b border-[#2e2554] text-gray-400 text-[10px] uppercase">
-                      <th className="py-2.5 px-3">Type</th>
-                      <th className="py-2.5 px-3">Category & Details</th>
-                      <th className="py-2.5 px-2 text-center">Method</th>
-                      <th className="py-2.5 px-2 text-center">Ref Code</th>
-                      <th className="py-2.5 px-2 text-right">Amount</th>
-                      <th className="py-2.5 px-3 text-right">Date</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#261f4d]">
-                    {finances.map((fin, fIdx) => (
-                      <tr key={fin.id ?? `fin-${fIdx}`} className="hover:bg-white/5 transition">
-                        <td className="py-3 px-3">
-                          <span
-                            className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
-                              fin.type === "INCOME"
-                                ? "bg-emerald-500/20 text-emerald-300"
-                                : "bg-rose-500/20 text-rose-300"
-                            }`}
-                          >
-                            {fin.type}
-                          </span>
-                        </td>
-                        <td className="py-3 px-3 font-bold text-white">
-                          <div>{fin.description}</div>
-                          <span className="text-[10px] text-gray-400 font-normal">
-                            {fin.category}
-                          </span>
-                        </td>
-                        <td className="py-3 px-2 text-center text-cyan-300">{fin.method}</td>
-                        <td className="py-3 px-2 text-center text-amber-300 font-bold">
-                          {fin.reference}
-                        </td>
-                        <td
-                          className={`py-3 px-2 text-right font-black ${
-                            fin.type === "INCOME" ? "text-emerald-400" : "text-rose-400"
-                          }`}
+            {/* Standings Table Editor */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs font-mono">
+                <thead>
+                  <tr className="border-b border-[#2e2554] text-gray-400 text-[10px] uppercase">
+                    <th className="py-2.5 px-3">Pos</th>
+                    <th className="py-2.5 px-3">Club</th>
+                    <th className="py-2.5 px-2 text-center">P</th>
+                    <th className="py-2.5 px-2 text-center">W</th>
+                    <th className="py-2.5 px-2 text-center">D</th>
+                    <th className="py-2.5 px-2 text-center">L</th>
+                    <th className="py-2.5 px-2 text-center">GF</th>
+                    <th className="py-2.5 px-2 text-center">GA</th>
+                    <th className="py-2.5 px-2 text-center">GD</th>
+                    <th className="py-2.5 px-3 text-center">Pts</th>
+                    <th className="py-2.5 px-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#261f4d]">
+                  {standings.map((st, pos) => (
+                    <tr key={st.id ?? `standing-${pos}`} className="hover:bg-white/5 transition">
+                      <td className="py-3 px-3 font-black text-white">#{pos + 1}</td>
+                      <td className="py-3 px-3 font-bold text-white flex items-center gap-2">
+                        <span
+                          className="w-2.5 h-2.5 rounded-full shrink-0"
+                          style={{ backgroundColor: st.color || "#00f0ff" }}
+                        />
+                        <span className="truncate">{st.name}</span>
+                      </td>
+                      <td className="py-3 px-2 text-center text-gray-300">
+                        {st.played ?? st.mp ?? 0}
+                      </td>
+                      <td className="py-3 px-2 text-center text-emerald-400 font-bold">
+                        {st.won ?? st.w ?? 0}
+                      </td>
+                      <td className="py-3 px-2 text-center text-gray-400">
+                        {st.drawn ?? st.d ?? 0}
+                      </td>
+                      <td className="py-3 px-2 text-center text-rose-400">
+                        {st.lost ?? st.l ?? 0}
+                      </td>
+                      <td className="py-3 px-2 text-center text-gray-300">{st.gf ?? 0}</td>
+                      <td className="py-3 px-2 text-center text-gray-400">{st.ga ?? 0}</td>
+                      <td className="py-3 px-2 text-center text-cyan-300 font-bold">
+                        {st.gd > 0 ? `+${st.gd}` : (st.gd ?? 0)}
+                      </td>
+                      <td className="py-3 px-3 text-center font-black text-amber-300 text-sm">
+                        {st.points ?? st.pts ?? 0}
+                      </td>
+                      <td className="py-3 px-3 text-right">
+                        <button
+                          type="button"
+                          onClick={() => setEditingStanding(st)}
+                          className="px-2.5 py-1 rounded-lg bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 font-bold text-[11px] transition cursor-pointer"
                         >
-                          {fin.type === "INCOME" ? "+" : "-"}KES {fin.amount.toLocaleString()}
-                        </td>
-                        <td className="py-3 px-3 text-right text-gray-400">{fin.date}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                          Edit Points
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          )}
+          </div>
+        )}
 
-          {/* =========================================================
-              PANEL 8: MASS BROADCASTS & NOTIFICATIONS (SMS, EMAIL, WHATSAPP)
+        {/* =========================================================
+              PANEL 6: PLAYER LEADERBOARD & GOLDEN BOOT
               ========================================================= */}
-          {activeSection === "broadcasts_alerts" && (
-            <div className="bg-[#0b0821] border-2 border-blue-400/30 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-5">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#2e2554] pb-4">
-                <div>
-                  <h3 className="font-header text-lg font-black text-white uppercase flex items-center gap-2">
-                    <Send className="w-5 h-5 text-blue-400" />
-                    Mass Communication, SMS & Broadcast Dispatcher
-                  </h3>
-                  <p className="text-xs text-gray-400 mt-0.5">
-                    Send urgent SMS alerts and email announcements to team managers, coaches,
-                    referees, and parents.
-                  </p>
-                </div>
+        {activeSection === "player_stats" && (
+          <div className="bg-[#0b0821] border-2 border-amber-400/30 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#2e2554] pb-4">
+              <div>
+                <h3 className="font-header text-lg font-black text-white uppercase flex items-center gap-2">
+                  <Award className="w-5 h-5 text-amber-400" />
+                  Golden Boot & Player Leaderboard Records
+                </h3>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  Update goals, assists, clean sheets, match ratings, and MVP accolades.
+                </p>
+              </div>
 
-                <button
-                  type="button"
-                  onClick={() => setShowSendBroadcastModal(true)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:brightness-110 text-white font-black text-xs uppercase tracking-wide transition shadow cursor-pointer shrink-0"
+              <button
+                type="button"
+                onClick={() => setShowAddStatModal(true)}
+                className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-gradient-to-r from-amber-400 to-yellow-500 hover:brightness-110 text-black font-black text-xs uppercase tracking-wide transition shadow cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Add Player Stat Entry</span>
+              </button>
+            </div>
+
+            {/* Player Stats Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+              {playerStats.map((stat, sIdx) => (
+                <div
+                  key={stat.id || `${stat.name}-${sIdx}`}
+                  className="p-4 bg-[#141029] rounded-2xl border border-[#2e2554] hover:border-amber-400/40 transition space-y-3"
                 >
-                  <Send className="w-4 h-4" />
-                  <span>Compose Broadcast</span>
-                </button>
-              </div>
-
-              {/* Broadcasts Archive */}
-              <div className="space-y-3">
-                {broadcasts.map((bc, bIdx) => (
-                  <div
-                    key={bc.id ?? `bc-${bIdx}`}
-                    className="p-4 bg-[#141029] rounded-2xl border border-[#2e2554] space-y-2"
-                  >
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 font-bold uppercase font-mono">
-                          {bc.channel.replace("_", " ")}
-                        </span>
-                        <span className="text-[10px] text-gray-400 font-bold">
-                          To: {bc.recipientGroup}
-                        </span>
-                      </div>
-                      <span className="text-[10px] text-gray-500 font-mono">{bc.sentAt}</span>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h5 className="text-sm font-black text-white">{stat.name}</h5>
+                      <span className="text-[11px] text-gray-400 font-mono">{stat.team}</span>
                     </div>
-
-                    <h5 className="text-sm font-black text-white">{bc.title}</h5>
-                    <p className="text-xs text-gray-300 leading-relaxed">{bc.body}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* =========================================================
-              PANEL 9: STADIUM SOUNDTRACK & ANTHEM STUDIO (YOUTUBE + AUTOPLAY)
-              ========================================================= */}
-          {activeSection === "anthem_studio" && (
-            <div className="space-y-4 animate-in fade-in">
-              <AnthemStudioAndPlaylist />
-            </div>
-          )}
-
-          {/* =========================================================
-              PANEL 9B: FAN CHEERS & COMMUNITY MODERATION
-              ========================================================= */}
-          {activeSection === "fan_comments" && (
-            <div className="space-y-4 animate-in fade-in">
-              <div className="bg-[#0b0821] border-2 border-emerald-400/30 rounded-3xl p-5 sm:p-6 shadow-2xl">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#2e2554] pb-4 mb-6">
-                  <div>
-                    <h3 className="font-header text-lg font-black text-white uppercase flex items-center gap-2">
-                      <MessageSquare className="w-5 h-5 text-emerald-400" />
-                      Fan Cheers & Community Moderation Console
-                    </h3>
-                    <p className="text-xs text-gray-400 mt-0.5">
-                      Audit community submissions, prayers, and chants. Pin inspiring messages to
-                      the top or remove inappropriate posts.
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 font-mono font-bold text-xs border border-emerald-500/30">
-                      Super Admin Moderation
+                    <span className="px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 font-mono font-bold text-xs">
+                      {stat.rating} Rating
                     </span>
                   </div>
-                </div>
 
-                <FanCommunityComments />
-              </div>
-            </div>
-          )}
+                  <div className="grid grid-cols-3 gap-1.5 text-center text-xs font-mono">
+                    <div className="p-1.5 bg-[#0a071b] rounded-xl border border-[#261f4d]">
+                      <span className="text-[9px] text-gray-500 block uppercase font-bold">
+                        Goals
+                      </span>
+                      <span className="font-black text-emerald-400">{stat.goals}</span>
+                    </div>
+                    <div className="p-1.5 bg-[#0a071b] rounded-xl border border-[#261f4d]">
+                      <span className="text-[9px] text-gray-500 block uppercase font-bold">
+                        Assists
+                      </span>
+                      <span className="font-black text-cyan-300">{stat.assists}</span>
+                    </div>
+                    <div className="p-1.5 bg-[#0a071b] rounded-xl border border-[#261f4d]">
+                      <span className="text-[9px] text-gray-500 block uppercase font-bold">
+                        MVP
+                      </span>
+                      <span className="font-black text-amber-300">{stat.mvpAwards}</span>
+                    </div>
+                  </div>
 
-          {/* =========================================================
-              PANEL 10: MVP VOTING CENTER DISPATCHER
-              ========================================================= */}
-          {activeSection === "voting_center" && (
-            <div className="bg-[#0b0821] border-2 border-pink-400/30 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-5">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#2e2554] pb-4">
-                <div>
-                  <h3 className="font-header text-lg font-black text-white uppercase flex items-center gap-2">
-                    <Vote className="w-5 h-5 text-pink-400" />
-                    MVP Voting Center Dispatcher
-                  </h3>
-                  <p className="text-xs text-gray-400 mt-0.5">
-                    Configure active voting matches, generate custom voting links, and audit
-                    certified school email ballots.
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <span className="px-3 py-1 rounded-full bg-pink-500/20 text-pink-300 font-mono font-bold text-xs border border-pink-500/30">
-                    {votedEmailsCount} Verified Ballots Cast
-                  </span>
-                </div>
-              </div>
-
-              {/* Voting Configuration Card */}
-              <div className="bg-[#141029] border border-[#2e2554] rounded-2xl p-5 space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-gray-400 font-bold uppercase text-[10px] mb-1.5">
-                      Active Match For Balloting
-                    </label>
-                    <select
-                      value={votingMatchId}
-                      onChange={(e) => setVotingMatchId(Number(e.target.value))}
-                      className="w-full bg-[#0a071b] border border-[#2e2554] focus:border-pink-400 rounded-xl px-3 py-2.5 text-xs font-bold text-white outline-none"
+                  <div className="flex items-center justify-between pt-2 border-t border-[#261f4d] text-xs">
+                    <button
+                      type="button"
+                      onClick={() => setEditingStat(stat)}
+                      className="text-cyan-400 hover:text-cyan-300 font-bold flex items-center gap-1 cursor-pointer"
                     >
-                      {fixtures.map((fix, fIdx) => {
-                        const h = teams.find((t) => t.id === fix.homeId)?.name || `#${fix.homeId}`;
-                        const a = teams.find((t) => t.id === fix.awayId)?.name || `#${fix.awayId}`;
-                        return (
-                          <option key={fix.id ?? `vote-fix-${fIdx}`} value={fix.id}>
-                            MW {fix.matchweek}: {h} vs {a} ({fix.date})
-                          </option>
-                        );
-                      })}
-                    </select>
-                  </div>
+                      <Edit3 className="w-3.5 h-3.5" />
+                      <span>Edit Stats</span>
+                    </button>
 
-                  <div>
-                    <label className="block text-gray-400 font-bold uppercase text-[10px] mb-1.5">
-                      Voting Deadline / Closing Notice
-                    </label>
-                    <input
-                      type="text"
-                      value={votingDeadline}
-                      onChange={(e) => setVotingDeadline(e.target.value)}
-                      placeholder="e.g. Sunday, Oct 25, 2026 at 23:59 EAT"
-                      className="w-full bg-[#0a071b] border border-[#2e2554] focus:border-pink-400 rounded-xl px-3 py-2.5 text-xs text-white outline-none"
-                    />
-                  </div>
-                </div>
-
-                {/* Shareable Link Box */}
-                <div className="p-3 bg-[#0a071b] rounded-xl border border-[#261f4d] space-y-2">
-                  <span className="text-[10px] uppercase font-bold text-gray-400 block">
-                    Shareable MVP Voting Link:
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      readOnly
-                      value={`${typeof window !== "undefined" ? window.location.origin : ""}/mvp-voting?matchId=${votingMatchId}`}
-                      className="w-full bg-black/40 border border-[#2e2554] rounded-xl px-3 py-2 text-xs font-mono text-cyan-300 select-all"
-                    />
                     <button
                       type="button"
                       onClick={() => {
-                        const origin = typeof window !== "undefined" ? window.location.origin : "";
-                        const url = `${origin}/mvp-voting?matchId=${votingMatchId}`;
-                        navigator.clipboard.writeText(url);
-                        showToast("✓ MVP Voting link copied to clipboard!");
+                        if (window.confirm(`Delete stat entry for ${stat.name}?`)) {
+                          const updated = playerStats.filter((_, idx) => idx !== sIdx);
+                          savePlayerStats(updated);
+                          showToast(`✓ Removed stats for ${stat.name}`);
+                        }
                       }}
-                      className="px-4 py-2 rounded-xl bg-pink-500/20 hover:bg-pink-500/30 text-pink-300 font-bold text-xs flex items-center gap-1.5 shrink-0 transition cursor-pointer"
+                      className="text-rose-400 hover:text-rose-300 font-bold flex items-center gap-1 cursor-pointer"
                     >
-                      <Copy className="w-3.5 h-3.5" />
-                      <span>Copy Link</span>
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Delete</span>
                     </button>
                   </div>
                 </div>
-
-                {/* Embedded Secure Voter Audit & Log Reset Interface */}
-                {(() => {
-                  const matchObj = fixtures.find((f) => f.id === votingMatchId) || fixtures[0];
-                  const homeTeamObj = teams.find((t) => t.id === matchObj?.homeId);
-                  const awayTeamObj = teams.find((t) => t.id === matchObj?.awayId);
-                  const storedPolls = JSON.parse(
-                    typeof window !== "undefined"
-                      ? localStorage.getItem("mpesa_pes_mvp_votes_v1") || "{}"
-                      : "{}",
-                  );
-                  const currentPoll = storedPolls[votingMatchId] || {
-                    matchId: votingMatchId,
-                    isOpen: true,
-                    votes: {},
-                    voterEmails: [],
-                  };
-
-                  return (
-                    <div className="pt-2">
-                      <AdminVotingVoterAudit
-                        matchId={votingMatchId}
-                        matchweek={matchObj?.matchweek || 1}
-                        matchTitle={`${homeTeamObj?.name || "Home"} vs ${awayTeamObj?.name || "Away"}`}
-                        matchDate={matchObj?.date || "Oct 25, 2026"}
-                        currentPoll={currentPoll}
-                        onUpdatePoll={(updated) => {
-                          storedPolls[votingMatchId] = updated;
-                          localStorage.setItem(
-                            "mpesa_pes_mvp_votes_v1",
-                            JSON.stringify(storedPolls),
-                          );
-                          window.dispatchEvent(new Event("storage"));
-                          setVotedEmailsCount(updated.voterEmails?.length || 0);
-                        }}
-                        onShowToast={showToast}
-                      />
-                    </div>
-                  );
-                })()}
-              </div>
+              ))}
             </div>
-          )}
+          </div>
+        )}
 
-          {/* =========================================================
-              PANEL 11: ATHLETE PHOTOS & MEDIA UPLOAD
+        {/* =========================================================
+              PANEL 8: MASS BROADCASTS & NOTIFICATIONS (SMS, EMAIL, WHATSAPP)
               ========================================================= */}
-          {activeSection === "media_photos" && (
-            <div className="bg-[#0b0821] border-2 border-blue-400/30 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-5">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#2e2554] pb-4">
+        {activeSection === "broadcasts_alerts" && (
+          <div className="bg-[#0b0821] border-2 border-blue-400/30 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#2e2554] pb-4">
+              <div>
+                <h3 className="font-header text-lg font-black text-white uppercase flex items-center gap-2">
+                  <Send className="w-5 h-5 text-blue-400" />
+                  Mass Communication, SMS & Broadcast Dispatcher
+                </h3>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  Send urgent SMS alerts and email announcements to team managers, coaches,
+                  referees, and parents.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowSendBroadcastModal(true)}
+                className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:brightness-110 text-white font-black text-xs uppercase tracking-wide transition shadow cursor-pointer shrink-0"
+              >
+                <Send className="w-4 h-4" />
+                <span>Compose Broadcast</span>
+              </button>
+            </div>
+
+            {/* Broadcasts Archive */}
+            <div className="space-y-3">
+              {broadcasts.map((bc, bIdx) => (
+                <div
+                  key={bc.id ?? `bc-${bIdx}`}
+                  className="p-4 bg-[#141029] rounded-2xl border border-[#2e2554] space-y-2"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 font-bold uppercase font-mono">
+                        {bc.channel.replace("_", " ")}
+                      </span>
+                      <span className="text-[10px] text-gray-400 font-bold">
+                        To: {bc.recipientGroup}
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-gray-500 font-mono">{bc.sentAt}</span>
+                  </div>
+
+                  <h5 className="text-sm font-black text-white">{bc.title}</h5>
+                  <p className="text-xs text-gray-300 leading-relaxed">{bc.body}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* =========================================================
+              PANEL 9: STADIUM SOUNDTRACK & ANTHEM STUDIO (YOUTUBE + AUTOPLAY)
+              ========================================================= */}
+        {activeSection === "anthem_studio" && (
+          <div className="space-y-4 animate-in fade-in">
+            <AnthemStudioAndPlaylist />
+          </div>
+        )}
+
+        {/* =========================================================
+              PANEL 9B: FAN CHEERS & COMMUNITY MODERATION
+              ========================================================= */}
+        {activeSection === "fan_comments" && (
+          <div className="space-y-4 animate-in fade-in">
+            <div className="bg-[#0b0821] border-2 border-emerald-400/30 rounded-3xl p-5 sm:p-6 shadow-2xl">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#2e2554] pb-4 mb-6">
                 <div>
                   <h3 className="font-header text-lg font-black text-white uppercase flex items-center gap-2">
-                    <Camera className="w-5 h-5 text-blue-400" />
-                    Athlete Photos & Official Media Hub
+                    <MessageSquare className="w-5 h-5 text-emerald-400" />
+                    Fan Cheers & Community Moderation Console
                   </h3>
                   <p className="text-xs text-gray-400 mt-0.5">
-                    Directly upload player headshots or dispatch shareable upload links to team
-                    captains.
+                    Audit community submissions, prayers, and chants. Pin inspiring messages to the
+                    top or remove inappropriate posts.
                   </p>
                 </div>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    const origin = typeof window !== "undefined" ? window.location.origin : "";
-                    const url = `${origin}/upload-photo`;
-                    navigator.clipboard.writeText(url);
-                    showToast("✓ Shareable Player Photo Upload link copied!");
-                  }}
-                  className="px-4 py-2 rounded-2xl bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
-                >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  <span>Copy Player Upload Portal Link</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 font-mono font-bold text-xs border border-emerald-500/30">
+                    Super Admin Moderation
+                  </span>
+                </div>
               </div>
 
-              {/* Direct Photo Uploader */}
-              <div className="bg-[#141029] border border-[#2e2554] rounded-2xl p-5 space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-gray-400 font-bold uppercase text-[10px] mb-1.5">
-                      Select Team
-                    </label>
-                    <select
-                      value={selectedPhotoTeamId}
-                      onChange={(e) => setSelectedPhotoTeamId(Number(e.target.value))}
-                      className="w-full bg-[#0a071b] border border-[#2e2554] focus:border-blue-400 rounded-xl px-3 py-2.5 text-xs font-bold text-white outline-none"
-                    >
-                      {teams.map((t, tIdx) => (
-                        <option key={t.id ?? `photo-team-${tIdx}`} value={t.id}>
-                          {t.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+              <FanCommunityComments />
+            </div>
+          </div>
+        )}
 
-                  <div>
-                    <label className="block text-gray-400 font-bold uppercase text-[10px] mb-1.5">
-                      Select Athlete
-                    </label>
-                    <select
-                      value={selectedPhotoPlayer}
-                      onChange={(e) => setSelectedPhotoPlayer(e.target.value)}
-                      className="w-full bg-[#0a071b] border border-[#2e2554] focus:border-blue-400 rounded-xl px-3 py-2.5 text-xs font-bold text-white outline-none"
-                    >
-                      {(teams.find((t) => t.id === Number(selectedPhotoTeamId))?.squad || []).map(
-                        (p, pIdx) => (
-                          <option key={`${p.name}-${pIdx}`} value={p.name}>
-                            #{p.number || pIdx + 1} - {p.name} ({p.position || "MID"})
-                          </option>
-                        ),
-                      )}
-                    </select>
-                  </div>
+        {/* =========================================================
+              PANEL 10: MVP VOTING CENTER DISPATCHER
+              ========================================================= */}
+        {activeSection === "voting_center" && (
+          <div className="bg-[#0b0821] border-2 border-pink-400/30 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#2e2554] pb-4">
+              <div>
+                <h3 className="font-header text-lg font-black text-white uppercase flex items-center gap-2">
+                  <Vote className="w-5 h-5 text-pink-400" />
+                  MVP Voting Center Dispatcher
+                </h3>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  Configure active voting matches, generate custom voting links, and audit certified
+                  school email ballots.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="px-3 py-1 rounded-full bg-pink-500/20 text-pink-300 font-mono font-bold text-xs border border-pink-500/30">
+                  {votedEmailsCount} Verified Ballots Cast
+                </span>
+              </div>
+            </div>
+
+            {/* Voting Configuration Card */}
+            <div className="bg-[#141029] border border-[#2e2554] rounded-2xl p-5 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-gray-400 font-bold uppercase text-[10px] mb-1.5">
+                    Active Match For Balloting
+                  </label>
+                  <select
+                    value={votingMatchId}
+                    onChange={(e) => setVotingMatchId(Number(e.target.value))}
+                    className="w-full bg-[#0a071b] border border-[#2e2554] focus:border-pink-400 rounded-xl px-3 py-2.5 text-xs font-bold text-white outline-none"
+                  >
+                    {fixtures.map((fix, fIdx) => {
+                      const h = teams.find((t) => t.id === fix.homeId)?.name || `#${fix.homeId}`;
+                      const a = teams.find((t) => t.id === fix.awayId)?.name || `#${fix.awayId}`;
+                      return (
+                        <option key={fix.id ?? `vote-fix-${fIdx}`} value={fix.id}>
+                          MW {fix.matchweek}: {h} vs {a} ({fix.date})
+                        </option>
+                      );
+                    })}
+                  </select>
                 </div>
 
-                {/* File input & Preview */}
-                <div className="p-4 bg-[#0a071b] rounded-xl border border-[#261f4d] space-y-3">
-                  <label className="block text-gray-400 font-bold uppercase text-[10px]">
-                    Choose Portrait Photo File (PNG, JPG, WebP):
+                <div>
+                  <label className="block text-gray-400 font-bold uppercase text-[10px] mb-1.5">
+                    Voting Deadline / Closing Notice
                   </label>
                   <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handlePhotoFileChange}
-                    className="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-blue-500/20 file:text-blue-300 hover:file:bg-blue-500/30 cursor-pointer"
+                    type="text"
+                    value={votingDeadline}
+                    onChange={(e) => setVotingDeadline(e.target.value)}
+                    placeholder="e.g. Sunday, Oct 25, 2026 at 23:59 EAT"
+                    className="w-full bg-[#0a071b] border border-[#2e2554] focus:border-pink-400 rounded-xl px-3 py-2.5 text-xs text-white outline-none"
                   />
+                </div>
+              </div>
 
-                  {photoPreview && (
-                    <div className="flex items-center gap-4 pt-2">
-                      <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-blue-400 shadow shrink-0">
-                        <img
-                          src={photoPreview}
-                          alt="Preview"
-                          className="w-full h-full object-cover"
-                        />
+              {/* Shareable Link Box */}
+              <div className="p-3 bg-[#0a071b] rounded-xl border border-[#261f4d] space-y-2">
+                <span className="text-[10px] uppercase font-bold text-gray-400 block">
+                  Shareable MVP Voting Link:
+                </span>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    readOnly
+                    value={`${typeof window !== "undefined" ? window.location.origin : ""}/mvp-voting?matchId=${votingMatchId}`}
+                    className="w-full bg-black/40 border border-[#2e2554] rounded-xl px-3 py-2 text-xs font-mono text-cyan-300 select-all"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const origin = typeof window !== "undefined" ? window.location.origin : "";
+                      const url = `${origin}/mvp-voting?matchId=${votingMatchId}`;
+                      navigator.clipboard.writeText(url);
+                      showToast("✓ MVP Voting link copied to clipboard!");
+                    }}
+                    className="px-4 py-2 rounded-xl bg-pink-500/20 hover:bg-pink-500/30 text-pink-300 font-bold text-xs flex items-center gap-1.5 shrink-0 transition cursor-pointer"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                    <span>Copy Link</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Embedded Secure Voter Audit & Log Reset Interface */}
+              {(() => {
+                const matchObj = fixtures.find((f) => f.id === votingMatchId) || fixtures[0];
+                const homeTeamObj = teams.find((t) => t.id === matchObj?.homeId);
+                const awayTeamObj = teams.find((t) => t.id === matchObj?.awayId);
+                const storedPolls = JSON.parse(
+                  typeof window !== "undefined"
+                    ? localStorage.getItem("mpesa_pes_mvp_votes_v1") || "{}"
+                    : "{}",
+                );
+                const currentPoll = storedPolls[votingMatchId] || {
+                  matchId: votingMatchId,
+                  isOpen: true,
+                  votes: {},
+                  voterEmails: [],
+                };
+
+                return (
+                  <div className="pt-2">
+                    <AdminVotingVoterAudit
+                      matchId={votingMatchId}
+                      matchweek={matchObj?.matchweek || 1}
+                      matchTitle={`${homeTeamObj?.name || "Home"} vs ${awayTeamObj?.name || "Away"}`}
+                      matchDate={matchObj?.date || "Oct 25, 2026"}
+                      currentPoll={currentPoll}
+                      onUpdatePoll={(updated) => {
+                        storedPolls[votingMatchId] = updated;
+                        localStorage.setItem("mpesa_pes_mvp_votes_v1", JSON.stringify(storedPolls));
+                        window.dispatchEvent(new Event("storage"));
+                        setVotedEmailsCount(updated.voterEmails?.length || 0);
+                      }}
+                      onShowToast={showToast}
+                    />
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+        )}
+
+        {/* =========================================================
+              PANEL 11: ATHLETE PHOTOS & MEDIA UPLOAD
+              ========================================================= */}
+        {activeSection === "media_photos" && (
+          <div className="bg-[#0b0821] border-2 border-blue-400/30 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#2e2554] pb-4">
+              <div>
+                <h3 className="font-header text-lg font-black text-white uppercase flex items-center gap-2">
+                  <Camera className="w-5 h-5 text-blue-400" />
+                  Athlete Photos & Official Media Hub
+                </h3>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  Directly upload player headshots or dispatch shareable upload links to team
+                  captains.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const origin = typeof window !== "undefined" ? window.location.origin : "";
+                  const url = `${origin}/upload-photo`;
+                  navigator.clipboard.writeText(url);
+                  showToast("✓ Shareable Player Photo Upload link copied!");
+                }}
+                className="px-4 py-2 rounded-2xl bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span>Copy Player Upload Portal Link</span>
+              </button>
+            </div>
+
+            {/* Direct Photo Uploader */}
+            <div
+              id="athlete-photo-upload-card"
+              className="bg-[#141029] border border-[#2e2554] rounded-2xl p-5 space-y-4"
+            >
+              <div className="flex items-center justify-between border-b border-[#2e2554] pb-3">
+                <div className="flex items-center gap-2">
+                  <Upload className="w-4 h-4 text-blue-400" />
+                  <h4 className="text-xs font-black uppercase text-white">
+                    Direct Portrait Photo Uploader
+                  </h4>
+                </div>
+                <span className="text-[10px] text-gray-400 font-mono">
+                  Target: <strong className="text-blue-300 font-bold">{selectedPhotoPlayer}</strong>{" "}
+                  ({teams.find((t) => t.id === Number(selectedPhotoTeamId))?.name || "Club"})
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-gray-400 font-bold uppercase text-[10px] mb-1.5">
+                    Select Team
+                  </label>
+                  <select
+                    value={selectedPhotoTeamId}
+                    onChange={(e) => {
+                      const newTid = Number(e.target.value);
+                      setSelectedPhotoTeamId(newTid);
+                      const firstPlayer = teams.find((t) => t.id === newTid)?.squad?.[0]?.name;
+                      if (firstPlayer) setSelectedPhotoPlayer(firstPlayer);
+                    }}
+                    className="w-full bg-[#0a071b] border border-[#2e2554] focus:border-blue-400 rounded-xl px-3 py-2.5 text-xs font-bold text-white outline-none"
+                  >
+                    {teams.map((t, tIdx) => (
+                      <option key={t.id ?? `photo-team-${tIdx}`} value={t.id}>
+                        {t.name} ({t.squad?.length || 0} athletes)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-gray-400 font-bold uppercase text-[10px] mb-1.5">
+                    Select Athlete
+                  </label>
+                  <select
+                    value={selectedPhotoPlayer}
+                    onChange={(e) => setSelectedPhotoPlayer(e.target.value)}
+                    className="w-full bg-[#0a071b] border border-[#2e2554] focus:border-blue-400 rounded-xl px-3 py-2.5 text-xs font-bold text-white outline-none"
+                  >
+                    {(teams.find((t) => t.id === Number(selectedPhotoTeamId))?.squad || []).map(
+                      (p, pIdx) => (
+                        <option key={`${p.name}-${pIdx}`} value={p.name}>
+                          #{p.number || pIdx + 1} - {p.name} ({p.position || "MID"}){" "}
+                          {p.photoUrl ? "✓ Has Photo" : "• Needs Photo"}
+                        </option>
+                      ),
+                    )}
+                  </select>
+                </div>
+              </div>
+
+              {/* File input & Preview */}
+              <div className="p-4 bg-[#0a071b] rounded-xl border border-[#261f4d] space-y-3">
+                <label className="block text-gray-400 font-bold uppercase text-[10px]">
+                  Choose Portrait Photo File (PNG, JPG, WebP):
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoFileChange}
+                  className="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-blue-500/20 file:text-blue-300 hover:file:bg-blue-500/30 cursor-pointer"
+                />
+
+                {photoPreview && (
+                  <div className="flex items-center gap-4 pt-2">
+                    <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-blue-400 shadow shrink-0">
+                      <img
+                        src={photoPreview}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="text-xs">
+                      <span className="font-black text-white block">Ready to apply photo</span>
+                      <span className="text-gray-400 text-[11px]">
+                        Target: {selectedPhotoPlayer}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#2e2554]">
+                <button
+                  type="button"
+                  onClick={handleSavePhotoDirectly}
+                  disabled={!photoPreview}
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:brightness-110 text-white font-black text-xs uppercase tracking-wider transition shadow-lg shadow-blue-500/20 cursor-pointer disabled:opacity-50"
+                >
+                  Save & Update Athlete Profile
+                </button>
+              </div>
+            </div>
+
+            {/* Comprehensive Athlete Gallery & Roster Catalog */}
+            {(() => {
+              const allAthletes = teams.flatMap((team) =>
+                (team.squad || []).map((player, idx) => ({
+                  player,
+                  team,
+                  index: idx,
+                  stats: playerStats.find(
+                    (s) => s.name.toLowerCase() === player.name.toLowerCase(),
+                  ),
+                })),
+              );
+
+              const filteredAthletes = allAthletes.filter(({ player, team }) => {
+                const matchesTeam =
+                  photoFilterTeamId === "ALL" || String(team.id) === String(photoFilterTeamId);
+                const q = photoSearchQuery.toLowerCase().trim();
+                const matchesSearch =
+                  !q ||
+                  player.name.toLowerCase().includes(q) ||
+                  (player.admissionNumber && player.admissionNumber.toLowerCase().includes(q)) ||
+                  (player.position && player.position.toLowerCase().includes(q)) ||
+                  team.name.toLowerCase().includes(q);
+                return matchesTeam && matchesSearch;
+              });
+
+              const withPhotosCount = allAthletes.filter((a) => Boolean(a.player.photoUrl)).length;
+
+              return (
+                <div className="space-y-4 pt-2">
+                  {/* Header bar with controls */}
+                  <div className="bg-[#141029] border border-[#2e2554] rounded-2xl p-4 space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <LayoutGrid className="w-5 h-5 text-cyan-400" />
+                        <div>
+                          <h4 className="text-sm font-black text-white uppercase">
+                            Official Registered Athlete Roster Gallery
+                          </h4>
+                          <p className="text-[11px] text-gray-400">
+                            Showing {filteredAthletes.length} of {allAthletes.length} athletes (
+                            {withPhotosCount} photos uploaded)
+                          </p>
+                        </div>
                       </div>
-                      <div className="text-xs">
-                        <span className="font-black text-white block">Ready to apply photo</span>
-                        <span className="text-gray-400 text-[11px]">
-                          Target: {selectedPhotoPlayer}
-                        </span>
+
+                      {/* View toggle (Grid / Table) */}
+                      <div className="flex items-center gap-1.5 bg-[#0a071b] p-1 rounded-xl border border-[#2e2554] self-start sm:self-auto">
+                        <button
+                          type="button"
+                          onClick={() => setPhotoGalleryView("grid")}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                            photoGalleryView === "grid"
+                              ? "bg-blue-500 text-white shadow"
+                              : "text-gray-400 hover:text-white"
+                          }`}
+                        >
+                          <LayoutGrid className="w-3.5 h-3.5" />
+                          <span>Grid Gallery</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPhotoGalleryView("table")}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                            photoGalleryView === "table"
+                              ? "bg-blue-500 text-white shadow"
+                              : "text-gray-400 hover:text-white"
+                          }`}
+                        >
+                          <List className="w-3.5 h-3.5" />
+                          <span>Roster Table</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Filter by Club and Search */}
+                    <div className="flex flex-col lg:flex-row gap-3 pt-1">
+                      {/* Club Tabs */}
+                      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => setPhotoFilterTeamId("ALL")}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer whitespace-nowrap ${
+                            photoFilterTeamId === "ALL"
+                              ? "bg-blue-500 text-white shadow"
+                              : "bg-[#0a071b] text-gray-400 hover:text-white border border-[#2e2554]"
+                          }`}
+                        >
+                          All Clubs ({allAthletes.length})
+                        </button>
+                        {teams.map((t) => (
+                          <button
+                            key={`gallery-filter-${t.id}`}
+                            type="button"
+                            onClick={() => setPhotoFilterTeamId(String(t.id))}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                              String(photoFilterTeamId) === String(t.id)
+                                ? "bg-white/20 text-white border border-white/40 shadow"
+                                : "bg-[#0a071b] text-gray-400 hover:text-white border border-[#2e2554]"
+                            }`}
+                          >
+                            <span
+                              className="w-2 h-2 rounded-full"
+                              style={{ backgroundColor: t.color || "#00f0ff" }}
+                            />
+                            <span>{t.name}</span>
+                            <span className="text-[10px] opacity-70 font-mono">
+                              ({t.squad?.length || 0})
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Search Bar */}
+                      <div className="relative flex-1">
+                        <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                        <input
+                          type="text"
+                          placeholder="Filter athletes by name, jersey #, position, admission ID..."
+                          value={photoSearchQuery}
+                          onChange={(e) => setPhotoSearchQuery(e.target.value)}
+                          className="w-full bg-[#0a071b] border border-[#2e2554] focus:border-blue-400 rounded-xl pl-9 pr-8 py-2 text-xs text-white placeholder-gray-500 outline-none"
+                        />
+                        {photoSearchQuery && (
+                          <button
+                            type="button"
+                            onClick={() => setPhotoSearchQuery("")}
+                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white text-xs"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Empty State */}
+                  {filteredAthletes.length === 0 && (
+                    <div className="p-10 text-center bg-[#141029] rounded-2xl border border-[#2e2554] space-y-2">
+                      <Camera className="w-8 h-8 text-gray-500 mx-auto" />
+                      <h5 className="text-sm font-bold text-gray-300">
+                        No athletes match the current filter
+                      </h5>
+                      <p className="text-xs text-gray-500">
+                        Try resetting your search query or selecting "All Clubs".
+                      </p>
+                    </div>
+                  )}
+
+                  {/* View 1: Grid Cards */}
+                  {photoGalleryView === "grid" && filteredAthletes.length > 0 && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {filteredAthletes.map(({ player, team, index, stats }) => (
+                        <div
+                          key={`athlete-card-${team.id}-${player.name}-${index}`}
+                          className="bg-[#141029] border border-[#2e2554] hover:border-blue-400/50 rounded-2xl overflow-hidden flex flex-col transition group shadow-lg"
+                        >
+                          {/* Card Top: Photo Container */}
+                          <div className="relative h-44 bg-gradient-to-b from-[#1b1538] to-[#0a071b] flex items-center justify-center overflow-hidden">
+                            {player.photoUrl ? (
+                              <img
+                                src={player.photoUrl}
+                                alt={player.name}
+                                className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                              />
+                            ) : (
+                              <div className="flex flex-col items-center justify-center p-4 text-center">
+                                <div
+                                  className="w-20 h-20 rounded-full flex items-center justify-center font-black text-2xl shadow-inner border-2 border-white/20"
+                                  style={{
+                                    backgroundColor: team.color
+                                      ? `${team.color}25`
+                                      : "rgba(0, 240, 255, 0.15)",
+                                    color: team.color || "#00f0ff",
+                                  }}
+                                >
+                                  #{player.number || index + 1}
+                                </div>
+                                <span className="text-[10px] text-gray-500 font-mono mt-2 uppercase tracking-wide">
+                                  No Official Photo
+                                </span>
+                              </div>
+                            )}
+
+                            {/* Position Badge Overlay */}
+                            <div className="absolute top-2.5 left-2.5">
+                              <span className="px-2 py-0.5 rounded-lg bg-black/75 backdrop-blur-md text-white font-mono text-[10px] font-black border border-white/20">
+                                {player.position || "MID"}
+                              </span>
+                            </div>
+
+                            {/* Jersey Number Badge Overlay */}
+                            <div className="absolute top-2.5 right-2.5">
+                              <span
+                                className="px-2 py-0.5 rounded-lg font-mono text-[10px] font-black shadow"
+                                style={{
+                                  backgroundColor: team.color || "#00f0ff",
+                                  color: "#000",
+                                }}
+                              >
+                                #{player.number || index + 1}
+                              </span>
+                            </div>
+
+                            {/* Club pill on bottom */}
+                            <div className="absolute bottom-2 left-2 right-2">
+                              <div className="px-2.5 py-1 rounded-xl bg-black/80 backdrop-blur-md border border-white/10 flex items-center justify-between text-[10px]">
+                                <span className="font-bold text-white truncate">{team.name}</span>
+                                <span
+                                  className="w-2 h-2 rounded-full shrink-0"
+                                  style={{ backgroundColor: team.color || "#00f0ff" }}
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Card Body */}
+                          <div className="p-3.5 flex-1 flex flex-col justify-between space-y-3">
+                            <div>
+                              <h5
+                                className="text-sm font-black text-white truncate"
+                                title={player.name}
+                              >
+                                {player.name}
+                              </h5>
+                              <div className="flex items-center gap-1.5 text-[10px] text-gray-400 font-mono mt-0.5">
+                                <span>Adm: {player.admissionNumber || "Verified"}</span>
+                                <span>•</span>
+                                <span className="text-emerald-400 font-semibold">
+                                  {player.documentsVerified ? "✓ Verified" : "Pending"}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Quick Stats or Medical info */}
+                            <div className="grid grid-cols-3 gap-1 bg-[#0a071b] p-1.5 rounded-xl border border-[#261f4d] text-center text-[10px] font-mono">
+                              <div>
+                                <span className="text-gray-500 block text-[9px] uppercase">
+                                  Goals
+                                </span>
+                                <span className="font-black text-emerald-400">
+                                  {stats?.goals ?? 0}
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-gray-500 block text-[9px] uppercase">
+                                  Assists
+                                </span>
+                                <span className="font-black text-cyan-300">
+                                  {stats?.assists ?? 0}
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-gray-500 block text-[9px] uppercase">
+                                  Rating
+                                </span>
+                                <span className="font-black text-amber-300">
+                                  {stats?.rating ?? 7.5}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Action: Select for Photo Upload */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedPhotoTeamId(team.id);
+                                setSelectedPhotoPlayer(player.name);
+                                const card = document.getElementById("athlete-photo-upload-card");
+                                if (card) {
+                                  card.scrollIntoView({ behavior: "smooth" });
+                                }
+                                showToast(`Selected ${player.name} for photo update.`);
+                              }}
+                              className="w-full py-1.5 rounded-xl bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 hover:text-white font-bold text-xs uppercase transition border border-blue-500/30 flex items-center justify-center gap-1.5 cursor-pointer"
+                            >
+                              <Camera className="w-3.5 h-3.5" />
+                              <span>{player.photoUrl ? "Change Photo" : "Upload Photo"}</span>
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* View 2: Table View */}
+                  {photoGalleryView === "table" && filteredAthletes.length > 0 && (
+                    <div className="bg-[#141029] border border-[#2e2554] rounded-2xl overflow-hidden shadow-xl">
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left text-xs">
+                          <thead className="bg-[#0a071b] border-b border-[#2e2554] text-gray-400 uppercase font-mono text-[10px]">
+                            <tr>
+                              <th className="p-3">Athlete</th>
+                              <th className="p-3">Club</th>
+                              <th className="p-3 text-center">Jersey</th>
+                              <th className="p-3">Position</th>
+                              <th className="p-3">Admission #</th>
+                              <th className="p-3 text-center">G / A</th>
+                              <th className="p-3 text-right">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-[#261f4d]">
+                            {filteredAthletes.map(({ player, team, index, stats }) => (
+                              <tr
+                                key={`table-row-${team.id}-${player.name}-${index}`}
+                                className="hover:bg-white/5 transition"
+                              >
+                                <td className="p-3">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-xl overflow-hidden bg-[#0a071b] border border-[#2e2554] shrink-0 flex items-center justify-center">
+                                      {player.photoUrl ? (
+                                        <img
+                                          src={player.photoUrl}
+                                          alt={player.name}
+                                          className="w-full h-full object-cover"
+                                        />
+                                      ) : (
+                                        <span
+                                          className="font-bold text-xs font-mono"
+                                          style={{ color: team.color || "#00f0ff" }}
+                                        >
+                                          #{player.number || index + 1}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div>
+                                      <div className="font-bold text-white">{player.name}</div>
+                                      <div className="text-[10px] text-gray-400">
+                                        {player.emergencyPhone || "No contact"}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="p-3">
+                                  <div className="flex items-center gap-1.5">
+                                    <span
+                                      className="w-2 h-2 rounded-full"
+                                      style={{ backgroundColor: team.color || "#00f0ff" }}
+                                    />
+                                    <span className="font-bold text-gray-200">{team.name}</span>
+                                  </div>
+                                </td>
+                                <td className="p-3 text-center font-mono font-bold text-cyan-300">
+                                  #{player.number || index + 1}
+                                </td>
+                                <td className="p-3">
+                                  <span className="px-2 py-0.5 rounded-lg bg-white/10 text-white font-mono text-[10px] font-bold">
+                                    {player.position || "MID"}
+                                  </span>
+                                </td>
+                                <td className="p-3 font-mono text-gray-400 text-[11px]">
+                                  {player.admissionNumber || "Verified"}
+                                </td>
+                                <td className="p-3 text-center font-mono text-[11px]">
+                                  <span className="text-emerald-400 font-bold">
+                                    {stats?.goals ?? 0}
+                                  </span>
+                                  <span className="text-gray-500"> / </span>
+                                  <span className="text-cyan-300 font-bold">
+                                    {stats?.assists ?? 0}
+                                  </span>
+                                </td>
+                                <td className="p-3 text-right">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setSelectedPhotoTeamId(team.id);
+                                      setSelectedPhotoPlayer(player.name);
+                                      const card = document.getElementById(
+                                        "athlete-photo-upload-card",
+                                      );
+                                      if (card) {
+                                        card.scrollIntoView({ behavior: "smooth" });
+                                      }
+                                      showToast(`Selected ${player.name} for photo update.`);
+                                    }}
+                                    className="px-3 py-1.5 rounded-xl bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 font-bold text-xs transition cursor-pointer"
+                                  >
+                                    {player.photoUrl ? "Change Photo" : "Upload Photo"}
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
                       </div>
                     </div>
                   )}
                 </div>
+              );
+            })()}
+          </div>
+        )}
 
-                <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#2e2554]">
-                  <button
-                    type="button"
-                    onClick={handleSavePhotoDirectly}
-                    disabled={!photoPreview}
-                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:brightness-110 text-white font-black text-xs uppercase tracking-wider transition shadow-lg shadow-blue-500/20 cursor-pointer disabled:opacity-50"
-                  >
-                    Save & Update Athlete Profile
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* =========================================================
+        {/* =========================================================
               PANEL 12: PRESIDENTIAL DECREES & COUNCIL MINUTES
               ========================================================= */}
-          {activeSection === "decrees_minutes" && (
-            <div className="bg-[#0b0821] border-2 border-indigo-400/30 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-5">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#2e2554] pb-4">
-                <div>
-                  <h3 className="font-header text-lg font-black text-white uppercase flex items-center gap-2">
-                    <FileText className="w-5 h-5 text-indigo-400" />
-                    Presidential Decrees & Executive Minutes
-                  </h3>
-                  <p className="text-xs text-gray-400 mt-0.5">
-                    Issue binding executive directives and archive timestamped council meeting
-                    resolutions.
-                  </p>
-                </div>
+        {activeSection === "decrees_minutes" && (
+          <div className="bg-[#0b0821] border-2 border-indigo-400/30 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#2e2554] pb-4">
+              <div>
+                <h3 className="font-header text-lg font-black text-white uppercase flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-indigo-400" />
+                  Presidential Decrees & Executive Minutes
+                </h3>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  Issue binding executive directives and archive timestamped council meeting
+                  resolutions.
+                </p>
               </div>
+            </div>
 
-              {/* Form: Issue Decree */}
-              <form
-                onSubmit={handleIssueDecree}
-                className="bg-[#141029] border border-[#2e2554] rounded-2xl p-5 space-y-4"
-              >
-                <h4 className="text-xs font-black uppercase text-indigo-300">
-                  Issue Official League Decree
-                </h4>
+            {/* Form: Issue Decree */}
+            <form
+              onSubmit={handleIssueDecree}
+              className="bg-[#141029] border border-[#2e2554] rounded-2xl p-5 space-y-4"
+            >
+              <h4 className="text-xs font-black uppercase text-indigo-300">
+                Issue Official League Decree
+              </h4>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-gray-400 font-bold uppercase text-[10px] mb-1">
-                      Decree Title
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Directive No. 05: Sunday Hall Reservation"
-                      value={newDecreeTitle}
-                      onChange={(e) => setNewDecreeTitle(e.target.value)}
-                      className="w-full bg-[#0a071b] border border-[#2e2554] focus:border-indigo-400 rounded-xl px-3 py-2 text-xs text-white outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-gray-400 font-bold uppercase text-[10px] mb-1">
-                      Council Category
-                    </label>
-                    <select
-                      value={newDecreeCategory}
-                      onChange={(e) => setNewDecreeCategory(e.target.value)}
-                      className="w-full bg-[#0a071b] border border-[#2e2554] focus:border-indigo-400 rounded-xl px-3 py-2 text-xs font-bold text-white outline-none"
-                    >
-                      <option value="Executive Governance">Executive Governance</option>
-                      <option value="Match Officiating">Match Officiating</option>
-                      <option value="Spiritual & Conduct Oversight">
-                        Spiritual & Conduct Oversight
-                      </option>
-                      <option value="Disciplinary Resolution">Disciplinary Resolution</option>
-                    </select>
-                  </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-gray-400 font-bold uppercase text-[10px] mb-1">
+                    Decree Title
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Directive No. 05: Sunday Hall Reservation"
+                    value={newDecreeTitle}
+                    onChange={(e) => setNewDecreeTitle(e.target.value)}
+                    className="w-full bg-[#0a071b] border border-[#2e2554] focus:border-indigo-400 rounded-xl px-3 py-2 text-xs text-white outline-none"
+                  />
                 </div>
 
                 <div>
                   <label className="block text-gray-400 font-bold uppercase text-[10px] mb-1">
-                    Decree Text & Statutory Content
+                    Council Category
                   </label>
-                  <textarea
-                    rows={3}
-                    required
-                    placeholder="Enter formal decree text..."
-                    value={newDecreeContent}
-                    onChange={(e) => setNewDecreeContent(e.target.value)}
-                    className="w-full bg-[#0a071b] border border-[#2e2554] focus:border-indigo-400 rounded-xl p-3 text-xs text-white outline-none resize-none"
+                  <select
+                    value={newDecreeCategory}
+                    onChange={(e) => setNewDecreeCategory(e.target.value)}
+                    className="w-full bg-[#0a071b] border border-[#2e2554] focus:border-indigo-400 rounded-xl px-3 py-2 text-xs font-bold text-white outline-none"
+                  >
+                    <option value="Executive Governance">Executive Governance</option>
+                    <option value="Match Officiating">Match Officiating</option>
+                    <option value="Spiritual & Conduct Oversight">
+                      Spiritual & Conduct Oversight
+                    </option>
+                    <option value="Disciplinary Resolution">Disciplinary Resolution</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-gray-400 font-bold uppercase text-[10px] mb-1">
+                  Decree Text & Statutory Content
+                </label>
+                <textarea
+                  rows={3}
+                  required
+                  placeholder="Enter formal decree text..."
+                  value={newDecreeContent}
+                  onChange={(e) => setNewDecreeContent(e.target.value)}
+                  className="w-full bg-[#0a071b] border border-[#2e2554] focus:border-indigo-400 rounded-xl p-3 text-xs text-white outline-none resize-none"
+                />
+              </div>
+
+              <div className="flex items-center justify-end">
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:brightness-110 text-white font-black text-xs uppercase tracking-wider transition shadow-lg shadow-indigo-500/20 cursor-pointer"
+                >
+                  Seal & Publish Decree
+                </button>
+              </div>
+            </form>
+
+            {/* Decrees Archive */}
+            <div className="space-y-3">
+              {decrees.map((dec, dIdx) => (
+                <div
+                  key={dec.id ?? `decree-${dIdx}`}
+                  className="p-4 bg-[#141029] rounded-2xl border border-[#2e2554] space-y-2"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-bold uppercase">
+                      {dec.category}
+                    </span>
+                    <span className="text-[10px] text-gray-400 font-mono">{dec.date}</span>
+                  </div>
+                  <h5 className="text-sm font-black text-white">{dec.title}</h5>
+                  <p className="text-xs text-gray-300 leading-relaxed">{dec.content}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* =========================================================
+              PANEL 13: DATABASE BACKUP, DISASTER RECOVERY & AUDIT
+              ========================================================= */}
+        {activeSection === "system_backup" && (
+          <div className="bg-[#0b0821] border-2 border-emerald-400/30 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#2e2554] pb-4">
+              <div>
+                <h3 className="font-header text-lg font-black text-white uppercase flex items-center gap-2">
+                  <Database className="w-5 h-5 text-emerald-400" />
+                  System Security, Database Backup & Audit Ledger
+                </h3>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  Export complete database snapshots to JSON, download official standings CSV
+                  reports, restore system records, and review operator audit trails.
+                </p>
+              </div>
+            </div>
+
+            {/* Data Export & Backup Actions */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* 1. Full Database JSON Export */}
+              <div className="p-4 bg-[#141029] rounded-2xl border border-[#2e2554] space-y-3">
+                <div className="flex items-center gap-2">
+                  <Download className="w-4 h-4 text-emerald-400" />
+                  <h4 className="text-xs font-black text-white uppercase">Full JSON Snapshot</h4>
+                </div>
+                <p className="text-[11px] text-gray-400 leading-relaxed">
+                  Downloads an encrypted database file with all teams, 15-player squad limit
+                  rosters, match results, standings, finances, and decrees.
+                </p>
+                <button
+                  type="button"
+                  onClick={exportSystemBackup}
+                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-400 to-teal-500 hover:brightness-110 text-black font-black text-xs uppercase tracking-wide transition shadow-lg shadow-emerald-500/20 cursor-pointer flex items-center justify-center gap-2"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download JSON Backup</span>
+                </button>
+              </div>
+
+              {/* 2. Standings & Stats CSV Export */}
+              <div className="p-4 bg-[#141029] rounded-2xl border border-[#2e2554] space-y-3">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-cyan-400" />
+                  <h4 className="text-xs font-black text-white uppercase">Official CSV Report</h4>
+                </div>
+                <p className="text-[11px] text-gray-400 leading-relaxed">
+                  Generates clean, spreadsheet-ready CSV report of official standings, points, goal
+                  difference, and fair play records for council meetings.
+                </p>
+                <button
+                  type="button"
+                  onClick={exportStandingsCSV}
+                  className="w-full py-2.5 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-400/30 font-bold text-xs uppercase tracking-wide transition cursor-pointer flex items-center justify-center gap-2"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download Standings CSV</span>
+                </button>
+              </div>
+
+              {/* 3. System Restore */}
+              <div className="p-4 bg-[#141029] rounded-2xl border border-[#2e2554] space-y-3">
+                <div className="flex items-center gap-2">
+                  <Upload className="w-4 h-4 text-amber-400" />
+                  <h4 className="text-xs font-black text-white uppercase">Disaster Restore</h4>
+                </div>
+                <p className="text-[11px] text-gray-400 leading-relaxed">
+                  Select a previously exported JSON backup file to overwrite and restore current
+                  league data safely.
+                </p>
+                <label className="w-full py-2.5 rounded-xl bg-amber-400/20 hover:bg-amber-400/30 text-amber-300 border border-amber-400/30 font-bold text-xs uppercase tracking-wide transition cursor-pointer flex items-center justify-center gap-2">
+                  <Upload className="w-3.5 h-3.5" />
+                  <span>Upload & Restore</span>
+                  <input
+                    type="file"
+                    accept=".json"
+                    onChange={handleRestoreBackup}
+                    className="hidden"
                   />
-                </div>
+                </label>
+              </div>
+            </div>
 
-                <div className="flex items-center justify-end">
-                  <button
-                    type="submit"
-                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:brightness-110 text-white font-black text-xs uppercase tracking-wider transition shadow-lg shadow-indigo-500/20 cursor-pointer"
-                  >
-                    Seal & Publish Decree
-                  </button>
-                </div>
-              </form>
+            {/* System Audit Ledger */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between border-b border-[#2e2554] pb-2">
+                <h4 className="text-xs font-black uppercase text-gray-300 flex items-center gap-2">
+                  <HardDrive className="w-4 h-4 text-emerald-400" />
+                  Master System Audit Ledger & Access Security Log
+                </h4>
+                <span className="text-[10px] text-emerald-400 font-mono font-bold">
+                  🛡️ Verified Tamper-Resistant
+                </span>
+              </div>
 
-              {/* Decrees Archive */}
-              <div className="space-y-3">
-                {decrees.map((dec, dIdx) => (
+              <div className="space-y-2">
+                {auditLog.map((log) => (
                   <div
-                    key={dec.id ?? `decree-${dIdx}`}
-                    className="p-4 bg-[#141029] rounded-2xl border border-[#2e2554] space-y-2"
+                    key={log.id}
+                    className="p-3 bg-[#141029] rounded-xl border border-[#2e2554] flex items-center justify-between text-xs"
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-bold uppercase">
-                        {dec.category}
-                      </span>
-                      <span className="text-[10px] text-gray-400 font-mono">{dec.date}</span>
+                    <div className="flex items-center gap-3">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                      <span className="font-semibold text-white">{log.action}</span>
                     </div>
-                    <h5 className="text-sm font-black text-white">{dec.title}</h5>
-                    <p className="text-xs text-gray-300 leading-relaxed">{dec.content}</p>
+                    <div className="flex items-center gap-3 text-[11px] text-gray-400 font-mono">
+                      <span>{log.operator}</span>
+                      <span>•</span>
+                      <span>{log.timestamp}</span>
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
-          )}
-
-          {/* =========================================================
-              PANEL 13: DATABASE BACKUP, DISASTER RECOVERY & AUDIT
-              ========================================================= */}
-          {activeSection === "system_backup" && (
-            <div className="bg-[#0b0821] border-2 border-emerald-400/30 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#2e2554] pb-4">
-                <div>
-                  <h3 className="font-header text-lg font-black text-white uppercase flex items-center gap-2">
-                    <Database className="w-5 h-5 text-emerald-400" />
-                    System Security, Database Backup & Audit Ledger
-                  </h3>
-                  <p className="text-xs text-gray-400 mt-0.5">
-                    Export complete database snapshots to JSON, download official standings CSV
-                    reports, restore system records, and review operator audit trails.
-                  </p>
-                </div>
-              </div>
-
-              {/* Data Export & Backup Actions */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* 1. Full Database JSON Export */}
-                <div className="p-4 bg-[#141029] rounded-2xl border border-[#2e2554] space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Download className="w-4 h-4 text-emerald-400" />
-                    <h4 className="text-xs font-black text-white uppercase">Full JSON Snapshot</h4>
-                  </div>
-                  <p className="text-[11px] text-gray-400 leading-relaxed">
-                    Downloads an encrypted database file with all teams, 15-player squad limit
-                    rosters, match results, standings, finances, and decrees.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={exportSystemBackup}
-                    className="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-400 to-teal-500 hover:brightness-110 text-black font-black text-xs uppercase tracking-wide transition shadow-lg shadow-emerald-500/20 cursor-pointer flex items-center justify-center gap-2"
-                  >
-                    <Download className="w-3.5 h-3.5" />
-                    <span>Download JSON Backup</span>
-                  </button>
-                </div>
-
-                {/* 2. Standings & Stats CSV Export */}
-                <div className="p-4 bg-[#141029] rounded-2xl border border-[#2e2554] space-y-3">
-                  <div className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-cyan-400" />
-                    <h4 className="text-xs font-black text-white uppercase">Official CSV Report</h4>
-                  </div>
-                  <p className="text-[11px] text-gray-400 leading-relaxed">
-                    Generates clean, spreadsheet-ready CSV report of official standings, points,
-                    goal difference, and fair play records for council meetings.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={exportStandingsCSV}
-                    className="w-full py-2.5 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-400/30 font-bold text-xs uppercase tracking-wide transition cursor-pointer flex items-center justify-center gap-2"
-                  >
-                    <Download className="w-3.5 h-3.5" />
-                    <span>Download Standings CSV</span>
-                  </button>
-                </div>
-
-                {/* 3. System Restore */}
-                <div className="p-4 bg-[#141029] rounded-2xl border border-[#2e2554] space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Upload className="w-4 h-4 text-amber-400" />
-                    <h4 className="text-xs font-black text-white uppercase">Disaster Restore</h4>
-                  </div>
-                  <p className="text-[11px] text-gray-400 leading-relaxed">
-                    Select a previously exported JSON backup file to overwrite and restore current
-                    league data safely.
-                  </p>
-                  <label className="w-full py-2.5 rounded-xl bg-amber-400/20 hover:bg-amber-400/30 text-amber-300 border border-amber-400/30 font-bold text-xs uppercase tracking-wide transition cursor-pointer flex items-center justify-center gap-2">
-                    <Upload className="w-3.5 h-3.5" />
-                    <span>Upload & Restore</span>
-                    <input
-                      type="file"
-                      accept=".json"
-                      onChange={handleRestoreBackup}
-                      className="hidden"
-                    />
-                  </label>
-                </div>
-              </div>
-
-              {/* System Audit Ledger */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between border-b border-[#2e2554] pb-2">
-                  <h4 className="text-xs font-black uppercase text-gray-300 flex items-center gap-2">
-                    <HardDrive className="w-4 h-4 text-emerald-400" />
-                    Master System Audit Ledger & Access Security Log
-                  </h4>
-                  <span className="text-[10px] text-emerald-400 font-mono font-bold">
-                    🛡️ Verified Tamper-Resistant
-                  </span>
-                </div>
-
-                <div className="space-y-2">
-                  {auditLog.map((log) => (
-                    <div
-                      key={log.id}
-                      className="p-3 bg-[#141029] rounded-xl border border-[#2e2554] flex items-center justify-between text-xs"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                        <span className="font-semibold text-white">{log.action}</span>
-                      </div>
-                      <div className="flex items-center gap-3 text-[11px] text-gray-400 font-mono">
-                        <span>{log.operator}</span>
-                        <span>•</span>
-                        <span>{log.timestamp}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* =========================================================
@@ -3557,7 +3857,12 @@ export function MasterAdminDashboard({
                 </label>
                 <select
                   value={transferFromTeamId}
-                  onChange={(e) => setTransferFromTeamId(Number(e.target.value))}
+                  onChange={(e) => {
+                    const newFromId = Number(e.target.value);
+                    setTransferFromTeamId(newFromId);
+                    const source = teams.find((t) => t.id === newFromId);
+                    setTransferPlayerName(source?.squad?.[0]?.name || "");
+                  }}
                   className="w-full bg-[#161138] border border-[#2e2554] focus:border-cyan-400 rounded-xl px-3 py-2 text-xs font-bold text-white outline-none"
                 >
                   {teams.map((t, idx) => (
@@ -3679,36 +3984,60 @@ export function MasterAdminDashboard({
                 </div>
               </div>
 
-              {/* Spiritual & Conduct Bonus Point Rubric */}
-              <div className="p-3 bg-amber-950/20 rounded-2xl border border-amber-500/30 space-y-2">
-                <span className="text-[10px] text-amber-300 uppercase font-black block">
-                  🕊️ Sunday School Conduct & Scripture Bonus Points:
+              {/* Match Events & Fair Play Protocol Rubric */}
+              <div className="p-3 bg-[#141029] rounded-2xl border border-cyan-500/30 space-y-2">
+                <span className="text-[10px] text-cyan-300 uppercase font-black block">
+                  ⚽ Match Events & Disciplinary Protocol:
                 </span>
-                <div className="grid grid-cols-2 gap-3 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                   <div>
                     <label className="block text-gray-400 text-[10px] mb-1">
-                      Home Spiritual Bonus (+Pts)
+                      Assists & Playmakers
                     </label>
                     <input
-                      type="number"
-                      min={0}
-                      max={2}
-                      value={certSpiritualHome}
-                      onChange={(e) => setCertSpiritualHome(parseInt(e.target.value) || 0)}
-                      className="w-full bg-[#161138] border border-[#2e2554] rounded-xl px-2.5 py-1.5 text-xs font-mono text-amber-300 outline-none"
+                      type="text"
+                      placeholder="e.g. Levis 24', Tonny 68'"
+                      value={certAssists}
+                      onChange={(e) => setCertAssists(e.target.value)}
+                      className="w-full bg-[#161138] border border-[#2e2554] rounded-xl px-2.5 py-1.5 text-xs text-cyan-200 outline-none"
                     />
                   </div>
                   <div>
                     <label className="block text-gray-400 text-[10px] mb-1">
-                      Away Spiritual Bonus (+Pts)
+                      Yellow Cards (Disciplinary)
                     </label>
                     <input
-                      type="number"
-                      min={0}
-                      max={2}
-                      value={certSpiritualAway}
-                      onChange={(e) => setCertSpiritualAway(parseInt(e.target.value) || 0)}
-                      className="w-full bg-[#161138] border border-[#2e2554] rounded-xl px-2.5 py-1.5 text-xs font-mono text-amber-300 outline-none"
+                      type="text"
+                      placeholder="e.g. Dennis 41' (YC), Ali 77' (YC)"
+                      value={certYellowCards}
+                      onChange={(e) => setCertYellowCards(e.target.value)}
+                      className="w-full bg-[#161138] border border-amber-500/30 rounded-xl px-2.5 py-1.5 text-xs text-amber-300 outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-1">
+                  <div>
+                    <label className="block text-gray-400 text-[10px] mb-1">
+                      Red Cards / Suspensions
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="None or Player Name 89'"
+                      value={certRedCards}
+                      onChange={(e) => setCertRedCards(e.target.value)}
+                      className="w-full bg-[#161138] border border-rose-500/30 rounded-xl px-2.5 py-1.5 text-xs text-rose-300 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-gray-400 text-[10px] mb-1">
+                      Fair Play Protocol Notes
+                    </label>
+                    <input
+                      type="text"
+                      value={certConductNotes}
+                      onChange={(e) => setCertConductNotes(e.target.value)}
+                      className="w-full bg-[#161138] border border-[#2e2554] rounded-xl px-2.5 py-1.5 text-xs text-emerald-300 outline-none"
                     />
                   </div>
                 </div>
@@ -3764,6 +4093,175 @@ export function MasterAdminDashboard({
                   className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 text-black text-xs font-black uppercase hover:brightness-110 shadow"
                 >
                   Certify & Update Standings
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 5B. Edit Fixture Modal */}
+      {editingFixture && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-[#100c2a] border-2 border-indigo-400/50 rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-[#2e2554] pb-3">
+              <h4 className="font-header text-base font-black text-white uppercase flex items-center gap-2">
+                <Edit3 className="w-5 h-5 text-indigo-400" />
+                Edit Fixture Details (MW {editingFixture.matchweek})
+              </h4>
+              <button
+                type="button"
+                onClick={() => setEditingFixture(null)}
+                className="text-gray-400 hover:text-white p-1 rounded-xl"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditedFixture} className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-gray-400 font-bold uppercase text-[10px] mb-1">
+                    Home Club
+                  </label>
+                  <select
+                    value={editingFixture.homeId}
+                    onChange={(e) =>
+                      setEditingFixture({ ...editingFixture, homeId: Number(e.target.value) })
+                    }
+                    className="w-full bg-[#161138] border border-[#2e2554] rounded-xl px-3 py-2 text-xs font-bold text-white outline-none"
+                  >
+                    {teams.map((t) => (
+                      <option key={`edit-fix-h-${t.id}`} value={t.id}>
+                        {t.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-gray-400 font-bold uppercase text-[10px] mb-1">
+                    Away Club
+                  </label>
+                  <select
+                    value={editingFixture.awayId}
+                    onChange={(e) =>
+                      setEditingFixture({ ...editingFixture, awayId: Number(e.target.value) })
+                    }
+                    className="w-full bg-[#161138] border border-[#2e2554] rounded-xl px-3 py-2 text-xs font-bold text-white outline-none"
+                  >
+                    {teams.map((t) => (
+                      <option key={`edit-fix-a-${t.id}`} value={t.id}>
+                        {t.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-gray-400 font-bold uppercase text-[10px] mb-1">
+                    Matchweek
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={editingFixture.matchweek}
+                    onChange={(e) =>
+                      setEditingFixture({
+                        ...editingFixture,
+                        matchweek: parseInt(e.target.value) || 1,
+                      })
+                    }
+                    className="w-full bg-[#161138] border border-[#2e2554] rounded-xl px-3 py-2 text-xs font-mono font-bold text-white outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-400 font-bold uppercase text-[10px] mb-1">
+                    Date
+                  </label>
+                  <input
+                    type="text"
+                    value={editingFixture.date}
+                    onChange={(e) => setEditingFixture({ ...editingFixture, date: e.target.value })}
+                    className="w-full bg-[#161138] border border-[#2e2554] rounded-xl px-3 py-2 text-xs text-white outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-400 font-bold uppercase text-[10px] mb-1">
+                    Kickoff Time
+                  </label>
+                  <input
+                    type="text"
+                    value={editingFixture.time}
+                    onChange={(e) => setEditingFixture({ ...editingFixture, time: e.target.value })}
+                    className="w-full bg-[#161138] border border-[#2e2554] rounded-xl px-3 py-2 text-xs text-white outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-gray-400 font-bold uppercase text-[10px] mb-1">
+                  Stadium / Venue Ground
+                </label>
+                <input
+                  type="text"
+                  value={editingFixture.venue}
+                  onChange={(e) => setEditingFixture({ ...editingFixture, venue: e.target.value })}
+                  className="w-full bg-[#161138] border border-[#2e2554] rounded-xl px-3 py-2 text-xs text-white outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-gray-400 font-bold uppercase text-[10px] mb-1">
+                    Match Referee Crew
+                  </label>
+                  <input
+                    type="text"
+                    value={editingFixture.referee || ""}
+                    onChange={(e) =>
+                      setEditingFixture({ ...editingFixture, referee: e.target.value })
+                    }
+                    className="w-full bg-[#161138] border border-[#2e2554] rounded-xl px-3 py-2 text-xs text-white outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-400 font-bold uppercase text-[10px] mb-1">
+                    Match Status
+                  </label>
+                  <select
+                    value={editingFixture.status || "SCHEDULED"}
+                    onChange={(e) =>
+                      setEditingFixture({
+                        ...editingFixture,
+                        status: e.target.value as AdminFixture["status"],
+                      })
+                    }
+                    className="w-full bg-[#161138] border border-[#2e2554] rounded-xl px-3 py-2 text-xs font-bold text-white outline-none"
+                  >
+                    <option value="SCHEDULED">SCHEDULED</option>
+                    <option value="LIVE">LIVE</option>
+                    <option value="COMPLETED">COMPLETED</option>
+                    <option value="POSTPONED">POSTPONED</option>
+                    <option value="CANCELLED">CANCELLED</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#2e2554]">
+                <button
+                  type="button"
+                  onClick={() => setEditingFixture(null)}
+                  className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 text-xs font-bold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-xs font-black uppercase hover:brightness-110 shadow"
+                >
+                  Save Fixture Changes
                 </button>
               </div>
             </form>

@@ -221,10 +221,10 @@ export function MatchMvpVoting({ initialMatchId, onClose }: MatchMvpVotingProps)
         squad?: { name: string; position?: string; number?: number; photoUrl?: string }[];
       }
     ).squad || [
-      { name: "Kevin Omondi", position: "FWD", number: 9 },
-      { name: "Dan Kiprop", position: "MID", number: 8 },
-      { name: "Levis Wanyama", position: "MID", number: 10 },
-      { name: "Brian Mwangi", position: "DEF", number: 4 },
+      { name: "Haron", position: "DEF", number: 4 },
+      { name: "Jaycrack", position: "MID", number: 10 },
+      { name: "Wokabi", position: "FWD", number: 9 },
+      { name: "Brian", position: "GK", number: 1 },
     ];
 
     const awaySquad = (
@@ -232,10 +232,10 @@ export function MatchMvpVoting({ initialMatchId, onClose }: MatchMvpVotingProps)
         squad?: { name: string; position?: string; number?: number; photoUrl?: string }[];
       }
     ).squad || [
-      { name: "Eric Mwangi", position: "FWD", number: 7 },
-      { name: "Samuel Kariuki", position: "MID", number: 6 },
-      { name: "John Kamau", position: "GK", number: 1 },
-      { name: "Peter Otieno", position: "DEF", number: 3 },
+      { name: "Elly Adams Otieno", position: "FWD", number: 10 },
+      { name: "Raila Junior", position: "FWD", number: 7 },
+      { name: "Ibrahim Salat", position: "MID", number: 8 },
+      { name: "Hassan Siad", position: "DEF", number: 2 },
     ];
 
     return [
@@ -255,26 +255,26 @@ export function MatchMvpVoting({ initialMatchId, onClose }: MatchMvpVotingProps)
         matchId: 1,
         isOpen: true,
         votes: {
-          "Kevin Omondi": {
+          Wokabi: {
             votesCount: 0,
             teamName: homeTeam.name,
             position: "FWD",
             number: 9,
           },
-          "Dan Kiprop": {
+          Jaycrack: {
             votesCount: 0,
             teamName: homeTeam.name,
             position: "MID",
-            number: 8,
+            number: 10,
           },
-          "Eric Mwangi": {
-            votesCount: 0,
+          "Elly Adams Otieno": {
+            votesCount: 5,
             teamName: awayTeam.name,
             position: "FWD",
             number: 7,
           },
           "John Kamau": {
-            votesCount: 0,
+            votesCount: 2,
             teamName: awayTeam.name,
             position: "GK",
             number: 1,

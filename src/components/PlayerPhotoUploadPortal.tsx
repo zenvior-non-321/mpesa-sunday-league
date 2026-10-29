@@ -64,8 +64,8 @@ export function PlayerPhotoUploadPortal() {
         homePitch: "Samba Arena (School Lower Pitch)",
         squad: [
           {
-            name: "Kevin Omondi",
-            number: 10,
+            name: "Wokabi",
+            number: 9,
             position: "FWD",
             foot: "Right",
             admissionNumber: "ADM-2024-0101",

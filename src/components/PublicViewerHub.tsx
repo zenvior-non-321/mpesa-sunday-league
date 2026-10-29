@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useEffect, useMemo } from "react";
 import {
   Trophy,
@@ -57,7 +56,50 @@ export interface MatchTimelineEvent {
   detail?: string;
 }
 
-const DEFAULT_NEWS_ARTICLES: PublicNewsArticle[] = [];
+const DEFAULT_NEWS_ARTICLES: PublicNewsArticle[] = [
+  {
+    id: "news-1",
+    title: "Championship Kickoff: Samba and Young Stars City Set for Sunday Opener",
+    category: "MATCH_RECAP",
+    excerpt:
+      "Wokabi and Elly Adams lead frontlines as the 2026/27 M-Pesa Sunday League eFootball Championship gets underway.",
+    content:
+      "Under bright skies at the Samba Arena, the 2026/27 M-Pesa Sunday League season kicks off with full Quad-Crew officiating and Match Commissioner certification. Both squads enter matchweek 1 with clean records and complete 15-player squad cap compliance.",
+    author: "League Editorial Desk",
+    date: "Sunday, Oct 25, 2026",
+    imageUrl:
+      "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=600&auto=format&fit=crop&q=80",
+    readTime: "3 min read",
+  },
+  {
+    id: "news-2",
+    title: "Fair Play & Sportsmanship Spotlight: Royal Rangers Tactical Discipline",
+    category: "SPOTLIGHT",
+    excerpt:
+      "Rangers captain Levis Wanyama commends defensive coordination and fair play conduct protocol as season begins.",
+    content:
+      "The Royal Rangers have set an early benchmark for tactical discipline and pre-match fair play handshake standards. Head coach George Kibet highlighted the squad's rigorous training sessions and clean defensive positioning.",
+    author: "Technical Committee",
+    date: "Friday, Oct 23, 2026",
+    imageUrl:
+      "https://images.unsplash.com/photo-1517466787929-bc90951d0974?w=600&auto=format&fit=crop&q=80",
+    readTime: "2 min read",
+  },
+  {
+    id: "news-3",
+    title: "Official 15-Player Squad Cap and Admission Verification In Effect",
+    category: "ANNOUNCEMENT",
+    excerpt:
+      "All participating clubs confirm compliance with the executive registration directive and student eligibility standards.",
+    content:
+      "Regulations Manager Whitney Juma officially confirmed that all 4 active league clubs have successfully verified their 15-player squad limit rosters. Verified student admission cards, medical emergency contacts, and signed waivers are now secured in the digital league vault.",
+    author: "Registrar Office",
+    date: "Wednesday, Oct 21, 2026",
+    imageUrl:
+      "https://images.unsplash.com/photo-1526232761682-d26e03ac148e?w=600&auto=format&fit=crop&q=80",
+    readTime: "2 min read",
+  },
+];
 
 export function PublicViewerHub({
   initialSubTab = "hub",
@@ -358,13 +400,13 @@ export function PublicViewerHub({
         type: "WHISTLE",
         team: "HOME",
         player: "Match Commenced",
-        detail: "Opening Scripture Recitation: Phil 4:13",
+        detail: "FIFA Fair Play Handshake & Captains Coin Toss",
       },
       {
         minute: 14,
         type: "GOAL",
         team: "HOME",
-        player: "Kevin Omondi",
+        player: "Wokabi",
         detail: "Clinical finish into bottom-right corner",
       },
       {
@@ -393,7 +435,7 @@ export function PublicViewerHub({
         type: "WHISTLE",
         team: "HOME",
         player: "Halftime Whistle",
-        detail: "Halftime prayer & water break",
+        detail: "Halftime tactical briefing & hydration break",
       },
       {
         minute: 58,
@@ -406,7 +448,7 @@ export function PublicViewerHub({
         minute: 68,
         type: "GOAL",
         team: "HOME",
-        player: "Kevin Omondi",
+        player: "Wokabi",
         detail: "Assisted by Levis Wanyama",
       },
       {
@@ -1155,7 +1197,7 @@ export function PublicViewerHub({
                 {[
                   {
                     pos: 1,
-                    name: "Kevin Omondi",
+                    name: "Wokabi",
                     club: "Samba",
                     goals: 5,
                     matches: 3,

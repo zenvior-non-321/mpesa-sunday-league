@@ -272,7 +272,8 @@ export function Fixtures() {
     const winningTeam = homeWon ? home : awayWon ? away : home;
 
     const firstGoal = fixture.goalEvents?.[0];
-    const topScorer = firstGoal?.scorerName || (homeWon ? "Kevin Omondi" : "Star Midfielder");
+    const topScorer =
+      firstGoal?.scorerName || (homeWon ? "Wokabi" : "Elly Adams Otieno");
 
     return {
       playerName: topScorer,
@@ -1471,7 +1472,7 @@ export function Fixtures() {
                             },
                           })
                         }
-                        placeholder="e.g. Kevin Omondi"
+                        placeholder="e.g. Wokabi"
                         className="w-full bg-[#141029] border border-[#2e2554] rounded-xl px-3 py-1.5 text-white"
                       />
                     </div>

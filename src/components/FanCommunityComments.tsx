@@ -129,12 +129,12 @@ export function FanCommunityComments() {
           </div>
 
           <h2 className="font-header text-2xl sm:text-4xl font-black text-white uppercase tracking-wider leading-tight">
-            Fan Cheers & Community Prayer Wall
+            Fan Cheers & Community Stadium Wall
           </h2>
 
           <p className="text-xs sm:text-sm text-gray-300 leading-relaxed max-w-2xl">
-            Cheer on your parish youth football team, post words of spiritual encouragement, and
-            celebrate Christian fellowship across the M-Pesa Sunday League.
+            Cheer on your academy youth football club, post matchday encouragement, and celebrate
+            fair play across the M-Pesa Sunday League.
           </p>
         </div>
       </div>
@@ -149,7 +149,7 @@ export function FanCommunityComments() {
             </span>
             <h4 className="font-header text-lg font-black text-white uppercase mt-0.5 flex items-center gap-2">
               <MessageSquare className="w-5 h-5 text-cyan-400" />
-              Post a Cheer or Prayer
+              Post a Matchday Cheer
             </h4>
           </div>
 
@@ -161,7 +161,7 @@ export function FanCommunityComments() {
               <input
                 type="text"
                 required
-                placeholder="e.g. Deacon Mark"
+                placeholder="e.g. Samuel Mark"
                 value={authorName}
                 onChange={(e) => setAuthorName(e.target.value)}
                 className="w-full bg-[#141029] border border-[#2e2554] focus:border-cyan-400 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none"
@@ -181,8 +181,8 @@ export function FanCommunityComments() {
                   <option value="Supporter">Supporter</option>
                   <option value="Parent">Parent / Guardian</option>
                   <option value="Student Athlete">Student Athlete</option>
-                  <option value="Youth Pastor">Youth Pastor</option>
-                  <option value="Church Member">Church Member</option>
+                  <option value="Club Staff">Club Staff</option>
+                  <option value="Alumni Supporter">Alumni Supporter</option>
                 </select>
               </div>
 
@@ -210,7 +210,7 @@ export function FanCommunityComments() {
               <div className="grid grid-cols-3 gap-2">
                 {[
                   { id: "CHEER", label: "Match Cheer", icon: "⚽" },
-                  { id: "PRAYER", label: "Prayer & Faith", icon: "🙏" },
+                  { id: "TACTICAL", label: "Tactical Note", icon: "📋" },
                   { id: "SPORTSMANSHIP", label: "Fair Play", icon: "🤝" },
                 ].map((cat) => (
                   <button
@@ -237,7 +237,7 @@ export function FanCommunityComments() {
               <textarea
                 required
                 rows={4}
-                placeholder="Share a verse, cheering message, or word of encouragement..."
+                placeholder="Share a cheering message, tactical reaction, or word of encouragement..."
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 className="w-full bg-[#141029] border border-[#2e2554] focus:border-cyan-400 rounded-xl p-3 text-xs text-white outline-none resize-none leading-relaxed"
@@ -396,9 +396,9 @@ export function FanCommunityComments() {
                   Comments Can Only Be Seen by Admin
                 </h4>
                 <p className="text-xs text-gray-300 leading-relaxed">
-                  In accordance with M-Pesa Sunday League policies and pastoral care standards, all
-                  fan cheers, prayers, and community notes are submitted directly to League
-                  Administration.
+                  In accordance with M-Pesa Sunday League policies and competition integrity
+                  standards, all fan cheers, tactical feedback, and community notes are submitted
+                  directly to League Administration.
                 </p>
                 <p className="text-xs text-gray-400 leading-relaxed">
                   Public spectators cannot view submitted comments. Only authorized administrators
