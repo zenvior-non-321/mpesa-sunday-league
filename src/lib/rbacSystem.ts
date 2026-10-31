@@ -9,7 +9,7 @@ import {
   getEmailDisplayName,
   normalizeAcademyEmail,
 } from "./academyAuthorizedEmails";
-import { getRegisteredBoardMembers } from "./boardMembersRegistry";
+import { getRegisteredBoardMembers, isBoardRoleLocked } from "./boardMembersRegistry";
 import type { LeagueRole } from "../hooks/useRoleAccess";
 
 export type RbacRole = "admin" | "board" | "public";
@@ -65,9 +65,15 @@ export function authenticateWithRbac(input: string): {
   // 2. Check if input is a board member access code (e.g. PRES-8491, DEP-3914, etc.)
   const boardMembers = getRegisteredBoardMembers();
   const matchedByCode = boardMembers.find(
-    (m) => m.active && m.accessCode.trim().toUpperCase() === cleaned.toUpperCase(),
+    (m) => m.accessCode.trim().toUpperCase() === cleaned.toUpperCase(),
   );
   if (matchedByCode) {
+    if (!matchedByCode.active || isBoardRoleLocked(matchedByCode.role)) {
+      return {
+        success: false,
+        error: `ACCESS DENIED: Access for ${matchedByCode.name} (${matchedByCode.role.replace(/_/g, " ")}) has been locked and suspended by the Super Administrator.`,
+      };
+    }
     const boardUser: RbacUser = {
       email: matchedByCode.schoolEmail,
       role: matchedByCode.role === "PRESIDENT" ? "admin" : "board",

@@ -52,6 +52,9 @@ import { BoardMemberManager } from "./BoardMemberManager";
 import { AnthemStudioAndPlaylist } from "./AnthemStudioAndPlaylist";
 import { FanCommunityComments } from "./FanCommunityComments";
 import { AdminVotingVoterAudit } from "./AdminVotingVoterAudit";
+import { BroadcastWorkspaceStudio } from "./BroadcastWorkspaceStudio";
+import { OfficialMatchSheetModal } from "./OfficialMatchSheetModal";
+import { OFFICIAL_CLUBS_DATA } from "../lib/teamSquadsData";
 import { DEFAULT_TEAMS, DEFAULT_FIXTURES, isTeamDeleted } from "../lib/fixturesData";
 import { DEFAULT_STANDINGS, type TeamStanding } from "./LeagueStandings";
 import { useRoleAccess } from "../hooks/useRoleAccess";
@@ -189,22 +192,22 @@ const DEFAULT_SEASONS: LeagueSeason[] = [
     name: "Spring 2026 Sunday League Championship",
     year: 2026,
     status: "ACTIVE",
-    division: "Youth & Parish Premier Division (Under-19)",
+    division: "M-Pesa Foundation Academy Premier Division (Under-19)",
     rulebookExcerpt:
       "All teams must maintain strict 15-player rosters. Standard FIFA rules apply with 10-minute halftime. Fair-play sportsmanship bonus points awarded per clean conduct fixture.",
     bibleVerseCurriculum:
-      "Philippians 4:13 & 1 Timothy 4:12 — 'Let no one despise your youth, but be an example to the believers in speech, in conduct, in love, in faith, in purity.'",
+      "Article IV & VII — Standard FIFA Laws of the Game, zero-tolerance for violent conduct, mandatory 15-player cap, and certified quad-crew officiating.",
   },
   {
     id: "season-2026-cup",
-    name: "Easter Resurrection Tournament Cup",
+    name: "Academy Champions Knockout Cup",
     year: 2026,
     status: "UPCOMING",
-    division: "Inter-Church Open Knockout Cup",
+    division: "Academy Inter-House Knockout Cup",
     rulebookExcerpt:
       "Single-elimination knockout format. Extra time (15 mins each half) followed by FIFA penalty shootout if level.",
     bibleVerseCurriculum:
-      "Hebrews 12:1-2 — 'Let us run with endurance the race that is set before us.'",
+      "Article IX — Knockout Cup Tournament Regulations, card carry-overs, substitution rules, and tiebreaker procedures.",
   },
 ];
 
@@ -356,6 +359,7 @@ export function MasterAdminDashboard({
   const [newFixReferee, setNewFixReferee] = useState("Center Ref: Bidan Mwaura");
   const [newFixChaplain, setNewFixChaplain] = useState("Match Commissioner: Mitchelle Muthoni");
   const [editingFixture, setEditingFixture] = useState<AdminFixture | null>(null);
+  const [matchSheetFixture, setMatchSheetFixture] = useState<AdminFixture | null>(null);
 
   // Score Certification State
   const [certifyingFixture, setCertifyingFixture] = useState<AdminFixture | null>(null);
@@ -451,10 +455,10 @@ export function MasterAdminDashboard({
     },
     {
       id: "dec-2",
-      title: "Council Resolution No. 04: Spiritual Conduct Bonus Point System",
-      category: "Spiritual & Conduct Oversight",
+      title: "Council Resolution No. 04: Fair Play & Disciplinary Bonus System",
+      category: "Sportsmanship & Fair Play",
       content:
-        "Each matchday awards up to +1 conduct point for scripture recitation attendance and +1 fair-play bonus point for teams with zero red cards and sporting conduct.",
+        "Each matchday awards up to +1 fair-play bonus point for teams with zero red cards, respectful conduct toward quad-crew officials, and positive sporting bench etiquette.",
       date: "2026-10-22",
     },
   ]);
@@ -1116,15 +1120,15 @@ export function MasterAdminDashboard({
     const referees = [
       "Bidan Mwaura (Official Match Referee)",
       "Idi Sebantu (Officiating Programmes Manager)",
-      "Kevin Ombati (Senior Official)",
+      "Elvis Mwangi (Senior Match Official)",
       "Sarah Wanjiku (Youth Official)",
       "David Kibet (FIFA Accredited)",
     ];
-    const chaplains = [
-      "Pastor Daniel Omondi",
-      "Rev. Grace Njeri",
-      "Elder Peter Kamau",
-      "Chaplain Joseph",
+    const matchCommissioners = [
+      "Mitchelle Muthoni (Match Commissioner)",
+      "Idi Sebantu (Officiating Lead)",
+      "Victor Kiplagat (Match Delegate)",
+      "Tonnie Mark Odundo (Official Scorer)",
     ];
 
     for (let i = 0; i < teamIds.length; i++) {
@@ -1139,7 +1143,7 @@ export function MasterAdminDashboard({
             time: `${14 + (generated.length % 3)}:00`,
             venue: venues[generated.length % venues.length],
             referee: referees[generated.length % referees.length],
-            chaplain: chaplains[generated.length % chaplains.length],
+            chaplain: matchCommissioners[generated.length % matchCommissioners.length],
             status: "SCHEDULED",
             homeScore: 0,
             awayScore: 0,
@@ -1652,11 +1656,11 @@ export function MasterAdminDashboard({
               <div>
                 <h3 className="font-header text-lg font-black text-white uppercase flex items-center gap-2">
                   <BookOpen className="w-5 h-5 text-indigo-400" />
-                  Season Setup, Age Divisions & Rulebook Curriculum
+                  Season Setup, Age Divisions & Rulebook Regulations
                 </h3>
                 <p className="text-xs text-gray-400 mt-0.5">
-                  Configure active championship seasons, division categories (U-10, U-15, Youth),
-                  and official scripture memory requirements.
+                  Configure active championship seasons, division categories (Under-19 Premier, Knockout Cup),
+                  and official competition regulations.
                 </p>
               </div>
 
@@ -1704,11 +1708,11 @@ export function MasterAdminDashboard({
                     </p>
                   </div>
 
-                  <div className="p-3 bg-amber-950/20 rounded-xl border border-amber-500/20 space-y-1.5 text-xs">
-                    <span className="text-[10px] text-amber-400 uppercase font-bold block">
-                      Spiritual Curriculum & Memory Verse:
+                  <div className="p-3 bg-indigo-950/20 rounded-xl border border-indigo-500/20 space-y-1.5 text-xs">
+                    <span className="text-[10px] text-indigo-400 uppercase font-bold block">
+                      Competition Regulations & Sanctions:
                     </span>
-                    <p className="text-amber-200 text-xs font-serif italic">
+                    <p className="text-indigo-200 text-xs font-mono">
                       {season.bibleVerseCurriculum}
                     </p>
                   </div>
@@ -2094,8 +2098,8 @@ export function MasterAdminDashboard({
                   Match Center, Live Scoring & Spiritual Bonus Certification
                 </h3>
                 <p className="text-xs text-gray-400 mt-0.5">
-                  Schedule matchweeks, assign referees & chaplains, and certify scores with
-                  spiritual conduct bonuses.
+                  Schedule matchweeks, assign referees & match commissioners, and certify scores with
+                  fair play conduct bonuses.
                 </p>
               </div>
 
@@ -2161,7 +2165,7 @@ export function MasterAdminDashboard({
 
                       <div className="flex flex-wrap items-center gap-3 text-[11px] text-gray-400 font-mono">
                         {fix.referee && <span>👤 Ref: {fix.referee}</span>}
-                        {fix.chaplain && <span>🕊️ Chaplain: {fix.chaplain}</span>}
+                        {fix.chaplain && <span>📋 Commissioner: {fix.chaplain}</span>}
                         {fix.scorers && <span>⚽ Goals: {fix.scorers}</span>}
                       </div>
                     </div>
@@ -2217,8 +2221,19 @@ export function MasterAdminDashboard({
 
                       <button
                         type="button"
+                        onClick={() => setMatchSheetFixture(fix)}
+                        className="px-3 py-1.5 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 font-bold text-xs flex items-center gap-1.5 border border-purple-500/30 transition cursor-pointer"
+                        title="Open and print FKF/FIFA official match sheet"
+                      >
+                        <FileText className="w-3.5 h-3.5" />
+                        <span>Match Sheet (PDF)</span>
+                      </button>
+
+                      <button
+                        type="button"
                         onClick={() => {
                           setCertifyingFixture(fix);
+
                           setCertHomeScore(fix.homeScore || 0);
                           setCertAwayScore(fix.awayScore || 0);
                           setCertStatus(fix.status || "COMPLETED");
@@ -2453,58 +2468,14 @@ export function MasterAdminDashboard({
         )}
 
         {/* =========================================================
-              PANEL 8: MASS BROADCASTS & NOTIFICATIONS (SMS, EMAIL, WHATSAPP)
+              PANEL 8: MASS BROADCASTS & NOTIFICATIONS (WORKSPACE STUDIO)
               ========================================================= */}
         {activeSection === "broadcasts_alerts" && (
-          <div className="bg-[#0b0821] border-2 border-blue-400/30 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-5">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#2e2554] pb-4">
-              <div>
-                <h3 className="font-header text-lg font-black text-white uppercase flex items-center gap-2">
-                  <Send className="w-5 h-5 text-blue-400" />
-                  Mass Communication, SMS & Broadcast Dispatcher
-                </h3>
-                <p className="text-xs text-gray-400 mt-0.5">
-                  Send urgent SMS alerts and email announcements to team managers, coaches,
-                  referees, and parents.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setShowSendBroadcastModal(true)}
-                className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:brightness-110 text-white font-black text-xs uppercase tracking-wide transition shadow cursor-pointer shrink-0"
-              >
-                <Send className="w-4 h-4" />
-                <span>Compose Broadcast</span>
-              </button>
-            </div>
-
-            {/* Broadcasts Archive */}
-            <div className="space-y-3">
-              {broadcasts.map((bc, bIdx) => (
-                <div
-                  key={bc.id ?? `bc-${bIdx}`}
-                  className="p-4 bg-[#141029] rounded-2xl border border-[#2e2554] space-y-2"
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 font-bold uppercase font-mono">
-                        {bc.channel.replace("_", " ")}
-                      </span>
-                      <span className="text-[10px] text-gray-400 font-bold">
-                        To: {bc.recipientGroup}
-                      </span>
-                    </div>
-                    <span className="text-[10px] text-gray-500 font-mono">{bc.sentAt}</span>
-                  </div>
-
-                  <h5 className="text-sm font-black text-white">{bc.title}</h5>
-                  <p className="text-xs text-gray-300 leading-relaxed">{bc.body}</p>
-                </div>
-              ))}
-            </div>
+          <div className="space-y-4 animate-in fade-in">
+            <BroadcastWorkspaceStudio />
           </div>
         )}
+
 
         {/* =========================================================
               PANEL 9: STADIUM SOUNDTRACK & ANTHEM STUDIO (YOUTUBE + AUTOPLAY)
@@ -2528,7 +2499,7 @@ export function MasterAdminDashboard({
                     Fan Cheers & Community Moderation Console
                   </h3>
                   <p className="text-xs text-gray-400 mt-0.5">
-                    Audit community submissions, prayers, and chants. Pin inspiring messages to the
+                    Audit community submissions, matchday cheers, and chants. Pin inspiring messages to the
                     top or remove inappropriate posts.
                   </p>
                 </div>
@@ -2583,9 +2554,10 @@ export function MasterAdminDashboard({
                     {fixtures.map((fix, fIdx) => {
                       const h = teams.find((t) => t.id === fix.homeId)?.name || `#${fix.homeId}`;
                       const a = teams.find((t) => t.id === fix.awayId)?.name || `#${fix.awayId}`;
+                      const isClosed = fix.status === "COMPLETED" || fix.status === "FINISHED";
                       return (
                         <option key={fix.id ?? `vote-fix-${fIdx}`} value={fix.id}>
-                          MW {fix.matchweek}: {h} vs {a} ({fix.date})
+                          MW {fix.matchweek}: {h} vs {a} {isClosed ? "✅ [CLOSED / FINISHED]" : "⏳ [SCHEDULED]"} ({fix.date})
                         </option>
                       );
                     })}
@@ -2605,6 +2577,116 @@ export function MasterAdminDashboard({
                   />
                 </div>
               </div>
+
+              {/* Dispatch MVP Voting for Closed Match */}
+              {(() => {
+                const matchObj = fixtures.find((f) => f.id === votingMatchId) || fixtures[0];
+                const homeClub = OFFICIAL_CLUBS_DATA.find((c) => c.id === matchObj?.homeId);
+                const awayClub = OFFICIAL_CLUBS_DATA.find((c) => c.id === matchObj?.awayId);
+                const homeSquad = homeClub?.squad || [];
+                const awaySquad = awayClub?.squad || [];
+                const totalSquadPlayers = homeSquad.length + awaySquad.length;
+
+                const handleDispatchMvpVotingForMatch = () => {
+                  const storedPolls = JSON.parse(
+                    typeof window !== "undefined"
+                      ? localStorage.getItem("mpesa_pes_mvp_votes_v1") || "{}"
+                      : "{}"
+                  );
+
+                  const votesObj: Record<string, { votesCount: number; teamName: string; position: string; number: number }> = {};
+
+                  homeSquad.forEach((p) => {
+                    votesObj[p.name] = {
+                      votesCount: 0,
+                      teamName: homeClub?.name || "Home",
+                      position: p.position,
+                      number: p.number,
+                    };
+                  });
+
+                  awaySquad.forEach((p) => {
+                    votesObj[p.name] = {
+                      votesCount: 0,
+                      teamName: awayClub?.name || "Away",
+                      position: p.position,
+                      number: p.number,
+                    };
+                  });
+
+                  storedPolls[votingMatchId] = {
+                    matchId: votingMatchId,
+                    isOpen: true,
+                    votes: votesObj,
+                    voterEmails: [],
+                  };
+
+                  localStorage.setItem("mpesa_pes_mvp_votes_v1", JSON.stringify(storedPolls));
+                  window.dispatchEvent(new Event("storage"));
+                  showToast(
+                    `✓ MVP Voting created & dispatched for MW ${matchObj?.matchweek}: ${homeClub?.name} vs ${awayClub?.name} with all ${totalSquadPlayers} registered players (starters & subs) open for balloting!`
+                  );
+                };
+
+                return (
+                  <div className="p-4 bg-[#0a071b] rounded-xl border border-pink-500/30 space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-black uppercase text-pink-300">
+                            Registered Match Squads Roster ({totalSquadPlayers} Players Eligible)
+                          </span>
+                          <span className="px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300 text-[10px] font-mono font-bold">
+                            Starters + Subs
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-gray-400 mt-0.5">
+                          {homeClub?.name} ({homeSquad.length} registered players) vs {awayClub?.name} ({awaySquad.length} registered players)
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleDispatchMvpVotingForMatch}
+                        className="px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-600 hover:brightness-110 active:scale-95 text-white font-black text-xs uppercase tracking-wider rounded-xl transition shadow-lg flex items-center gap-1.5 cursor-pointer shrink-0"
+                      >
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>Dispatch MVP Voting for This Match</span>
+                      </button>
+                    </div>
+
+                    {/* Preview of Starting and Sub Players */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 border-t border-white/5 text-[11px]">
+                      <div className="space-y-1">
+                        <span className="font-bold text-emerald-400 block uppercase text-[10px]">
+                          {homeClub?.name} ({homeSquad.length} Players)
+                        </span>
+                        <div className="flex flex-wrap gap-1">
+                          {homeSquad.map((p, idx) => (
+                            <span key={`h-p-${idx}`} className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-gray-300 font-mono text-[10px]">
+                              #{p.number} {p.name} ({p.position})
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <span className="font-bold text-blue-400 block uppercase text-[10px]">
+                          {awayClub?.name} ({awaySquad.length} Players)
+                        </span>
+                        <div className="flex flex-wrap gap-1">
+                          {awaySquad.map((p, idx) => (
+                            <span key={`a-p-${idx}`} className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-gray-300 font-mono text-[10px]">
+                              #{p.number} {p.name} ({p.position})
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
 
               {/* Shareable Link Box */}
               <div className="p-3 bg-[#0a071b] rounded-xl border border-[#261f4d] space-y-2">
@@ -4068,17 +4150,87 @@ export function MasterAdminDashboard({
 
                 <div>
                   <label className="block text-gray-400 font-bold uppercase text-[10px] mb-1">
-                    Goal Scorers (Minutes)
+                    Goal Scorers (Player & Minute)
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. Jaycrack 24', Mutua 68'"
+                    placeholder="e.g. Wokabi 24', Jaycrack 68'"
                     value={certScorers}
                     onChange={(e) => setCertScorers(e.target.value)}
                     className="w-full bg-[#161138] border border-[#2e2554] focus:border-cyan-400 rounded-xl px-3 py-2 text-xs text-white outline-none"
                   />
                 </div>
               </div>
+
+              {/* Squad Quick-Pick Helpers */}
+              {(() => {
+                const home = teams.find((t) => t.id === certifyingFixture.homeId);
+                const away = teams.find((t) => t.id === certifyingFixture.awayId);
+                const homeSquad = (home as unknown as { squad?: Array<{ name: string }> })?.squad || [];
+                const awaySquad = (away as unknown as { squad?: Array<{ name: string }> })?.squad || [];
+
+                return (
+                  <div className="p-3 bg-[#0a071b] rounded-2xl border border-[#2e2554] space-y-2">
+                    <span className="text-[10px] text-gray-400 font-bold uppercase block">
+                      ⚡ Quick Add Squad Athletes (Click to append goal):
+                    </span>
+                    <div className="space-y-1.5">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="text-[9px] font-bold text-cyan-300 uppercase shrink-0">
+                          {home?.name || "Home"}:
+                        </span>
+                        {homeSquad.slice(0, 7).map((p) => (
+                          <button
+                            key={`h-quick-${p.name}`}
+                            type="button"
+                            onClick={() => {
+                              const append = certScorers.trim() ? `, ${p.name}` : p.name;
+                              setCertScorers(certScorers.trim() + append);
+                            }}
+                            className="text-[10px] px-2 py-0.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-200 border border-cyan-400/20 font-mono transition cursor-pointer"
+                          >
+                            + {p.name}
+                          </button>
+                        ))}
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="text-[9px] font-bold text-yellow-300 uppercase shrink-0">
+                          {away?.name || "Away"}:
+                        </span>
+                        {awaySquad.slice(0, 7).map((p) => (
+                          <button
+                            key={`a-quick-${p.name}`}
+                            type="button"
+                            onClick={() => {
+                              const append = certScorers.trim() ? `, ${p.name}` : p.name;
+                              setCertScorers(certScorers.trim() + append);
+                            }}
+                            className="text-[10px] px-2 py-0.5 rounded-lg bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-200 border border-yellow-400/20 font-mono transition cursor-pointer"
+                          >
+                            + {p.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Timeline Live Preview */}
+                    {(certScorers || certAssists || certYellowCards || certRedCards) && (
+                      <div className="mt-2 pt-2 border-t border-[#261f4d] space-y-1">
+                        <span className="text-[9px] text-emerald-400 font-mono font-bold uppercase block">
+                          🕒 Certified Match Incident Timeline Preview:
+                        </span>
+                        <div className="text-[11px] font-mono text-gray-300 bg-[#161138] p-2 rounded-xl border border-[#2e2554] space-y-0.5">
+                          {certScorers && <p>⚽ <strong className="text-white">Goals:</strong> {certScorers}</p>}
+                          {certAssists && <p>👟 <strong className="text-cyan-300">Assists:</strong> {certAssists}</p>}
+                          {certYellowCards && <p>🟨 <strong className="text-amber-300">Cautions:</strong> {certYellowCards}</p>}
+                          {certRedCards && <p>🟥 <strong className="text-rose-400">Dismissals:</strong> {certRedCards}</p>}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
               <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#2e2554]">
                 <button
@@ -4276,12 +4428,12 @@ export function MasterAdminDashboard({
             <div className="flex items-center justify-between border-b border-[#2e2554] pb-3">
               <h4 className="font-header text-base font-black text-white uppercase flex items-center gap-2">
                 <Trophy className="w-5 h-5 text-yellow-400" />
-                Adjust Points for {editingStanding.name}
+                Edit Championship Record for {editingStanding.name}
               </h4>
               <button
                 type="button"
                 onClick={() => setEditingStanding(null)}
-                className="text-gray-400 hover:text-white p-1 rounded-xl"
+                className="text-gray-400 hover:text-white p-1 rounded-xl cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -4295,42 +4447,50 @@ export function MasterAdminDashboard({
                 );
                 saveStandings(updated);
                 setEditingStanding(null);
-                showToast(`✓ Updated table record for ${editingStanding.name}`);
+                showToast(`✓ Updated full table record for ${editingStanding.name}`);
               }}
               className="space-y-3"
             >
+              {/* Row 1: Points & Matches Played */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-gray-400 font-bold uppercase text-[10px] mb-1">
-                    Points (Total)
+                    Points (Total Pts)
                   </label>
                   <input
                     type="number"
-                    value={editingStanding.points}
+                    value={editingStanding.points ?? 0}
                     onChange={(e) =>
                       setEditingStanding({
                         ...editingStanding,
                         points: parseInt(e.target.value) || 0,
                       })
                     }
-                    className="w-full bg-[#161138] border border-[#2e2554] focus:border-yellow-400 rounded-xl px-3 py-2 text-xs font-mono font-bold text-amber-300 outline-none"
+                    className="w-full bg-[#161138] border border-[#2e2554] focus:border-yellow-400 rounded-xl px-3 py-2 text-xs font-mono font-black text-amber-300 outline-none"
                   />
                 </div>
                 <div>
                   <label className="block text-gray-400 font-bold uppercase text-[10px] mb-1">
-                    Goal Difference (GD)
+                    Matches Played (P)
                   </label>
                   <input
                     type="number"
-                    value={editingStanding.gd}
-                    onChange={(e) =>
-                      setEditingStanding({ ...editingStanding, gd: parseInt(e.target.value) || 0 })
-                    }
-                    className="w-full bg-[#161138] border border-[#2e2554] focus:border-yellow-400 rounded-xl px-3 py-2 text-xs font-mono font-bold text-cyan-300 outline-none"
+                    min={0}
+                    value={editingStanding.played ?? editingStanding.mp ?? 0}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value) || 0;
+                      setEditingStanding({
+                        ...editingStanding,
+                        played: val,
+                        mp: val,
+                      });
+                    }}
+                    className="w-full bg-[#161138] border border-[#2e2554] focus:border-yellow-400 rounded-xl px-3 py-2 text-xs font-mono font-bold text-white outline-none"
                   />
                 </div>
               </div>
 
+              {/* Row 2: W - D - L Record */}
               <div className="grid grid-cols-3 gap-2">
                 <div>
                   <label className="block text-gray-400 font-bold uppercase text-[10px] mb-1">
@@ -4338,11 +4498,13 @@ export function MasterAdminDashboard({
                   </label>
                   <input
                     type="number"
-                    value={editingStanding.won}
-                    onChange={(e) =>
-                      setEditingStanding({ ...editingStanding, won: parseInt(e.target.value) || 0 })
-                    }
-                    className="w-full bg-[#161138] border border-[#2e2554] rounded-xl px-2.5 py-1.5 text-xs font-mono text-white outline-none"
+                    min={0}
+                    value={editingStanding.won ?? 0}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value) || 0;
+                      setEditingStanding({ ...editingStanding, won: val, w: val });
+                    }}
+                    className="w-full bg-[#161138] border border-[#2e2554] rounded-xl px-2.5 py-1.5 text-xs font-mono font-bold text-emerald-400 outline-none"
                   />
                 </div>
                 <div>
@@ -4351,14 +4513,17 @@ export function MasterAdminDashboard({
                   </label>
                   <input
                     type="number"
-                    value={editingStanding.drawn}
-                    onChange={(e) =>
+                    min={0}
+                    value={editingStanding.drawn ?? 0}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value) || 0;
                       setEditingStanding({
                         ...editingStanding,
-                        drawn: parseInt(e.target.value) || 0,
-                      })
-                    }
-                    className="w-full bg-[#161138] border border-[#2e2554] rounded-xl px-2.5 py-1.5 text-xs font-mono text-white outline-none"
+                        drawn: val,
+                        d: val,
+                      });
+                    }}
+                    className="w-full bg-[#161138] border border-[#2e2554] rounded-xl px-2.5 py-1.5 text-xs font-mono font-bold text-gray-300 outline-none"
                   />
                 </div>
                 <div>
@@ -4367,14 +4532,77 @@ export function MasterAdminDashboard({
                   </label>
                   <input
                     type="number"
-                    value={editingStanding.lost}
+                    min={0}
+                    value={editingStanding.lost ?? 0}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value) || 0;
+                      setEditingStanding({
+                        ...editingStanding,
+                        lost: val,
+                        l: val,
+                      });
+                    }}
+                    className="w-full bg-[#161138] border border-[#2e2554] rounded-xl px-2.5 py-1.5 text-xs font-mono font-bold text-rose-400 outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Row 3: GF, GA, GD */}
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <label className="block text-gray-400 font-bold uppercase text-[10px] mb-1">
+                    Goals For (GF)
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={editingStanding.gf ?? 0}
+                    onChange={(e) => {
+                      const newGf = parseInt(e.target.value) || 0;
+                      const curGa = editingStanding.ga ?? 0;
+                      setEditingStanding({
+                        ...editingStanding,
+                        gf: newGf,
+                        gd: newGf - curGa,
+                      });
+                    }}
+                    className="w-full bg-[#161138] border border-[#2e2554] rounded-xl px-2.5 py-1.5 text-xs font-mono font-bold text-cyan-300 outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-400 font-bold uppercase text-[10px] mb-1">
+                    Goals Against (GA)
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={editingStanding.ga ?? 0}
+                    onChange={(e) => {
+                      const newGa = parseInt(e.target.value) || 0;
+                      const curGf = editingStanding.gf ?? 0;
+                      setEditingStanding({
+                        ...editingStanding,
+                        ga: newGa,
+                        gd: curGf - newGa,
+                      });
+                    }}
+                    className="w-full bg-[#161138] border border-[#2e2554] rounded-xl px-2.5 py-1.5 text-xs font-mono font-bold text-rose-300 outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-400 font-bold uppercase text-[10px] mb-1">
+                    Goal Diff (GD)
+                  </label>
+                  <input
+                    type="number"
+                    value={editingStanding.gd ?? 0}
                     onChange={(e) =>
                       setEditingStanding({
                         ...editingStanding,
-                        lost: parseInt(e.target.value) || 0,
+                        gd: parseInt(e.target.value) || 0,
                       })
                     }
-                    className="w-full bg-[#161138] border border-[#2e2554] rounded-xl px-2.5 py-1.5 text-xs font-mono text-white outline-none"
+                    className="w-full bg-[#161138] border border-yellow-400/40 rounded-xl px-2.5 py-1.5 text-xs font-mono font-black text-amber-300 outline-none"
                   />
                 </div>
               </div>
@@ -4383,15 +4611,15 @@ export function MasterAdminDashboard({
                 <button
                   type="button"
                   onClick={() => setEditingStanding(null)}
-                  className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 text-xs font-bold"
+                  className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 text-xs font-bold cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-yellow-400 to-amber-500 text-black text-xs font-black uppercase hover:brightness-110 shadow"
+                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-yellow-400 to-amber-500 text-black text-xs font-black uppercase hover:brightness-110 shadow cursor-pointer"
                 >
-                  Save Points
+                  Save Full Table Record
                 </button>
               </div>
             </form>
@@ -4750,7 +4978,7 @@ export function MasterAdminDashboard({
                 </div>
                 <div>
                   <label className="block text-gray-400 font-bold uppercase text-[10px] mb-1">
-                    Field Chaplain / Steward
+                    Match Commissioner / Pitch Steward
                   </label>
                   <input
                     type="text"
@@ -5120,6 +5348,17 @@ export function MasterAdminDashboard({
           </div>
         </div>
       )}
+
+      {/* Official Match Sheet Modal (Print / PDF) */}
+      {matchSheetFixture && (
+        <OfficialMatchSheetModal
+          isOpen={!!matchSheetFixture}
+          onClose={() => setMatchSheetFixture(null)}
+          fixture={matchSheetFixture as any}
+          teams={teams as any}
+        />
+      )}
     </div>
   );
 }
+

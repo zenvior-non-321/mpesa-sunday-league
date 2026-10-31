@@ -1,5 +1,19 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useRoleAccess } from "../hooks/useRoleAccess";
+import { getAllRegisteredPlayers, OFFICIAL_CLUBS_DATA } from "../lib/teamSquadsData";
+import { getMvpWinnersHistory } from "../lib/mvpWinnersHistory";
+import {
+  Trophy,
+  RefreshCw,
+  Sparkles,
+  Award,
+  Shield,
+  CheckCircle2,
+  Sliders,
+  Flame,
+  Search,
+  ExternalLink,
+} from "lucide-react";
 
 export interface PlayerStat {
   id: number;
@@ -16,6 +30,7 @@ export interface PlayerStat {
   redCards: number;
   photoUrl?: string;
   rating?: number;
+  mvpAccolades?: number;
 }
 
 export interface Team {
@@ -26,154 +41,303 @@ export interface Team {
 }
 
 const DEFAULT_TEAMS: Team[] = [
-  { id: 1, name: "Samba Boys", shortCode: "SMB", color: "#00ff85" },
+  { id: 1, name: "Samba", shortCode: "SAM", color: "#00ff85" },
   { id: 6, name: "Royal Rangers", shortCode: "RR", color: "#3b82f6" },
   { id: 7, name: "Young Stars City", shortCode: "YSC", color: "#f97316" },
   { id: 8, name: "Mzinga Boyz", shortCode: "MZB", color: "#eab308" },
 ];
 
-const DEFAULT_STATS: PlayerStat[] = [
-  {
-    id: 1,
-    name: "Wokabi",
-    teamId: 1,
-    position: "FWD",
-    foot: "Right",
-    goals: 0,
-    assists: 0,
-    starts: 0,
-    matches: 0,
-    cleanSheets: 0,
-    yellowCards: 0,
-    redCards: 0,
-  },
-  {
-    id: 2,
-    name: "Jaycrack",
-    teamId: 1,
-    position: "MID",
-    foot: "Right",
-    goals: 0,
-    assists: 0,
-    starts: 0,
-    matches: 0,
-    cleanSheets: 0,
-    yellowCards: 0,
-    redCards: 0,
-  },
-  {
-    id: 3,
-    name: "Haron",
-    teamId: 1,
-    position: "DEF",
-    foot: "Right",
-    goals: 0,
-    assists: 0,
-    starts: 0,
-    matches: 0,
-    cleanSheets: 0,
-    yellowCards: 0,
-    redCards: 0,
-  },
-  {
-    id: 4,
-    name: "Levis Wanyama",
-    teamId: 6,
-    position: "MID",
-    foot: "Right",
-    goals: 0,
-    assists: 0,
-    starts: 0,
-    matches: 0,
-    cleanSheets: 0,
-    yellowCards: 0,
-    redCards: 0,
-  },
-  {
-    id: 5,
-    name: "Elvis Kingoo",
-    teamId: 6,
-    position: "FWD",
-    foot: "Right",
-    goals: 0,
-    assists: 0,
-    starts: 0,
-    matches: 0,
-    cleanSheets: 0,
-    yellowCards: 0,
-    redCards: 0,
-  },
-  {
-    id: 6,
-    name: "Tonny Odundo",
-    teamId: 6,
-    position: "MID",
-    foot: "Right",
-    goals: 0,
-    assists: 0,
-    starts: 0,
-    matches: 0,
-    cleanSheets: 0,
-    yellowCards: 0,
-    redCards: 0,
-  },
-  {
-    id: 7,
-    name: "Elly Adams Otieno",
-    teamId: 7,
-    position: "FWD",
-    foot: "Left",
-    goals: 0,
-    assists: 0,
-    starts: 0,
-    matches: 0,
-    cleanSheets: 0,
-    yellowCards: 0,
-    redCards: 0,
-  },
-  {
-    id: 8,
-    name: "Raila Junior",
-    teamId: 7,
-    position: "FWD",
-    foot: "Right",
-    goals: 0,
-    assists: 0,
-    starts: 0,
-    matches: 0,
-    cleanSheets: 0,
-    yellowCards: 0,
-    redCards: 0,
-  },
-  {
-    id: 9,
-    name: "Hamard Adan",
-    teamId: 8,
-    position: "FWD",
-    foot: "Right",
-    goals: 0,
-    assists: 0,
-    starts: 0,
-    matches: 0,
-    cleanSheets: 0,
-    yellowCards: 0,
-    redCards: 0,
-  },
-  {
-    id: 10,
-    name: "Brandon Wandera",
-    teamId: 8,
-    position: "FWD",
-    foot: "Right",
-    goals: 0,
-    assists: 0,
-    starts: 0,
-    matches: 0,
-    cleanSheets: 0,
-    yellowCards: 0,
-    redCards: 0,
-  },
-];
+const DEFAULT_STATS: PlayerStat[] = getAllRegisteredPlayers().map((p, idx) => ({
+  id: p.id || idx + 1,
+  name: p.name,
+  teamId: p.teamId,
+  position: p.position,
+  foot: p.foot || "Right",
+  goals: 0,
+  assists: 0,
+  starts: 0,
+  matches: 0,
+  cleanSheets: 0,
+  yellowCards: 0,
+  redCards: 0,
+  photoUrl: p.photoUrl,
+  rating: 7.0,
+  mvpAccolades: 0,
+}));
+
+// Automated calculation engine from official match fixtures and match sheets
+export function calculateLeaderboardFromMatchRecords(baseList: PlayerStat[]): {
+  calculatedStats: PlayerStat[];
+  matchesProcessed: number;
+  goalsCount: number;
+  assistsCount: number;
+  cleanSheetsCount: number;
+} {
+  const playerMap = new Map<string, PlayerStat>();
+
+  // Initialize with all registered players
+  baseList.forEach((p) => {
+    playerMap.set(p.name.trim().toLowerCase(), {
+      ...p,
+      goals: 0,
+      assists: 0,
+      starts: 0,
+      matches: 0,
+      cleanSheets: 0,
+      yellowCards: 0,
+      redCards: 0,
+      mvpAccolades: 0,
+      rating: 7.0,
+    });
+  });
+
+  const findPlayer = (name: string): PlayerStat | undefined => {
+    if (!name) return undefined;
+    const clean = name.trim().toLowerCase();
+    if (playerMap.has(clean)) return playerMap.get(clean);
+
+    // Fuzzy partial match
+    for (const [key, val] of playerMap.entries()) {
+      if (key.includes(clean) || clean.includes(key)) {
+        return val;
+      }
+    }
+    return undefined;
+  };
+
+  let matchesProcessed = 0;
+  let goalsCount = 0;
+  let assistsCount = 0;
+  let cleanSheetsCount = 0;
+
+  try {
+    const rawMatches = localStorage.getItem("mpesa_pes_matches_v6");
+    const fixtures: any[] = rawMatches ? JSON.parse(rawMatches) : [];
+
+    fixtures.forEach((fix) => {
+      const isCompleted =
+        fix.status === "COMPLETED" ||
+        fix.status === "FINISHED" ||
+        (fix.homeScore !== undefined && fix.awayScore !== undefined && fix.status !== "POSTPONED");
+
+      if (!isCompleted) return;
+
+      matchesProcessed++;
+      const homeScore = Number(fix.homeScore) || 0;
+      const awayScore = Number(fix.awayScore) || 0;
+
+      // 1. Check custom saved matchsheet for this fixture
+      let sheet: any = null;
+      try {
+        const rawSheet = localStorage.getItem(`mpesa_pes_matchsheet_v2_${fix.id}`);
+        if (rawSheet) {
+          sheet = JSON.parse(rawSheet);
+        }
+      } catch {
+        // ignore
+      }
+
+      // Track appearances from sheet lineups if present
+      if (sheet?.homeLineup && Array.isArray(sheet.homeLineup)) {
+        sheet.homeLineup.forEach((lp: any) => {
+          const target = findPlayer(lp.name);
+          if (target) {
+            if (lp.isStarting) {
+              target.starts += 1;
+              target.matches += 1;
+            } else if (lp.isSub) {
+              target.matches += 1;
+            }
+          }
+        });
+      }
+
+      if (sheet?.awayLineup && Array.isArray(sheet.awayLineup)) {
+        sheet.awayLineup.forEach((lp: any) => {
+          const target = findPlayer(lp.name);
+          if (target) {
+            if (lp.isStarting) {
+              target.starts += 1;
+              target.matches += 1;
+            } else if (lp.isSub) {
+              target.matches += 1;
+            }
+          }
+        });
+      }
+
+      // If no sheet lineup was saved, give all squad players from both teams 1 match appearance
+      if (!sheet?.homeLineup) {
+        const homeClub = OFFICIAL_CLUBS_DATA.find((c) => c.id === fix.homeId);
+        const awayClub = OFFICIAL_CLUBS_DATA.find((c) => c.id === fix.awayId);
+        homeClub?.squad?.slice(0, 11).forEach((p) => {
+          const target = findPlayer(p.name);
+          if (target) {
+            target.starts += 1;
+            target.matches += 1;
+          }
+        });
+        awayClub?.squad?.slice(0, 11).forEach((p) => {
+          const target = findPlayer(p.name);
+          if (target) {
+            target.starts += 1;
+            target.matches += 1;
+          }
+        });
+      }
+
+      // 2. Process events & scorers
+      let eventsProcessed = false;
+      if (sheet?.events && Array.isArray(sheet.events) && sheet.events.length > 0) {
+        eventsProcessed = true;
+        sheet.events.forEach((ev: any) => {
+          if (ev.eventType && ev.eventType.includes("Goal") && !ev.eventType.includes("Own")) {
+            const scorer = findPlayer(ev.playerName);
+            if (scorer) {
+              scorer.goals += 1;
+              goalsCount++;
+            }
+            if (ev.assistOrSubIn && ev.assistOrSubIn.trim() !== "-") {
+              const assister = findPlayer(ev.assistOrSubIn);
+              if (assister) {
+                assister.assists += 1;
+                assistsCount++;
+              }
+            }
+          } else if (ev.eventType && ev.eventType.includes("Yellow")) {
+            const carded = findPlayer(ev.playerName);
+            if (carded) carded.yellowCards += 1;
+          } else if (ev.eventType && ev.eventType.includes("Red")) {
+            const carded = findPlayer(ev.playerName);
+            if (carded) carded.redCards += 1;
+          }
+        });
+      }
+
+      // If no events in sheet, parse fix.goalEvents or fix.scorers string
+      if (!eventsProcessed) {
+        if (fix.goalEvents && Array.isArray(fix.goalEvents)) {
+          fix.goalEvents.forEach((ge: any) => {
+            if (ge.scorerName && !ge.isOwnGoal) {
+              const scorer = findPlayer(ge.scorerName);
+              if (scorer) {
+                scorer.goals += 1;
+                goalsCount++;
+              }
+            }
+            if (ge.assisterName) {
+              const assister = findPlayer(ge.assisterName);
+              if (assister) {
+                assister.assists += 1;
+                assistsCount++;
+              }
+            }
+          });
+        } else if (fix.scorers && typeof fix.scorers === "string") {
+          // Parse string like "Wokabi 23', Jaycrack 67'"
+          const parts = fix.scorers.split(/[,;\n]+/);
+          parts.forEach((item: string) => {
+            const cleaned = item.replace(/\d+['\)]/g, "").replace(/\(/g, "").trim();
+            if (cleaned) {
+              const scorer = findPlayer(cleaned);
+              if (scorer) {
+                scorer.goals += 1;
+                goalsCount++;
+              }
+            }
+          });
+        }
+      }
+
+      // 3. Clean sheets calculation
+      if (awayScore === 0) {
+        // Home team clean sheet
+        const homeClub = OFFICIAL_CLUBS_DATA.find((c) => c.id === fix.homeId);
+        homeClub?.squad
+          ?.filter((p) => p.position === "GK" || p.position === "DEF")
+          .forEach((p) => {
+            const defOrGk = findPlayer(p.name);
+            if (defOrGk) {
+              defOrGk.cleanSheets += 1;
+              if (p.position === "GK") cleanSheetsCount++;
+            }
+          });
+      }
+
+      if (homeScore === 0) {
+        // Away team clean sheet
+        const awayClub = OFFICIAL_CLUBS_DATA.find((c) => c.id === fix.awayId);
+        awayClub?.squad
+          ?.filter((p) => p.position === "GK" || p.position === "DEF")
+          .forEach((p) => {
+            const defOrGk = findPlayer(p.name);
+            if (defOrGk) {
+              defOrGk.cleanSheets += 1;
+              if (p.position === "GK") cleanSheetsCount++;
+            }
+          });
+      }
+
+      // 4. Man of the Match from fixture
+      if (fix.manOfTheMatch?.playerName) {
+        const motm = findPlayer(fix.manOfTheMatch.playerName);
+        if (motm) {
+          motm.mvpAccolades = (motm.mvpAccolades || 0) + 1;
+        }
+      }
+    });
+
+    // 5. Factor in MVP Votes Winners
+    const rawPolls = localStorage.getItem("mpesa_pes_mvp_votes_v1");
+    if (rawPolls) {
+      const polls = JSON.parse(rawPolls);
+      Object.values(polls).forEach((poll: any) => {
+        if (poll.officialWinner?.playerName) {
+          const winner = findPlayer(poll.officialWinner.playerName);
+          if (winner) {
+            winner.mvpAccolades = (winner.mvpAccolades || 0) + 1;
+          }
+        }
+      });
+    }
+
+    // 6. Factor in historical MVP Hall of Fame
+    const historyWinners = getMvpWinnersHistory();
+    historyWinners.forEach((hw) => {
+      const target = findPlayer(hw.playerName);
+      if (target) {
+        target.mvpAccolades = (target.mvpAccolades || 0) + 1;
+      }
+    });
+  } catch (err) {
+    console.error("Auto calculation failed:", err);
+  }
+
+  // Calculate final dynamic rating for all players
+  const calculatedStats = Array.from(playerMap.values()).map((p) => {
+    const rawRating =
+      7.0 +
+      p.goals * 0.5 +
+      p.assists * 0.35 +
+      p.cleanSheets * 0.4 +
+      (p.mvpAccolades || 0) * 0.6 -
+      p.yellowCards * 0.2 -
+      p.redCards * 0.6;
+    const rating = Math.min(9.9, Math.max(6.0, Number(rawRating.toFixed(1))));
+    return {
+      ...p,
+      rating,
+    };
+  });
+
+  return {
+    calculatedStats,
+    matchesProcessed,
+    goalsCount,
+    assistsCount,
+    cleanSheetsCount,
+  };
+}
 
 type SortKey =
   | "rank"
@@ -186,7 +350,9 @@ type SortKey =
   | "cleanSheets"
   | "yellowCards"
   | "redCards"
-  | "performance";
+  | "performance"
+  | "rating"
+  | "mvpAccolades";
 
 export function PlayerLeaderboard() {
   const { currentRole, isSuperAdmin } = useRoleAccess();
@@ -198,16 +364,42 @@ export function PlayerLeaderboard() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedTeamFilter, setSelectedTeamFilter] = useState<string>("ALL");
   const [selectedPositionFilter, setSelectedPositionFilter] = useState<string>("ALL");
+  const [activeHonorsCategory, setActiveHonorsCategory] = useState<
+    "ALL" | "GOALS" | "ASSISTS" | "CLEAN_SHEETS" | "MVP"
+  >("ALL");
 
   // Sorting state
   const [sortKey, setSortKey] = useState<SortKey>("goals");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
+  // Auto-sync feedback toast
+  const [syncFeedback, setSyncFeedback] = useState<string | null>(null);
+
   // Modal State for Editing / Adding stats
   const [openModal, setOpenModal] = useState<boolean>(false);
   const [editingStat, setEditingStat] = useState<PlayerStat | null>(null);
 
-  // Load from localStorage or defaults
+  // Auto calculate and load
+  const runAutoCalculation = useCallback((notify = false) => {
+    try {
+      const { calculatedStats, matchesProcessed, goalsCount, assistsCount, cleanSheetsCount } =
+        calculateLeaderboardFromMatchRecords(DEFAULT_STATS);
+
+      setStats(calculatedStats);
+      localStorage.setItem("mpesa_pes_stats_v6", JSON.stringify(calculatedStats));
+
+      if (notify) {
+        setSyncFeedback(
+          `✓ Auto-calculated from ${matchesProcessed} match records: ${goalsCount} goals, ${assistsCount} assists, ${cleanSheetsCount} clean sheets synced!`,
+        );
+        setTimeout(() => setSyncFeedback(null), 4000);
+      }
+    } catch {
+      setStats(DEFAULT_STATS);
+    }
+  }, []);
+
+  // Load from localStorage or calculate
   useEffect(() => {
     try {
       const storedStats = localStorage.getItem("mpesa_pes_stats_v6");
@@ -216,10 +408,10 @@ export function PlayerLeaderboard() {
         if (Array.isArray(parsed) && parsed.length > 0) {
           setStats(parsed);
         } else {
-          setStats(DEFAULT_STATS);
+          runAutoCalculation();
         }
       } else {
-        setStats(DEFAULT_STATS);
+        runAutoCalculation();
       }
 
       const storedTeams = localStorage.getItem("mpesa_pes_teams_v6");
@@ -230,9 +422,13 @@ export function PlayerLeaderboard() {
         }
       }
     } catch {
-      setStats(DEFAULT_STATS);
+      runAutoCalculation();
     }
-  }, []);
+
+    const handleStorage = () => runAutoCalculation();
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, [runAutoCalculation]);
 
   const persistStats = (updated: PlayerStat[]) => {
     setStats(updated);
@@ -303,7 +499,19 @@ export function PlayerLeaderboard() {
         selectedTeamFilter === "ALL" || player.teamId === Number(selectedTeamFilter);
       const matchPosition =
         selectedPositionFilter === "ALL" || player.position === selectedPositionFilter;
-      return matchSearch && matchTeam && matchPosition;
+
+      let matchCategory = true;
+      if (activeHonorsCategory === "GOALS") {
+        matchCategory = player.position === "FWD" || player.position === "MID" || (player.goals || 0) > 0;
+      } else if (activeHonorsCategory === "ASSISTS") {
+        matchCategory = player.position === "MID" || (player.assists || 0) > 0;
+      } else if (activeHonorsCategory === "CLEAN_SHEETS") {
+        matchCategory = player.position === "GK" || player.position === "DEF";
+      } else if (activeHonorsCategory === "MVP") {
+        matchCategory = (player.mvpAccolades || 0) > 0 || (player.rating || 0) >= 7.5;
+      }
+
+      return matchSearch && matchTeam && matchPosition && matchCategory;
     });
 
     result.sort((a, b) => {
@@ -347,6 +555,14 @@ export function PlayerLeaderboard() {
           valA = a.redCards;
           valB = b.redCards;
           break;
+        case "rating":
+          valA = a.rating ?? 7.0;
+          valB = b.rating ?? 7.0;
+          break;
+        case "mvpAccolades":
+          valA = a.mvpAccolades ?? 0;
+          valB = b.mvpAccolades ?? 0;
+          break;
         case "performance":
         default:
           valA = calcPerformance(a);
@@ -360,7 +576,7 @@ export function PlayerLeaderboard() {
     });
 
     return result;
-  }, [stats, searchQuery, selectedTeamFilter, selectedPositionFilter, sortKey, sortOrder, getTeam]);
+  }, [stats, searchQuery, selectedTeamFilter, selectedPositionFilter, activeHonorsCategory, sortKey, sortOrder, getTeam]);
 
   // Open modal to add new stat
   const handleOpenAddModal = () => {
@@ -446,11 +662,21 @@ export function PlayerLeaderboard() {
           </p>
         </div>
 
-        {canManageStats && (
-          <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => runAutoCalculation(true)}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 hover:brightness-110 active:scale-95 text-black font-black text-xs uppercase tracking-wider transition shadow-lg cursor-pointer"
+            title="Automatically parse all match records, goal logs, lineups, and clean sheets"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            <span>🔄 Auto-Calculate from Match Records</span>
+          </button>
+
+          {canManageStats && (
             <button
               onClick={handleOpenAddModal}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-[#00f0ff] via-emerald-400 to-[#00ff85] text-black font-black text-xs hover:shadow-lg hover:shadow-cyan-500/25 transition transform active:scale-95"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-[#00f0ff] via-emerald-400 to-[#00ff85] text-black font-black text-xs hover:shadow-lg hover:shadow-cyan-500/25 transition transform active:scale-95"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -462,9 +688,26 @@ export function PlayerLeaderboard() {
               </svg>
               <span>+ Record Player Stat</span>
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
+
+      {/* Sync Feedback Toast */}
+      {syncFeedback && (
+        <div className="p-4 bg-emerald-500/15 border-2 border-emerald-400/50 rounded-2xl text-emerald-300 text-xs font-bold flex items-center justify-between shadow-xl animate-in fade-in">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span>{syncFeedback}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSyncFeedback(null)}
+            className="text-gray-400 hover:text-white text-xs font-mono px-2"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* Top Performer Podium Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -619,6 +862,84 @@ export function PlayerLeaderboard() {
         </div>
       </div>
 
+      {/* CATEGORY HONOR TABS */}
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={() => {
+            setActiveHonorsCategory("ALL");
+            setSortKey("goals");
+          }}
+          className={`px-4 py-2 rounded-2xl text-xs font-black uppercase transition ${
+            activeHonorsCategory === "ALL"
+              ? "bg-white text-black shadow-lg"
+              : "bg-[#141029] text-gray-400 hover:text-white border border-[#2e2554]"
+          }`}
+        >
+          All Players ({stats.length})
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setActiveHonorsCategory("GOALS");
+            setSortKey("goals");
+            setSortOrder("desc");
+          }}
+          className={`px-4 py-2 rounded-2xl text-xs font-black uppercase transition flex items-center gap-1.5 ${
+            activeHonorsCategory === "GOALS"
+              ? "bg-amber-400 text-black shadow-lg"
+              : "bg-[#141029] text-amber-300 hover:text-white border border-amber-400/30"
+          }`}
+        >
+          ⚽ Golden Boot (Goals)
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setActiveHonorsCategory("ASSISTS");
+            setSortKey("assists");
+            setSortOrder("desc");
+          }}
+          className={`px-4 py-2 rounded-2xl text-xs font-black uppercase transition flex items-center gap-1.5 ${
+            activeHonorsCategory === "ASSISTS"
+              ? "bg-[#00f0ff] text-black shadow-lg"
+              : "bg-[#141029] text-[#00f0ff] hover:text-white border border-[#00f0ff]/30"
+          }`}
+        >
+          🎯 Assist Kings (Playmakers)
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setActiveHonorsCategory("CLEAN_SHEETS");
+            setSortKey("cleanSheets");
+            setSortOrder("desc");
+          }}
+          className={`px-4 py-2 rounded-2xl text-xs font-black uppercase transition flex items-center gap-1.5 ${
+            activeHonorsCategory === "CLEAN_SHEETS"
+              ? "bg-emerald-400 text-black shadow-lg"
+              : "bg-[#141029] text-emerald-300 hover:text-white border border-emerald-400/30"
+          }`}
+        >
+          🧤 Golden Glove (Clean Sheets)
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setActiveHonorsCategory("MVP");
+            setSortKey("mvpAccolades");
+            setSortOrder("desc");
+          }}
+          className={`px-4 py-2 rounded-2xl text-xs font-black uppercase transition flex items-center gap-1.5 ${
+            activeHonorsCategory === "MVP"
+              ? "bg-purple-400 text-black shadow-lg"
+              : "bg-[#141029] text-purple-300 hover:text-white border border-purple-400/30"
+          }`}
+        >
+          ⭐ MVP Leaders & Ratings
+        </button>
+      </div>
+
       {/* SORTABLE TABLE LAYOUT */}
       <div className="bg-[#0e0a26]/90 border border-[#2e2554] rounded-3xl overflow-hidden shadow-2xl">
         <div className="overflow-x-auto">
@@ -675,6 +996,18 @@ export function PlayerLeaderboard() {
                   🧤 Clean {getSortIcon("cleanSheets")}
                 </th>
                 <th
+                  className="py-4 px-3 text-center cursor-pointer hover:text-purple-300"
+                  onClick={() => handleSort("mvpAccolades")}
+                >
+                  ⭐ MVP {getSortIcon("mvpAccolades")}
+                </th>
+                <th
+                  className="py-4 px-3 text-center cursor-pointer hover:text-cyan-300"
+                  onClick={() => handleSort("rating")}
+                >
+                  Rating {getSortIcon("rating")}
+                </th>
+                <th
                   className="py-4 px-3 text-center cursor-pointer hover:text-amber-300"
                   onClick={() => handleSort("yellowCards")}
                 >
@@ -690,11 +1023,12 @@ export function PlayerLeaderboard() {
                   className="py-4 px-4 text-right cursor-pointer hover:text-purple-300"
                   onClick={() => handleSort("performance")}
                 >
-                  Rating {getSortIcon("performance")}
+                  Index {getSortIcon("performance")}
                 </th>
                 {canManageStats && <th className="py-4 px-4 text-center">Actions</th>}
               </tr>
             </thead>
+
 
             {/* Table Body */}
             <tbody className="divide-y divide-[#2e2554]/40 font-semibold text-gray-200">
@@ -781,6 +1115,22 @@ export function PlayerLeaderboard() {
                     {/* Clean Sheets */}
                     <td className="py-3 px-3 text-center font-mono text-emerald-300">
                       {player.cleanSheets ?? 0}
+                    </td>
+
+                    {/* MVP Accolades */}
+                    <td className="py-3 px-3 text-center font-mono font-bold text-xs">
+                      {(player.mvpAccolades || 0) > 0 ? (
+                        <span className="px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                          {player.mvpAccolades} ⭐
+                        </span>
+                      ) : (
+                        <span className="text-gray-600">-</span>
+                      )}
+                    </td>
+
+                    {/* Rating */}
+                    <td className="py-3 px-3 text-center font-mono font-bold text-xs text-cyan-300">
+                      {(player.rating ?? 7.0).toFixed(1)}
                     </td>
 
                     {/* Yellow Cards */}
@@ -1024,9 +1374,42 @@ export function PlayerLeaderboard() {
                     className="w-full bg-[#141029] border border-[#2e2554] rounded-xl px-3 py-2 text-white font-mono text-center"
                   />
                 </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-gray-400 font-bold uppercase mb-1">
+                    Match Rating (⭐ 1.0 - 10.0)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    min="1"
+                    max="10"
+                    value={editingStat.rating ?? 7.0}
+                    onChange={(e) =>
+                      setEditingStat({ ...editingStat, rating: parseFloat(e.target.value) || 7.0 })
+                    }
+                    className="w-full bg-[#141029] border border-[#2e2554] rounded-xl px-3 py-2 text-white font-mono text-center font-bold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-gray-400 font-bold uppercase mb-1">
+                    MVP Accolades Count (⭐)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={editingStat.mvpAccolades ?? 0}
+                    onChange={(e) =>
+                      setEditingStat({ ...editingStat, mvpAccolades: Number(e.target.value) })
+                    }
+                    className="w-full bg-[#141029] border border-[#2e2554] rounded-xl px-3 py-2 text-white font-mono text-center font-bold"
+                  />
+                </div>
               </div>
 
               <div className="flex justify-end gap-2 pt-3 border-t border-[#2e2554]">
+
                 <button
                   type="button"
                   onClick={() => setOpenModal(false)}

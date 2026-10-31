@@ -165,16 +165,62 @@ export function GoldenBootLeaderboard({ customContenders }: GoldenBootLeaderboar
   const [selectedClub, setSelectedClub] = useState<string>("ALL");
   const [activeTab, setActiveTab] = useState<"race" | "trends" | "efficiency">("race");
   const [highlightedPlayer, setHighlightedPlayer] = useState<string | null>("Wokabi");
+  const [liveContenders, setLiveContenders] = useState<GoldenBootContender[]>(DEFAULT_CONTENDERS);
 
-  const contenders = customContenders || DEFAULT_CONTENDERS;
+  // Sync with live player stats in localStorage
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("mpesa_pes_stats_v6");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const clubMap: Record<number, { name: string; code: string; color: string }> = {
+            1: { name: "Samba", code: "SAM", color: "#00ff85" },
+            6: { name: "Royal Rangers", code: "RR", color: "#3b82f6" },
+            7: { name: "Young Stars City", code: "YSC", color: "#f97316" },
+            8: { name: "Mzinga Boyz", code: "MZB", color: "#eab308" },
+          };
+          const mapped: GoldenBootContender[] = parsed
+            .filter((p: any) => p.position === "FWD" || p.position === "MID" || (p.goals || 0) > 0)
+            .map((p: any, idx: number) => {
+              const club = clubMap[p.teamId] || { name: "Club", code: "CLB", color: "#00f0ff" };
+              return {
+                id: p.id || idx + 1,
+                name: p.name,
+                clubName: club.name,
+                clubShortCode: club.code,
+                clubColor: club.color,
+                position: p.position === "FWD" ? "Forward" : "Midfielder",
+                matchesPlayed: p.matches || 0,
+                goals: p.goals || 0,
+                assists: p.assists || 0,
+                shotsOnTarget: Math.round((p.goals || 0) * 1.8),
+                penalties: 0,
+                openPlayGoals: p.goals || 0,
+                photoUrl: p.photoUrl,
+                matchweekGoals: [0, p.goals || 0],
+              };
+            });
+          if (mapped.length > 0) {
+            setLiveContenders(mapped);
+          }
+        }
+      }
+    } catch {
+      // fallback
+    }
+  }, []);
+
+  const contenders = customContenders || liveContenders;
 
   const filteredContenders = useMemo(() => {
-    return contenders
+    return [...contenders]
       .filter((c) => selectedClub === "ALL" || c.clubShortCode === selectedClub)
       .sort(
         (a, b) => b.goals - a.goals || b.assists - a.assists || a.matchesPlayed - b.matchesPlayed,
       );
   }, [contenders, selectedClub]);
+
 
   const leader = contenders[0];
   const clubs = Array.from(new Set(contenders.map((c) => c.clubShortCode)));

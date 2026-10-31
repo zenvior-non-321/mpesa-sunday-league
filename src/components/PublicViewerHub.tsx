@@ -463,7 +463,7 @@ export function PublicViewerHub({
         type: "WHISTLE",
         team: "HOME",
         player: "Full Time Whistle",
-        detail: "Final sportsmanship handshake & joint prayer",
+        detail: "Final sportsmanship handshake & captain post-match debrief",
       },
     ];
   }, []);
@@ -573,20 +573,19 @@ export function PublicViewerHub({
               </h2>
 
               <p className="text-xs sm:text-sm text-gray-300 leading-relaxed max-w-2xl">
-                Experience high-octane youth football powered by faith and fair play. Watch the
+                Experience high-octane youth football powered by skill, teamwork, and fair play. Watch the
                 league's top offenses clash at the Academy Arena this Sunday at 3:00 PM EAT.
               </p>
 
-              {/* Devotional Quote of the Week Card */}
+              {/* Sporting Code of the Week Card */}
               <div className="p-3.5 bg-black/40 border border-yellow-400/30 rounded-2xl flex items-start gap-3 backdrop-blur-md max-w-xl">
                 <Heart className="w-4 h-4 text-yellow-400 shrink-0 mt-0.5" />
                 <div className="text-xs">
                   <span className="font-black text-yellow-300 uppercase block text-[10px]">
-                    Weekly Spiritual Devotional Scripture:
+                    Weekly League Sporting Code & Fair Play Standard:
                   </span>
-                  <p className="text-gray-200 font-serif italic mt-0.5">
-                    "Do you not know that in a race all the runners run, but only one gets the
-                    prize? Run in such a way as to get the prize." — 1 Corinthians 9:24
+                  <p className="text-gray-200 font-sans italic mt-0.5">
+                    "Play with honor, integrity, and relentless determination. Respect opponents, coaches, and quad-crew officials on and off the pitch." — M-Pesa League Sporting Charter
                   </p>
                 </div>
               </div>
@@ -926,11 +925,10 @@ export function PublicViewerHub({
 
           <div className="p-3 bg-[#141029] rounded-2xl border border-[#2e2554] flex flex-wrap items-center justify-between text-xs text-gray-400 gap-2">
             <span className="font-mono text-[11px]">
-              ⭐ BP = Spiritual & Christian Conduct Bonus Points (+1 Scripture Attendance, +1 Fair
-              Play Zero Red Card bonus)
+              ⭐ BP = Fair Play & Disciplinary Bonus Points (+1 Technical Area Conduct, +1 Zero Red Card bonus)
             </span>
             <span className="text-[11px] font-bold text-emerald-400">
-              Top 2 Qualify for Diocesan Championship Cup
+              Top 2 Qualify for Academy Championship Cup
             </span>
           </div>
         </div>
@@ -1077,10 +1075,10 @@ export function PublicViewerHub({
             <div>
               <h3 className="font-header text-lg font-black text-white uppercase flex items-center gap-2">
                 <Shield className="w-5 h-5 text-emerald-400" />
-                Youth Ministry Football Clubs Directory
+                Official Academy Football Clubs Directory
               </h3>
               <p className="text-xs text-gray-400 mt-0.5">
-                Registered community & parish clubs. Click on any club to view its dedicated squad
+                Registered academy football clubs. Click on any club to view its dedicated 15-player squad
                 roster, coach, and recent form guide.
               </p>
             </div>
@@ -1375,15 +1373,15 @@ export function PublicViewerHub({
               <div>
                 <h3 className="font-header text-lg font-black text-white uppercase flex items-center gap-2">
                   <Star className="w-5 h-5 text-yellow-400" />
-                  Christian Sportsmanship & Fair Play Award Table
+                  School Sportsmanship & Fair Play Award Table
                 </h3>
                 <p className="text-xs text-gray-400 mt-0.5">
-                  Ranked by fewest disciplinary card points, scripture memory verse attendance, and
+                  Ranked by fewest disciplinary card points, technical area conduct, and
                   referee respect scores.
                 </p>
               </div>
               <span className="text-[10px] px-3 py-1 rounded-full bg-yellow-400/20 text-yellow-300 font-bold uppercase border border-yellow-400/30">
-                Official Diocesan Trophy Criteria
+                Official Fair Play Trophy Criteria
               </span>
             </div>
 
@@ -1396,7 +1394,7 @@ export function PublicViewerHub({
                     <th className="py-2.5 px-2 text-center">Yellows</th>
                     <th className="py-2.5 px-2 text-center">Reds</th>
                     <th className="py-2.5 px-2 text-center">Card Pts</th>
-                    <th className="py-2.5 px-2 text-center">Scripture Verses</th>
+                    <th className="py-2.5 px-2 text-center">Conduct Rating</th>
                     <th className="py-2.5 px-3 text-right">Fair Play Rating</th>
                   </tr>
                 </thead>
@@ -1469,7 +1467,7 @@ export function PublicViewerHub({
           <div className="bg-[#0b0821] border border-[#2e2554] rounded-3xl p-5 space-y-4 shadow-xl">
             <div className="border-b border-[#2e2554] pb-3">
               <span className="text-[10px] text-cyan-400 uppercase font-black tracking-wider block">
-                For Churches & Youth Ministries
+                For Student Clubs & Academy Teams
               </span>
               <h4 className="font-header text-base font-black text-white uppercase mt-0.5 flex items-center gap-2">
                 <Shield className="w-4 h-4 text-cyan-400" />
@@ -1485,7 +1483,7 @@ export function PublicViewerHub({
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Bethany Warriors FC"
+                  placeholder="e.g. Serengeti Lions FC"
                   value={clubAppForm.clubName}
                   onChange={(e) => setClubAppForm({ ...clubAppForm, clubName: e.target.value })}
                   className="w-full bg-[#141029] border border-[#2e2554] focus:border-cyan-400 rounded-xl px-3 py-2 text-xs text-white outline-none"
@@ -1494,12 +1492,12 @@ export function PublicViewerHub({
 
               <div>
                 <label className="block text-gray-400 font-bold uppercase text-[10px] mb-1">
-                  Church / Parish Ministry
+                  Academy House / Class Affiliation
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. St. James Parish"
+                  placeholder="e.g. Serengeti House / Grade 11"
                   value={clubAppForm.parishName}
                   onChange={(e) => setClubAppForm({ ...clubAppForm, parishName: e.target.value })}
                   className="w-full bg-[#141029] border border-[#2e2554] focus:border-cyan-400 rounded-xl px-3 py-2 text-xs text-white outline-none"
@@ -1542,7 +1540,7 @@ export function PublicViewerHub({
                 <input
                   type="email"
                   required
-                  placeholder="club@church.org"
+                  placeholder="club@mpesafoundationacademy.ac.ke"
                   value={clubAppForm.contactEmail}
                   onChange={(e) => setClubAppForm({ ...clubAppForm, contactEmail: e.target.value })}
                   className="w-full bg-[#141029] border border-[#2e2554] rounded-xl px-3 py-2 text-xs text-white outline-none"
@@ -1834,18 +1832,18 @@ export function PublicViewerHub({
             <div className="p-4 bg-amber-950/20 border border-amber-500/30 rounded-2xl space-y-2">
               <span className="text-xs font-black text-amber-300 uppercase flex items-center gap-1.5">
                 <Heart className="w-4 h-4 text-amber-400" />
-                Spiritual & Fair Play Match Report
+                Fair Play & Conduct Match Report
               </span>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-gray-300">
                 <div className="p-2.5 bg-black/40 rounded-xl border border-white/5 space-y-1">
                   <span className="text-[10px] text-gray-400 uppercase font-bold block">
-                    Scripture Memory Verification
+                    Pre-Match Sporting Handshake & Roster Verification
                   </span>
                   <p className="font-mono text-emerald-400 font-bold">
-                    100% Completion (Both Squads)
+                    100% Certified (Both Squads)
                   </p>
-                  <span className="text-[10px] text-gray-400 block font-serif italic">
-                    Recited Philippians 4:13 pre-kickoff.
+                  <span className="text-[10px] text-gray-400 block font-mono">
+                    Confirmed 15-player cap & zero conduct violations pre-kickoff.
                   </span>
                 </div>
                 <div className="p-2.5 bg-black/40 rounded-xl border border-white/5 space-y-1">
@@ -2192,8 +2190,8 @@ export function PublicViewerHub({
                     ARTICLE III: AFFILIATION & MEMBERSHIP
                   </p>
                   <p>
-                    All participating football clubs must maintain official youth parish
-                    accreditation, a certified 15-player squad list, and adhere to Christian conduct
+                    All participating football clubs must maintain official academy
+                    accreditation, a certified 15-player squad list, and adhere to fair play sportsmanship
                     principles.
                   </p>
                 </>
@@ -2213,17 +2211,17 @@ export function PublicViewerHub({
                   <p className="font-bold text-white uppercase">SECTION 3: POINTS & TIEBREAKERS</p>
                   <p>
                     3 points for a win, 1 point for a draw, 0 points for a loss. Additional bonus
-                    points (+1) are awarded for scripture recitation and fair play conduct.
+                    points (+1) are awarded for technical area discipline and zero disciplinary cards.
                   </p>
                 </>
               )}
               {activeDocModal === "fairplay" && (
                 <>
                   <p className="font-bold text-white uppercase">
-                    PREAMBLE: CHRISTIAN SPORTSMANSHIP
+                    PREAMBLE: SCHOOL SPORTSMANSHIP & INTEGRITY
                   </p>
                   <p>
-                    "Let your gentleness be evident to all. The Lord is near." — Philippians 4:5
+                    "Play fair, compete fiercely, and uphold the highest standards of athletic integrity and school pride." — M-Pesa League Sporting Charter
                   </p>
                   <p className="font-bold text-white uppercase">CONDUCT POINT SYSTEM</p>
                   <p>
@@ -2231,11 +2229,11 @@ export function PublicViewerHub({
                     point.
                   </p>
                   <p>
-                    2. Pre-match scripture recitation and joint prayer award +1 Spiritual Conduct
+                    2. Pre-match sporting handshake and respectful technical area conduct award +1 Sporting Conduct
                     bonus point to the official league ledger.
                   </p>
                   <p>
-                    3. Dissent toward match officials results in disciplinary review by the Supreme
+                    3. Dissent toward quad-crew match officials results in disciplinary review by the Supreme
                     Council.
                   </p>
                 </>

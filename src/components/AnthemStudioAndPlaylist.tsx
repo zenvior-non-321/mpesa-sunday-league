@@ -310,7 +310,7 @@ export function AnthemStudioAndPlaylist() {
           </h2>
 
           <p className="text-xs sm:text-sm text-gray-300 leading-relaxed max-w-2xl">
-            Upload custom YouTube anthems, curate church worship chants, and configure automated
+            Upload custom YouTube anthems, curate stadium matchday hype chants, and configure automated
             continuous web playback that plays stadium sound uninterrupted as fans navigate the
             league portal.
           </p>

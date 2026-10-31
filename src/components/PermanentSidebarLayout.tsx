@@ -1034,7 +1034,7 @@ export function PermanentSidebarLayout({ children }: PermanentSidebarLayoutProps
               className="w-full bg-[#141029] hover:bg-[#1f1744] border border-amber-400/30 text-amber-300 hover:text-white py-2.5 rounded-2xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow"
             >
               <KeyRound className="w-3.5 h-3.5 text-amber-400" />
-              <span>Council & Academy Login</span>
+              <span>Council Access Code Login</span>
             </button>
           ) : (
             <div className="space-y-2">

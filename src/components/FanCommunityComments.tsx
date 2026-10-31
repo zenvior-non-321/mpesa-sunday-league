@@ -281,7 +281,7 @@ export function FanCommunityComments() {
                   >
                     <option value="ALL">All Categories</option>
                     <option value="CHEER">⚽ Match Cheers</option>
-                    <option value="PRAYER">🙏 Prayer & Faith</option>
+                    <option value="TACTICAL">📋 Tactical Notes</option>
                     <option value="SPORTSMANSHIP">🤝 Fair Play</option>
                   </select>
                 </div>
@@ -332,7 +332,7 @@ export function FanCommunityComments() {
                         <div className="flex items-center gap-1.5 shrink-0">
                           <span
                             className={`text-[9px] px-2 py-0.5 rounded-full font-bold uppercase border ${
-                              comment.category === "PRAYER"
+                              comment.category === "TACTICAL"
                                 ? "bg-purple-500/20 text-purple-300 border-purple-500/30"
                                 : comment.category === "SPORTSMANSHIP"
                                   ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
@@ -424,7 +424,7 @@ export function FanCommunityComments() {
               <div className="pt-4 border-t border-[#2e2554]/60 text-[11px] text-gray-400 flex items-center justify-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                 <span>
-                  You can still submit prayers and cheers on the left; they will be delivered
+                  You can still submit comments and cheers on the left; they will be delivered
                   privately to admins.
                 </span>
               </div>

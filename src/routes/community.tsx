@@ -4,11 +4,11 @@ import { FanCommunityComments } from "../components/FanCommunityComments";
 export const Route = createFileRoute("/community")({
   head: () => ({
     meta: [
-      { title: "Fan Cheers & Community Prayer Wall | M-Pesa Sunday League" },
+      { title: "Fan Cheers & Stadium Community Wall | M-Pesa Sunday League" },
       {
         name: "description",
         content:
-          "Official fan community board: cheer on your church football team, share words of encouragement, and celebrate Christian sportsmanship in the M-Pesa Sunday League.",
+          "Official fan community board: cheer on your academy football team, share match predictions, and celebrate school sportsmanship in the M-Pesa Sunday League.",
       },
     ],
   }),

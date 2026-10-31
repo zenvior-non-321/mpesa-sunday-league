@@ -34,13 +34,20 @@ export function UnifiedAccessModal({ isOpen, onClose, onSuccess }: UnifiedAccess
     const cleaned = accessCredential.trim();
 
     if (!cleaned) {
-      setError("Please enter your academy email or authorized access code.");
+      setError("Please enter your assigned confidential Access Code.");
+      return;
+    }
+
+    if (cleaned.includes("@")) {
+      setError(
+        "Council login is strictly via confidential Access Code only. Email is not required or accepted here (email is exclusively reserved for Student MVP Voting).",
+      );
       return;
     }
 
     setIsSubmitting(true);
 
-    // Authenticate via RBAC System (checks whitelist for admin, board, or public roles)
+    // Authenticate via RBAC System using access code
     const result = authenticateWithRbac(cleaned);
 
     if (result.success && result.user) {
@@ -64,7 +71,7 @@ export function UnifiedAccessModal({ isOpen, onClose, onSuccess }: UnifiedAccess
     setIsSubmitting(false);
     setError(
       result.error ||
-        "Invalid credentials. Please verify your academy email or confidential access code.",
+        "Invalid access code. Please verify your confidential Council or Admin access credential.",
     );
   };
 
@@ -86,7 +93,7 @@ export function UnifiedAccessModal({ isOpen, onClose, onSuccess }: UnifiedAccess
           <div>
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30">
-                Official Access Portal • RBAC
+                Council & Admin Gateway • Code Only
               </span>
             </div>
             <h3 className="font-header text-xl font-black text-white uppercase tracking-wide mt-0.5">
@@ -96,20 +103,18 @@ export function UnifiedAccessModal({ isOpen, onClose, onSuccess }: UnifiedAccess
         </div>
 
         <p className="text-xs text-gray-300 leading-relaxed">
-          Sign in with your verified M-Pesa Foundation Academy email from the 344-member roster or
-          your confidential Council access code. The RBAC system automatically unlocks your assigned
-          role:
-          <strong> Super Admin</strong>, <strong>Council Board Member</strong>, or{" "}
-          <strong>Verified Public Spectator</strong>.
+          Sign in exclusively with your confidential <strong>Council Access Code</strong> or{" "}
+          <strong>Super Admin Passcode</strong>. No email is required for Council or Admin access
+          (student email verification is strictly reserved for MVP Voting).
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-gray-400 font-bold uppercase text-[10px] mb-1.5 flex items-center justify-between">
-              <span>Academy Email or Access Code</span>
+              <span>Confidential Access Code</span>
               <span className="text-[10px] text-gray-400 font-mono flex items-center gap-1">
                 <Lock className="w-3 h-3 text-emerald-400" />
-                Encrypted RBAC Check
+                Code-Only RBAC Gate
               </span>
             </label>
             <div className="relative">
@@ -121,7 +126,7 @@ export function UnifiedAccessModal({ isOpen, onClose, onSuccess }: UnifiedAccess
                   setAccessCredential(e.target.value);
                   if (error) setError(null);
                 }}
-                placeholder="name@mpesafoundationacademy.ac.ke or Access Code"
+                placeholder="Enter Code (e.g. msl-27 or PRES-8491)"
                 className="w-full bg-[#161033] border border-[#3b2d6e] focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 rounded-2xl px-4 py-3 text-sm font-mono text-white outline-none pr-12 transition"
               />
               <button

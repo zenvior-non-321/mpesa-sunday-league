@@ -23,6 +23,7 @@ import {
 import { useRoleAccess } from "../hooks/useRoleAccess";
 import type { MatchFixture, Team } from "./Fixtures";
 import { DEFAULT_FIXTURES, DEFAULT_TEAMS } from "../lib/fixturesData";
+import { OFFICIAL_CLUBS_DATA } from "../lib/teamSquadsData";
 import {
   isRegisteredSchoolEmail,
   generateVerificationCode,
@@ -214,35 +215,37 @@ export function MatchMvpVoting({ initialMatchId, onClose }: MatchMvpVotingProps)
     [teams, currentMatch.awayId],
   );
 
-  // Extract squad candidates from both teams
+  // Extract all registered squad candidates (starters and subs) from both playing clubs
   const matchCandidates = useMemo(() => {
-    const homeSquad = (
-      homeTeam as unknown as {
-        squad?: { name: string; position?: string; number?: number; photoUrl?: string }[];
-      }
-    ).squad || [
-      { name: "Haron", position: "DEF", number: 4 },
-      { name: "Jaycrack", position: "MID", number: 10 },
-      { name: "Wokabi", position: "FWD", number: 9 },
-      { name: "Brian", position: "GK", number: 1 },
-    ];
+    const homeClub = OFFICIAL_CLUBS_DATA.find((c) => c.id === currentMatch.homeId);
+    const awayClub = OFFICIAL_CLUBS_DATA.find((c) => c.id === currentMatch.awayId);
 
-    const awaySquad = (
-      awayTeam as unknown as {
-        squad?: { name: string; position?: string; number?: number; photoUrl?: string }[];
-      }
-    ).squad || [
-      { name: "Elly Adams Otieno", position: "FWD", number: 10 },
-      { name: "Raila Junior", position: "FWD", number: 7 },
-      { name: "Ibrahim Salat", position: "MID", number: 8 },
-      { name: "Hassan Siad", position: "DEF", number: 2 },
-    ];
+    const homeSquad = homeClub?.squad ||
+      (homeTeam as unknown as { squad?: { name: string; position?: string; number?: number; photoUrl?: string }[] })?.squad || [];
+
+    const awaySquad = awayClub?.squad ||
+      (awayTeam as unknown as { squad?: { name: string; position?: string; number?: number; photoUrl?: string }[] })?.squad || [];
 
     return [
-      ...homeSquad.map((p) => ({ ...p, teamName: homeTeam.name, teamColor: homeTeam.color })),
-      ...awaySquad.map((p) => ({ ...p, teamName: awayTeam.name, teamColor: awayTeam.color })),
+      ...homeSquad.map((p) => ({
+        name: p.name,
+        position: p.position,
+        number: p.number,
+        photoUrl: p.photoUrl,
+        teamName: homeTeam.name,
+        teamColor: homeTeam.color,
+      })),
+      ...awaySquad.map((p) => ({
+        name: p.name,
+        position: p.position,
+        number: p.number,
+        photoUrl: p.photoUrl,
+        teamName: awayTeam.name,
+        teamColor: awayTeam.color,
+      })),
     ];
-  }, [homeTeam, awayTeam]);
+  }, [homeTeam, awayTeam, currentMatch.homeId, currentMatch.awayId]);
+
 
   // Current match poll data
   const currentPoll: MvpVoteRecord = useMemo(() => {
@@ -363,9 +366,19 @@ export function MatchMvpVoting({ initialMatchId, onClose }: MatchMvpVotingProps)
     }
   };
 
+  const isCurrentMatchFinished = useMemo(() => {
+    const st = (currentMatch?.status || "").toUpperCase();
+    return st === "COMPLETED" || st === "FINISHED";
+  }, [currentMatch?.status]);
+
   // Step 3: Handle member casting a vote
   const handleCastVote = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isCurrentMatchFinished) {
+      showToast("⚠️ MVP Balloting is strictly reserved for matches that have finished and been certified.");
+      return;
+    }
+
     if (!currentPoll.isOpen) {
       showToast("⚠️ MVP Voting for this match is currently closed.");
       return;
@@ -572,9 +585,12 @@ export function MatchMvpVoting({ initialMatchId, onClose }: MatchMvpVotingProps)
               {matches.map((m) => {
                 const h = teams.find((t) => t.id === m.homeId)?.shortCode || `C${m.homeId}`;
                 const a = teams.find((t) => t.id === m.awayId)?.shortCode || `C${m.awayId}`;
+                const isFinished =
+                  (m.status || "").toUpperCase() === "COMPLETED" ||
+                  (m.status || "").toUpperCase() === "FINISHED";
                 return (
                   <option key={m.id} value={m.id} className="bg-[#141029] text-white">
-                    MW {m.matchweek}: {h} vs {a} ({m.status})
+                    MW {m.matchweek}: {h} vs {a} ({isFinished ? "✅ Finished" : "⏳ " + (m.status || "Scheduled")})
                   </option>
                 );
               })}
@@ -706,7 +722,23 @@ export function MatchMvpVoting({ initialMatchId, onClose }: MatchMvpVotingProps)
             </span>
           </div>
 
-          {currentPoll.isOpen ? (
+          {!isCurrentMatchFinished ? (
+            <div className="p-6 rounded-2xl bg-gradient-to-r from-amber-950/40 via-[#1a1236] to-[#0c0922] border-2 border-amber-400/40 text-center space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-amber-400/20 text-amber-300 mx-auto flex items-center justify-center border border-amber-400/30 shadow-lg">
+                <Lock className="w-6 h-6" />
+              </div>
+              <h4 className="text-sm font-black uppercase text-amber-300 tracking-wide">
+                MVP Balloting Opens When Match Finishes
+              </h4>
+              <p className="text-xs text-gray-300 leading-relaxed max-w-md mx-auto">
+                Matchweek {currentMatch.matchweek} ({homeTeam.name} vs {awayTeam.name}) is currently{" "}
+                <span className="font-mono font-bold text-amber-300 px-1.5 py-0.5 rounded bg-black/40 border border-amber-400/30 uppercase">
+                  {currentMatch.status || "SCHEDULED"}
+                </span>
+                . In accordance with league governance, MVP voting is strictly enabled only for completed matches once certified by match officials.
+              </p>
+            </div>
+          ) : currentPoll.isOpen ? (
             <form onSubmit={handleCastVote} className="space-y-4">
               {/* Voter Identification */}
               <div className="space-y-3">

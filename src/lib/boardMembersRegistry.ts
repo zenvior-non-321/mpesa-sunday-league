@@ -25,6 +25,7 @@ export const ROLE_DEPARTMENT_MAP: Record<Exclude<LeagueRole, "SUPER_ADMIN" | "GU
 };
 
 export const INITIAL_DEFAULT_BOARD_MEMBERS: RegisteredBoardMember[] = [
+
   {
     id: "bm-1",
     name: "Alex Haro",
@@ -165,10 +166,47 @@ export function deleteBoardMember(id: string): RegisteredBoardMember[] {
   return updated;
 }
 
+const BOARD_LOCKS_STORAGE_KEY = "mpesa_board_access_locks_v2";
+
+export function getBoardAccessLocks(): Record<string, boolean> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = localStorage.getItem(BOARD_LOCKS_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+export function isBoardRoleLocked(role: string): boolean {
+  if (!role) return false;
+  const locks = getBoardAccessLocks();
+  return !!locks[role];
+}
+
+export function setBoardRoleLock(role: string, locked: boolean): Record<string, boolean> {
+  const locks = getBoardAccessLocks();
+  locks[role] = locked;
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem(BOARD_LOCKS_STORAGE_KEY, JSON.stringify(locks));
+      window.dispatchEvent(new CustomEvent("mpesa_board_locks_changed", { detail: locks }));
+    } catch {
+      // Ignore
+    }
+  }
+  return locks;
+}
+
 export function authenticateBoardMember(code: string): RegisteredBoardMember | null {
   const cleaned = code.trim().toUpperCase();
   if (!cleaned) return null;
   const current = getRegisteredBoardMembers();
-  const matched = current.find((m) => m.active && m.accessCode.trim().toUpperCase() === cleaned);
-  return matched || null;
+  const matched = current.find((m) => m.accessCode.trim().toUpperCase() === cleaned);
+  if (!matched) return null;
+  // If role is locked or member deactivated, deny authentication
+  if (!matched.active || isBoardRoleLocked(matched.role)) {
+    return null;
+  }
+  return matched;
 }

@@ -14,6 +14,10 @@ import {
   Search,
   X,
   Check,
+  Lock,
+  Unlock,
+  ShieldAlert,
+  ShieldCheck,
 } from "lucide-react";
 import {
   getRegisteredBoardMembers,
@@ -21,6 +25,9 @@ import {
   updateBoardMember,
   deleteBoardMember,
   ROLE_DEPARTMENT_MAP,
+  getBoardAccessLocks,
+  setBoardRoleLock,
+  isBoardRoleLocked,
   type RegisteredBoardMember,
 } from "../lib/boardMembersRegistry";
 import type { LeagueRole } from "../hooks/useRoleAccess";
@@ -30,6 +37,7 @@ export function BoardMemberManager() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [roleLocks, setRoleLocks] = useState<Record<string, boolean>>({});
 
   // New member form state
   const [newName, setNewName] = useState("");
@@ -53,7 +61,25 @@ export function BoardMemberManager() {
 
   useEffect(() => {
     setMembers(getRegisteredBoardMembers());
+    setRoleLocks(getBoardAccessLocks());
+    const handleLocksUpdate = () => {
+      setRoleLocks(getBoardAccessLocks());
+    };
+    window.addEventListener("mpesa_board_locks_changed", handleLocksUpdate);
+    return () => window.removeEventListener("mpesa_board_locks_changed", handleLocksUpdate);
   }, []);
+
+  const handleToggleRoleLock = (role: string, memberName: string) => {
+    const isCurrentlyLocked = !!roleLocks[role];
+    const nextLocked = !isCurrentlyLocked;
+    const updated = setBoardRoleLock(role, nextLocked);
+    setRoleLocks({ ...updated });
+    showToast(
+      nextLocked
+        ? `🔒 ACCESS LOCKED: ${memberName} (${role.replace(/_/g, " ")}) portal access is now suspended by Super Admin!`
+        : `🔓 ACCESS RESTORED: ${memberName} (${role.replace(/_/g, " ")}) portal access is now authorized and active.`,
+    );
+  };
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -238,12 +264,11 @@ export function BoardMemberManager() {
           <div className="flex items-center gap-2.5">
             <KeyRound className="w-5 h-5 text-amber-400" />
             <h4 className="font-header text-base sm:text-lg font-black text-white uppercase tracking-wide">
-              Council Board Member Registry & Credentials
+              Council Board Member Registry & Security Credentials
             </h4>
           </div>
           <p className="text-xs text-gray-400 mt-0.5">
-            Register new council members, edit current members, configure access codes, or revoke
-            credentials.
+            Super Admin command desk: register council members, issue access codes, and lock or suspend individual board member access in real time.
           </p>
         </div>
 
@@ -256,6 +281,84 @@ export function BoardMemberManager() {
             <UserPlus className="w-4 h-4" />
             <span>Register Board Member</span>
           </button>
+        </div>
+      </div>
+
+      {/* Board Member Access Lock & Security Control Panel */}
+      <div className="bg-gradient-to-r from-[#170e33] via-[#100c28] to-[#1f0b24] border-2 border-amber-400/40 rounded-2xl p-4 sm:p-5 space-y-3.5 shadow-xl">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-2.5">
+          <div className="flex items-center gap-2">
+            <ShieldAlert className="w-5 h-5 text-amber-400" />
+            <div>
+              <h5 className="text-xs sm:text-sm font-black uppercase tracking-wide text-white flex items-center gap-2">
+                <span>Council Board Access Locks & Suspension Desk</span>
+                <span className="text-[9px] px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30">
+                  Super Admin Override
+                </span>
+              </h5>
+              <p className="text-[11px] text-gray-400">
+                Immediately block or restore workspace login access for specific Council board seats.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+          {members.map((m) => {
+            const isLocked = !!roleLocks[m.role] || !m.active;
+            return (
+              <div
+                key={`lock-card-${m.id}`}
+                className={`p-3 rounded-xl border flex flex-col justify-between gap-2 transition ${
+                  isLocked
+                    ? "bg-rose-950/30 border-rose-500/50 text-rose-200"
+                    : "bg-[#0b0821]/80 border-emerald-500/30 text-emerald-200"
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="text-[10px] font-black uppercase truncate text-white">
+                      {m.name}
+                    </span>
+                    <span
+                      className={`text-[8px] font-mono font-bold px-1.5 py-0.2 rounded uppercase ${
+                        isLocked
+                          ? "bg-rose-500/20 text-rose-300 border border-rose-500/40"
+                          : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
+                      }`}
+                    >
+                      {isLocked ? "LOCKED" : "ACTIVE"}
+                    </span>
+                  </div>
+                  <span className="text-[9px] text-gray-400 block truncate">
+                    {m.role.replace(/_/g, " ")}
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleToggleRoleLock(m.role, m.name)}
+                  className={`w-full py-1.5 px-2 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition cursor-pointer shadow ${
+                    isLocked
+                      ? "bg-emerald-500 hover:bg-emerald-400 text-black"
+                      : "bg-rose-600/80 hover:bg-rose-600 text-white"
+                  }`}
+                >
+                  {isLocked ? (
+                    <>
+                      <Unlock className="w-3 h-3 text-black" />
+                      <span>Unlock Access</span>
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="w-3 h-3 text-white" />
+                      <span>Lock Access</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -552,14 +655,15 @@ export function BoardMemberManager() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
         {filteredMembers.map((member) => {
           const isVisible = !!visibleCodes[member.id];
+          const isLocked = !!roleLocks[member.role] || !member.active;
 
           return (
             <div
               key={member.id}
               className={`p-4 rounded-2xl border transition space-y-3 ${
-                member.active
-                  ? "bg-[#141029] border-[#2e2554] hover:border-amber-400/40 shadow-lg"
-                  : "bg-red-950/20 border-red-500/30 opacity-70"
+                isLocked
+                  ? "bg-rose-950/25 border-rose-500/40 shadow-rose-950/20 shadow-lg"
+                  : "bg-[#141029] border-[#2e2554] hover:border-amber-400/40 shadow-lg"
               }`}
             >
               <div className="flex items-start justify-between gap-2">
@@ -571,13 +675,23 @@ export function BoardMemberManager() {
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span
-                    className={`text-[9px] px-2 py-0.5 rounded-full font-bold uppercase ${
-                      member.active
-                        ? "bg-emerald-400/20 text-emerald-300 border border-emerald-400/30"
-                        : "bg-rose-400/20 text-rose-300 border border-rose-400/30"
+                    className={`text-[9px] px-2 py-0.5 rounded-full font-bold uppercase flex items-center gap-1 ${
+                      isLocked
+                        ? "bg-rose-500/20 text-rose-300 border border-rose-500/40"
+                        : "bg-emerald-400/20 text-emerald-300 border border-emerald-400/30"
                     }`}
                   >
-                    {member.active ? "Active" : "Suspended"}
+                    {isLocked ? (
+                      <>
+                        <Lock className="w-2.5 h-2.5 text-rose-400" />
+                        <span>LOCKED</span>
+                      </>
+                    ) : (
+                      <>
+                        <ShieldCheck className="w-2.5 h-2.5 text-emerald-400" />
+                        <span>AUTHORIZED</span>
+                      </>
+                    )}
                   </span>
                 </div>
               </div>
@@ -636,30 +750,39 @@ export function BoardMemberManager() {
                   className="px-2.5 py-1 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 font-bold flex items-center gap-1 text-[11px] transition cursor-pointer"
                 >
                   <Edit3 className="w-3 h-3" />
-                  <span>Edit Member</span>
+                  <span>Edit</span>
                 </button>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
                   <button
                     type="button"
-                    onClick={() => handleToggleStatus(member)}
-                    className={`font-bold transition text-[11px] ${
-                      member.active
-                        ? "text-yellow-400 hover:text-yellow-300"
-                        : "text-emerald-400 hover:text-emerald-300"
+                    onClick={() => handleToggleRoleLock(member.role, member.name)}
+                    className={`px-2.5 py-1 rounded-lg font-bold flex items-center gap-1 text-[11px] transition cursor-pointer ${
+                      isLocked
+                        ? "bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30"
+                        : "bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30"
                     }`}
                   >
-                    {member.active ? "Suspend" : "Activate"}
+                    {isLocked ? (
+                      <>
+                        <Unlock className="w-3 h-3 text-emerald-400" />
+                        <span>Unlock</span>
+                      </>
+                    ) : (
+                      <>
+                        <Lock className="w-3 h-3 text-rose-400" />
+                        <span>Lock</span>
+                      </>
+                    )}
                   </button>
 
                   <button
                     type="button"
                     onClick={() => handleDelete(member)}
-                    className="p-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 font-bold flex items-center gap-1 text-[11px] transition cursor-pointer"
+                    className="p-1.5 rounded-lg bg-white/5 hover:bg-rose-500/30 text-gray-400 hover:text-rose-300 font-bold flex items-center gap-1 text-[11px] transition cursor-pointer"
                     title="Delete Board Member"
                   >
                     <Trash2 className="w-3 h-3" />
-                    <span>Delete</span>
                   </button>
                 </div>
               </div>

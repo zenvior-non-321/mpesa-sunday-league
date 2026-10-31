@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useRoleAccess, ROLE_HIERARCHY_DATA, type LeagueRole } from "../hooks/useRoleAccess";
 import { DEFAULT_TEAMS, DEFAULT_FIXTURES, isTeamDeleted } from "../lib/fixturesData";
+import { OfficialMatchSheetModal } from "./OfficialMatchSheetModal";
 import {
   Crown,
   Shield,
@@ -59,6 +60,7 @@ import {
   type BoardRoleDefinition,
   type BoardRoleFeature,
 } from "../lib/boardRolesCatalog";
+import { isBoardRoleLocked } from "../lib/boardMembersRegistry";
 
 interface AdminSquadPlayer {
   name: string;
@@ -95,6 +97,7 @@ export function BoardWorkspaces() {
 
   // Modal state when a board member tries to access another member's desk
   const [restrictedRoleTarget, setRestrictedRoleTarget] = useState<LeagueRole | null>(null);
+  const [selectedMatchSheetFixture, setSelectedMatchSheetFixture] = useState<any | null>(null);
 
   useEffect(() => {
     if (!isSuperAdmin && currentRole && currentRole !== "GUEST") {
@@ -776,8 +779,41 @@ export function BoardWorkspaces() {
     }
   };
 
+  // Check if role is locked by Super Admin
+  const isCurrentWorkspaceLocked = !isSuperAdmin && isBoardRoleLocked(activeWorkspaceRole);
+
+  if (isCurrentWorkspaceLocked) {
+    return (
+      <div className="bg-[#0b0821] border-2 border-rose-500/50 rounded-3xl p-8 sm:p-12 text-center max-w-2xl mx-auto space-y-4 my-10 shadow-2xl animate-in fade-in">
+        <div className="w-16 h-16 rounded-3xl bg-rose-500/20 text-rose-400 mx-auto flex items-center justify-center border border-rose-500/40 shadow-lg shadow-rose-500/20">
+          <Lock className="w-8 h-8" />
+        </div>
+        <h3 className="text-xl sm:text-2xl font-black text-white uppercase tracking-wider">
+          Workspace Access Locked & Suspended
+        </h3>
+        <p className="text-sm text-rose-200 leading-relaxed">
+          Access to the <strong>{currentMeta.title} ({currentMeta.officialName})</strong> desk has been locked and suspended by Master Super Administrator <strong>Bramuel Osichiro</strong>.
+        </p>
+        <p className="text-xs text-gray-400">
+          All workspace capabilities and administrative privileges for this seat are temporarily withheld until unlocked in the Super Admin command center.
+        </p>
+        <div className="pt-4 border-t border-rose-500/20 flex flex-col sm:flex-row items-center justify-center gap-3">
+          <span className="text-xs text-gray-400 font-mono">
+            Contact Supreme Admin: bramuel.osichiro@mpesafoundationacademy.ac.ke
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  // Modern dashboard theme & view states matching reference design
+  const [dashboardTheme, setDashboardTheme] = useState<"dark" | "light" | "high_contrast" | "soft">(
+    "dark",
+  );
+  const [boardSearchTerm, setBoardSearchTerm] = useState<string>("");
+
   return (
-    <div className="space-y-6">
+    <div className={`space-y-6 ${dashboardTheme === "high_contrast" ? "contrast-125" : ""}`}>
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed top-5 right-5 z-50 bg-[#00f0ff] text-black px-6 py-3 rounded-2xl shadow-2xl font-black flex items-center gap-2 border border-cyan-100 animate-in fade-in slide-in-from-top-2">
@@ -786,47 +822,318 @@ export function BoardWorkspaces() {
         </div>
       )}
 
-      {/* Top Workspace Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#0d0a21]/90 border border-[#2e2554] p-5 sm:p-6 rounded-3xl backdrop-blur-xl shadow-2xl">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-purple-500 via-pink-500 to-[#00f0ff] text-white shadow">
-              Executive Governance Suite
-            </span>
-            <span className="text-xs text-[#00f0ff] font-mono">
-              Tier {currentMeta.tier} • {currentMeta.title}
-            </span>
+      {/* =========================================================================
+          TOP NAVIGATION BAR (Matching User Reference Image)
+          ========================================================================= */}
+      <div className="bg-[#0b0821]/95 border border-[#2e2554] p-3.5 sm:p-4 rounded-3xl backdrop-blur-xl shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-3">
+        {/* Left: Search input */}
+        <div className="relative flex-1 max-w-md">
+          <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            placeholder="Search council motions, clubs, players, rulebook, referee notes..."
+            value={boardSearchTerm}
+            onChange={(e) => setBoardSearchTerm(e.target.value)}
+            className="w-full bg-[#141029] border border-[#2e2554] focus:border-blue-500 rounded-2xl pl-10 pr-12 py-2 text-xs text-white placeholder-gray-500 outline-none"
+          />
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-mono text-gray-500 bg-white/5 px-1.5 py-0.5 rounded border border-white/10">
+            ⌘K
+          </span>
+        </div>
+
+        {/* Center: Theme & Accessibility Pills */}
+        <div className="flex items-center gap-1 bg-[#141029] p-1 rounded-2xl border border-[#2e2554] self-start md:self-auto text-[11px] font-bold">
+          <button
+            type="button"
+            onClick={() => setDashboardTheme("dark")}
+            className={`px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${
+              dashboardTheme === "dark"
+                ? "bg-blue-600 text-white shadow"
+                : "text-gray-400 hover:text-white"
+            }`}
+          >
+            <span>🌙 Dark Mode</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setDashboardTheme("light")}
+            className={`px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${
+              dashboardTheme === "light"
+                ? "bg-white text-black shadow"
+                : "text-gray-400 hover:text-white"
+            }`}
+          >
+            <span>☀️ Light Mode</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setDashboardTheme("high_contrast")}
+            className={`px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${
+              dashboardTheme === "high_contrast"
+                ? "bg-amber-400 text-black shadow"
+                : "text-gray-400 hover:text-white"
+            }`}
+          >
+            <span>⚡ High Contrast</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setDashboardTheme("soft")}
+            className={`px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${
+              dashboardTheme === "soft"
+                ? "bg-emerald-500 text-black shadow"
+                : "text-gray-400 hover:text-white"
+            }`}
+          >
+            <span>👁️ Soft Mode</span>
+          </button>
+        </div>
+
+        {/* Right: Active Profile Badge */}
+        <div className="flex items-center gap-3 self-end md:self-auto">
+          <div className="flex items-center gap-2.5 bg-[#141029] p-1.5 pr-3 rounded-2xl border border-[#2e2554]">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-sm font-black text-white shadow">
+              {currentMeta.officialName.charAt(0)}
+            </div>
+            <div className="text-left text-xs leading-tight">
+              <span className="font-bold text-white block">{currentMeta.officialName}</span>
+              <span className="text-[10px] text-gray-400 font-mono">{currentMeta.title}</span>
+            </div>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-wider mt-1 flex items-center gap-2">
-            {activeWorkspaceRole === "PRESIDENT" && "👑"}
-            {activeWorkspaceRole === "DEPUTY_PRESIDENT" && "🥈"}
-            {activeWorkspaceRole === "REGULATIONS_MANAGER" && "📋"}
-            {activeWorkspaceRole === "MATCH_OFFICIATING_MANAGER" && "⚖️"}
-            {activeWorkspaceRole === "RECORDS_MANAGER" && "📂"}
-            {activeWorkspaceRole === "TECH_MANAGER" && "💻"}
-            {activeWorkspaceRole === "ASST_TECH_MANAGER" && "🛠️"}
-            {currentMeta.title} — {currentMeta.officialName}
+        </div>
+      </div>
+
+      {/* =========================================================================
+          ACTIVE WORKSPACE & ACCESSIBILITY STATUS BANNER (Matching Reference Image)
+          ========================================================================= */}
+      <div className="bg-[#0b0821] border border-blue-500/30 rounded-2xl p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xl">
+        <div className="flex items-center gap-2.5">
+          <span className="p-2 rounded-xl bg-blue-500/20 text-blue-300">
+            <Briefcase className="w-4 h-4" />
+          </span>
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <span className="text-gray-400 uppercase font-black text-[10px] tracking-wider">
+              ACTIVE COUNCIL WORKSPACE
+            </span>
+            <span className="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 font-bold text-[10px]">
+              {currentMeta.department}
+            </span>
+            <span className="text-gray-400">• Goal: 100% Council Integrity</span>
+            <span className="text-emerald-400 font-bold font-mono">+500 Pts Standard</span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <button
+            type="button"
+            onClick={() => showToast(`Synchronized with ${currentMeta.department} live desk!`)}
+            className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+          >
+            <Layers className="w-3.5 h-3.5 text-blue-400" />
+            <span>Workspace</span>
+          </button>
+          <a
+            href="/league-officials.js"
+            target="_blank"
+            rel="noreferrer"
+            className="px-3 py-1.5 rounded-xl bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+          >
+            <BookOpen className="w-3.5 h-3.5" />
+            <span>Rulebook</span>
+          </a>
+        </div>
+      </div>
+
+      {/* =========================================================================
+          VIBRANT HERO WELCOME BANNER (Exact Replica of Reference Design)
+          ========================================================================= */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#e1147e] via-[#6366f1] via-[#06b6d4] to-[#10b981] p-6 sm:p-8 text-white shadow-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="relative z-10 max-w-xl space-y-1">
+          <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-white drop-shadow">
+            Welcome back, {currentMeta.officialName}! 👋
           </h2>
-          <p className="text-xs sm:text-sm text-gray-300">
-            {activeWorkspaceRole === "PRESIDENT" &&
-              "Focus: Executive Leadership, Disciplinary Appeals, Policy Rulings & Governance"}
-            {activeWorkspaceRole === "DEPUTY_PRESIDENT" &&
-              "Focus: Operations Supervision, Departmental Monitoring & Special Projects"}
-            {activeWorkspaceRole === "REGULATIONS_MANAGER" &&
-              "Focus: Player/Club Registrations, Regulatory Compliance, Eligibility & Document Audits"}
-            {activeWorkspaceRole === "MATCH_OFFICIATING_MANAGER" &&
-              "Focus: Referee Roster, Match Officiating Assignments, Performance & Concerns"}
-            {activeWorkspaceRole === "RECORDS_MANAGER" &&
-              "Focus: Official Archives, Certified Standings, Disciplinary Ledger & Decision Minutes"}
-            {activeWorkspaceRole === "TECH_MANAGER" &&
-              "Focus: System Health, Public Site Publishing, Live Engine & Data Integrity"}
-            {activeWorkspaceRole === "ASST_TECH_MANAGER" &&
-              "Focus: Content Drafting, Media Gallery Management, Digital Backups & User Support"}
+          <p className="text-xs sm:text-sm font-medium text-white/90 drop-shadow">
+            M-Pesa Sunday League Supreme Council Command Center • {currentMeta.title} ({currentMeta.department})
           </p>
         </div>
 
-        {/* Role Navigation Switcher for Council & Admins */}
-        <div className="flex flex-wrap items-center gap-1.5 bg-[#0a071b] p-1.5 rounded-2xl border border-[#2e2554]">
+        <div className="relative z-10 shrink-0">
+          <button
+            type="button"
+            onClick={() => showToast("✓ Official League Constitution & Statutes synchronized.")}
+            className="px-5 py-2.5 rounded-2xl bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/30 text-white font-black text-xs uppercase tracking-wider transition shadow-lg flex items-center gap-2 cursor-pointer"
+          >
+            <Download className="w-4 h-4" />
+            <span>Download Official Statutes</span>
+          </button>
+        </div>
+
+        {/* Decorative background glow circle */}
+        <div className="absolute -right-10 -bottom-10 w-60 h-60 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+      </div>
+
+      {/* =========================================================================
+          MAIN TWO-COLUMN DASHBOARD GRID (Matching Reference Layout)
+          Left: Club Standings (House Leaderboard style)
+          Right: Stack of 3 High-Contrast KPI Cards
+          ========================================================================= */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column (2 Cols): Club Championship Standings (House Leaderboard) */}
+        <div className="lg:col-span-2 bg-[#0d0926] border border-[#2e2554] rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4">
+          <div className="flex items-center justify-between border-b border-[#2e2554] pb-3">
+            <div className="flex items-center gap-2.5">
+              <span className="p-2 bg-purple-500/20 text-purple-300 rounded-xl">
+                <Trophy className="w-5 h-5 text-purple-400" />
+              </span>
+              <div>
+                <h3 className="text-base sm:text-lg font-black uppercase text-white tracking-wide">
+                  Club Championship Leaderboard
+                </h3>
+                <p className="text-[11px] text-gray-400">
+                  Official standings derived from verified matchday sheets • 4 Affiliated Clubs
+                </p>
+              </div>
+            </div>
+
+            <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+              ● Live Table Verified
+            </span>
+          </div>
+
+          {/* 4 Official Clubs Styled like House Leaderboard in Image */}
+          <div className="space-y-3">
+            {[
+              {
+                rank: 1,
+                name: "Samba Boys",
+                colorBadge: "Emerald Green",
+                colorHex: "#00ff85",
+                badgeBg: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
+                circleBg: "bg-emerald-600 text-white",
+                stats: "15 registered athletes • Coach Austin Brian Omondi",
+                points: 3,
+              },
+              {
+                rank: 2,
+                name: "Royal Rangers",
+                colorBadge: "Royal Blue",
+                colorHex: "#3b82f6",
+                badgeBg: "bg-blue-500/20 text-blue-300 border-blue-500/30",
+                circleBg: "bg-blue-600 text-white",
+                stats: "15 registered athletes • Coach Samwel Reagan Wanyama",
+                points: 3,
+              },
+              {
+                rank: 3,
+                name: "Young Stars City",
+                colorBadge: "Vibrant Orange",
+                colorHex: "#f97316",
+                badgeBg: "bg-orange-500/20 text-orange-300 border-orange-500/30",
+                circleBg: "bg-amber-600 text-white",
+                stats: "15 registered athletes • Coach Adams Technical Bench",
+                points: 0,
+              },
+              {
+                rank: 4,
+                name: "Mzinga Boyz",
+                colorBadge: "Gold Yellow",
+                colorHex: "#eab308",
+                badgeBg: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
+                circleBg: "bg-rose-600 text-white",
+                stats: "15 registered athletes • Coach Carson Technical Bench",
+                points: 0,
+              },
+            ].map((club) => (
+              <div
+                key={club.rank}
+                className="p-3.5 sm:p-4 rounded-2xl bg-[#140e36] border border-[#2e2554] hover:border-blue-400/50 transition flex items-center justify-between gap-3 group shadow-md"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  {/* Circular Rank Badge matching image */}
+                  <div
+                    className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-black text-sm shadow shrink-0 ${club.circleBg}`}
+                  >
+                    {club.rank}
+                  </div>
+
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-black text-white text-sm sm:text-base group-hover:text-blue-300 transition truncate">
+                        {club.name}
+                      </span>
+                      <span
+                        className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${club.badgeBg}`}
+                      >
+                        {club.colorBadge}
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-gray-400 block truncate mt-0.5">
+                      {club.stats}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Right Points Pill matching image */}
+                <div className="text-right shrink-0">
+                  <span className="text-lg sm:text-2xl font-black text-white font-mono block leading-none">
+                    {club.points}
+                  </span>
+                  <span className="text-[10px] text-gray-400 uppercase font-bold">Points</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Right Column (1 Col): Stack of 3 High-Contrast KPI Cards */}
+        <div className="space-y-4">
+          {/* Card 1: Blue Border */}
+          <div className="p-5 sm:p-6 bg-[#0c0926] border-2 border-cyan-400/60 rounded-3xl shadow-xl flex flex-col justify-between h-32 hover:scale-[1.02] transition">
+            <span className="text-3xl sm:text-4xl font-black text-cyan-300 font-mono leading-none">
+              4
+            </span>
+            <div>
+              <span className="text-xs font-black uppercase text-white tracking-wide block">
+                Total Affiliated Clubs
+              </span>
+              <span className="text-[10px] text-gray-400">Official accredited competition sides</span>
+            </div>
+          </div>
+
+          {/* Card 2: Amber Border */}
+          <div className="p-5 sm:p-6 bg-[#0c0926] border-2 border-amber-400/60 rounded-3xl shadow-xl flex flex-col justify-between h-32 hover:scale-[1.02] transition">
+            <span className="text-3xl sm:text-4xl font-black text-amber-300 font-mono leading-none">
+              60
+            </span>
+            <div>
+              <span className="text-xs font-black uppercase text-white tracking-wide block">
+                Registered Athletes
+              </span>
+              <span className="text-[10px] text-gray-400">15 athletes per club roster verified</span>
+            </div>
+          </div>
+
+          {/* Card 3: Magenta Border */}
+          <div className="p-5 sm:p-6 bg-[#0c0926] border-2 border-purple-400/60 rounded-3xl shadow-xl flex flex-col justify-between h-32 hover:scale-[1.02] transition">
+            <span className="text-3xl sm:text-4xl font-black text-purple-300 font-mono leading-none">
+              7
+            </span>
+            <div>
+              <span className="text-xs font-black uppercase text-white tracking-wide block">
+                Council Quorum Seats
+              </span>
+              <span className="text-[10px] text-gray-400">Supreme Executive Governance Council</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Role Navigation Switcher for Council & Admins */}
+      <div className="p-3 bg-[#0a071b] rounded-2xl border border-[#2e2554] flex flex-wrap items-center justify-between gap-2">
+        <span className="text-[10px] font-black uppercase text-gray-400 px-2">
+          Council Department Workspace Switcher:
+        </span>
+        <div className="flex flex-wrap items-center gap-1.5">
           {[
             { id: "PRESIDENT", label: "1. President (Alex Haro)", icon: Crown },
             { id: "DEPUTY_PRESIDENT", label: "2. Deputy (Babra Nandako)", icon: Shield },
@@ -2447,7 +2754,7 @@ export function BoardWorkspaces() {
                   label: "⚖️ Officiating Overview",
                   sub: "Referee Roster & Coverage",
                 },
-                { id: "scheduler", label: "📅 Referee Scheduler", sub: "Assignments & Chaplains" },
+                { id: "scheduler", label: "📅 Referee Scheduler", sub: "Assignments & Commissioners" },
                 {
                   id: "ref_reports",
                   label: "📝 Referee Reports",
@@ -2530,7 +2837,7 @@ export function BoardWorkspaces() {
                     </h4>
                     <p className="text-xs text-gray-300 mt-0.5">
                       Register certified referees and assign complete quad-crews (Center Ref,
-                      Linesman 1, Linesman 2, 4th Official & Chaplain) to match fixtures.
+                      Linesman 1, Linesman 2, 4th Official & Match Commissioner) to match fixtures.
                     </p>
                   </div>
                   <span className="px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 font-mono font-bold text-xs border border-purple-500/30">
@@ -2701,7 +3008,7 @@ export function BoardWorkspaces() {
                       Deploy Quad-Crew Match Officials to Fixture
                     </h5>
                     <span className="text-[10px] text-gray-400 font-mono">
-                      Center Ref + 2 Linesmen + 4th Official + Chaplain
+                      Center Ref + 2 Linesmen + 4th Official + Match Commissioner
                     </span>
                   </div>
 
@@ -2880,15 +3187,25 @@ export function BoardWorkspaces() {
                             </div>
                             <div className="p-2 bg-[#0a071b] rounded-xl border border-[#261f4d]">
                               <span className="text-[10px] text-emerald-300 uppercase font-bold block">
-                                Pitch Chaplain:
+                                Match Commissioner:
                               </span>
                               <span className="text-gray-200 text-xs font-mono">
-                                {f.chaplain || "Pastor David M."}
+                                {f.chaplain || "Mitchelle Muthoni (Commissioner)"}
                               </span>
                             </div>
                           </div>
+
+                          <button
+                            type="button"
+                            onClick={() => setSelectedMatchSheetFixture(f)}
+                            className="w-full mt-2.5 py-1.5 px-3 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 border border-purple-500/30 transition cursor-pointer"
+                          >
+                            <FileText className="w-3.5 h-3.5" />
+                            <span>Open Official Match Sheet (PDF / Sign-Off)</span>
+                          </button>
                         </div>
                       );
+
                     })}
                   </div>
                 </div>
@@ -3807,6 +4124,17 @@ export function BoardWorkspaces() {
           </div>
         </div>
       )}
+
+      {/* Official Match Sheet Modal (Print / PDF) */}
+      {selectedMatchSheetFixture && (
+        <OfficialMatchSheetModal
+          isOpen={!!selectedMatchSheetFixture}
+          onClose={() => setSelectedMatchSheetFixture(null)}
+          fixture={selectedMatchSheetFixture}
+          teams={teams}
+        />
+      )}
     </div>
   );
 }
+
