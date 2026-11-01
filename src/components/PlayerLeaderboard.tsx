@@ -1248,7 +1248,6 @@ export function PlayerLeaderboard() {
                 />
               </div>
 
-              </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-gray-400 font-bold uppercase mb-1">
@@ -1375,6 +1374,7 @@ export function PlayerLeaderboard() {
                     className="w-full bg-[#141029] border border-[#2e2554] rounded-xl px-3 py-2 text-white font-mono text-center"
                   />
                 </div>
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-gray-400 font-bold uppercase mb-1">
