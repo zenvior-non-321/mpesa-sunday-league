@@ -1248,6 +1248,7 @@ export function PlayerLeaderboard() {
                 />
               </div>
 
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-gray-400 font-bold uppercase mb-1">

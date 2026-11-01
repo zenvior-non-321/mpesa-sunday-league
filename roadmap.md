@@ -1,5 +1,10 @@
 # Requested update
 
+- [ ] Remove login code examples and exposed credentials from public code.
+- [ ] Create league record tables and import the website's existing league data.
+- [ ] Connect shared reads and authorized writes across league pages.
+- [ ] Verify login privacy, saved records, and cross-device synchronization.
+
 - [x] Permanently remove deleted teams across reloads and devices.
 - [x] Enforce Super Admin, board member, and viewer access; keep board codes private.
 - [x] Verify deletion and access restrictions; resolve existing preview errors.
