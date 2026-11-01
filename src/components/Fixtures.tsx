@@ -6,7 +6,8 @@ import { LeagueCalendarView } from "./LeagueCalendarView";
 import { MatchMvpVoting } from "./MatchMvpVoting";
 import { MatchNotificationDispatch } from "./MatchNotificationDispatch";
 import { OfficialMatchSheetModal } from "./OfficialMatchSheetModal";
-import { Trophy, Mail, Trash2, FileText, CheckCircle2 } from "lucide-react";
+import { MatchReportForm } from "./MatchReportForm";
+import { Trophy, Mail, Trash2, FileText, CheckCircle2, PenTool } from "lucide-react";
 
 export interface MatchGoalEvent {
   id: number;

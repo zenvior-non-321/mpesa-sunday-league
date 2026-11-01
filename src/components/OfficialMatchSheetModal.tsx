@@ -298,14 +298,34 @@ export function OfficialMatchSheetModal({
     };
   };
 
-  const [sheet, setSheet] = useState<MatchSheetRecord>(() => {
+  const safeMergeSheet = (storedStr: string | null): MatchSheetRecord => {
+    const base = buildInitialSheet();
+    if (!storedStr) return base;
     try {
-      const stored = localStorage.getItem(storageKey);
-      if (stored) return JSON.parse(stored);
+      const parsed = JSON.parse(storedStr);
+      if (!parsed || typeof parsed !== "object") return base;
+      return {
+        ...base,
+        ...parsed,
+        stats: { ...base.stats, ...(parsed.stats || {}) },
+        signatures: { ...base.signatures, ...(parsed.signatures || {}) },
+        adminHandover: { ...base.adminHandover, ...(parsed.adminHandover || {}) },
+        officials: { ...base.officials, ...(parsed.officials || {}) },
+        homeStaff: { ...base.homeStaff, ...(parsed.homeStaff || {}) },
+        awayStaff: { ...base.awayStaff, ...(parsed.awayStaff || {}) },
+        homeRateAway: { ...base.homeRateAway, ...(parsed.homeRateAway || {}) },
+        awayRateHome: { ...base.awayRateHome, ...(parsed.awayRateHome || {}) },
+        homeLineup: Array.isArray(parsed.homeLineup) && parsed.homeLineup.length > 0 ? parsed.homeLineup : base.homeLineup,
+        awayLineup: Array.isArray(parsed.awayLineup) && parsed.awayLineup.length > 0 ? parsed.awayLineup : base.awayLineup,
+        events: Array.isArray(parsed.events) ? parsed.events : base.events,
+      };
     } catch {
-      // fallback
+      return base;
     }
-    return buildInitialSheet();
+  };
+
+  const [sheet, setSheet] = useState<MatchSheetRecord>(() => {
+    return safeMergeSheet(localStorage.getItem(storageKey));
   });
 
   const [showAdminRecordingDesk, setShowAdminRecordingDesk] = useState<boolean>(false);
@@ -313,17 +333,8 @@ export function OfficialMatchSheetModal({
   const [isGeneratingPdf, setIsGeneratingPdf] = useState<boolean>(false);
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(storageKey);
-      if (stored) {
-        setSheet(JSON.parse(stored));
-      } else {
-        setSheet(buildInitialSheet());
-      }
-    } catch {
-      setSheet(buildInitialSheet());
-    }
-  }, [fixture.id]);
+    setSheet(safeMergeSheet(localStorage.getItem(storageKey)));
+  }, [fixture.id, storageKey]);
 
   const handleSaveSheet = () => {
     try {
@@ -340,7 +351,7 @@ export function OfficialMatchSheetModal({
               ...fixturesArr[fIdx],
               homeScore: sheet.stats.homeScore,
               awayScore: sheet.stats.awayScore,
-              status: sheet.adminHandover.isHandedOver ? "COMPLETED" : fixturesArr[fIdx].status,
+              status: sheet.adminHandover?.isHandedOver ? "COMPLETED" : fixturesArr[fIdx].status,
               manOfTheMatch: {
                 playerName: sheet.stats.manOfTheMatch,
                 teamName: sheet.stats.manOfTheMatchTeam,
@@ -840,13 +851,13 @@ export function OfficialMatchSheetModal({
               <label className="flex items-center gap-2 cursor-pointer bg-[#0a071b] px-3 py-1.5 rounded-xl border border-amber-400/40">
                 <input
                   type="checkbox"
-                  checked={sheet.adminHandover.isHandedOver}
+                  checked={Boolean(sheet.adminHandover?.isHandedOver)}
                   onChange={(e) => {
                     const checked = e.target.checked;
                     setSheet((prev) => ({
                       ...prev,
                       adminHandover: {
-                        ...prev.adminHandover,
+                        ...(prev.adminHandover || { recordedByAdmin: "League Records Administrator", notes: "" }),
                         isHandedOver: checked,
                         handedOverAt: checked ? new Date().toLocaleString("en-KE") : "",
                       },
@@ -855,7 +866,7 @@ export function OfficialMatchSheetModal({
                   className="w-4 h-4 accent-amber-400 rounded cursor-pointer"
                 />
                 <span className="text-xs font-black text-amber-300">
-                  {sheet.adminHandover.isHandedOver ? "✓ Physical Sheet Handed Over to Admin" : "Pending Official Handover"}
+                  {sheet.adminHandover?.isHandedOver ? "✓ Physical Sheet Handed Over to Admin" : "Pending Official Handover"}
                 </span>
               </label>
             </div>
@@ -1009,8 +1020,8 @@ export function OfficialMatchSheetModal({
 
             <div className="flex items-center justify-between pt-2 border-t border-[#2e2554]">
               <span className="text-[11px] text-gray-400">
-                {sheet.adminHandover.isHandedOver
-                  ? `✓ Handed over on ${sheet.adminHandover.handedOverAt || "Matchday"}`
+                {sheet.adminHandover?.isHandedOver
+                  ? `✓ Handed over on ${sheet.adminHandover?.handedOverAt || "Matchday"}`
                   : "Please obtain signed paper sheet before final recording"}
               </span>
               <button
@@ -1552,11 +1563,11 @@ export function OfficialMatchSheetModal({
                 </p>
               </div>
               <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase shrink-0 ${
-                sheet.adminHandover.isHandedOver
+                sheet.adminHandover?.isHandedOver
                   ? "bg-emerald-500 text-black"
                   : "bg-amber-400/20 text-amber-300"
               }`}>
-                {sheet.adminHandover.isHandedOver ? "Handed Over & Verified" : "Awaiting Handover"}
+                {sheet.adminHandover?.isHandedOver ? "Handed Over & Verified" : "Awaiting Handover"}
               </span>
             </div>
           </div>
