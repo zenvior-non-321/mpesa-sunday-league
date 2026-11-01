@@ -152,6 +152,7 @@ export function Fixtures() {
   });
 
   const [selectedMatchSheetFixture, setSelectedMatchSheetFixture] = useState<MatchFixture | null>(null);
+  const [selectedReportFixture, setSelectedReportFixture] = useState<MatchFixture | null>(null);
 
   // Load from localStorage or defaults with smart merging
   useEffect(() => {
@@ -1067,6 +1068,16 @@ export function Fixtures() {
                         <FileText className="w-3 h-3" />
                         <span>Match Sheet (PDF)</span>
                       </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setSelectedReportFixture(fixture)}
+                        className="px-2.5 py-1 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/30 text-emerald-300 font-extrabold text-[11px] transition flex items-center gap-1 cursor-pointer border border-emerald-500/30"
+                        title="Open Referee Match Report Form with registered squads, scorers, assists and direct sign-off"
+                      >
+                        <PenTool className="w-3 h-3" />
+                        <span>Report & Sign</span>
+                      </button>
                     </div>
 
                     {canManageFixtures && (
@@ -1852,6 +1863,24 @@ export function Fixtures() {
           onClose={() => setSelectedMatchSheetFixture(null)}
           fixture={selectedMatchSheetFixture}
           teams={teams}
+        />
+      )}
+
+      {/* Official Match Report Form (Scorers, Assists, Multi-Signature & PDF) */}
+      {selectedReportFixture && (
+        <MatchReportForm
+          isOpen={!!selectedReportFixture}
+          onClose={() => setSelectedReportFixture(null)}
+          fixture={selectedReportFixture}
+          teams={teams}
+          onReportSaved={() => {
+            try {
+              const raw = localStorage.getItem("mpesa_pes_matches_v6");
+              if (raw) setFixtures(JSON.parse(raw));
+            } catch (err) {
+              console.warn(err);
+            }
+          }}
         />
       )}
     </div>

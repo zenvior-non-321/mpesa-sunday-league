@@ -1,7 +1,7 @@
 import { o as __toESM } from "../_runtime.mjs";
 import { r as require_react } from "../_libs/react+tanstack__react-query.mjs";
 import { n as useRoleAccess } from "./useRoleAccess-qpujIbxr.mjs";
-import { $ as ListMusic, Ht as ArrowUp, L as Plus, M as Repeat, Ot as CircleCheck, P as Radio, R as Play, V as Pause, Wt as ArrowDown, b as Shuffle, f as Trash2, gt as ExternalLink, i as Volume2, kt as CircleAlert, r as VolumeX, v as SkipForward, xt as Crown, y as SkipBack, yt as Disc3 } from "../_libs/lucide-react.mjs";
+import { At as CircleCheck, Ct as Crown, Kt as ArrowDown, L as Plus, M as Repeat, P as Radio, R as Play, U as Pause, Wt as ArrowUp, b as Shuffle, f as Trash2, i as Volume2, jt as CircleAlert, r as VolumeX, tt as ListMusic, v as SkipForward, vt as ExternalLink, xt as Disc3, y as SkipBack } from "../_libs/lucide-react.mjs";
 import { t as require_jsx_dev_runtime } from "../_libs/react.mjs";
 //#region node_modules/.nitro/vite/services/ssr/assets/AnthemStudioAndPlaylist-DjJy9dBY.js
 var import_react = /* @__PURE__ */ __toESM(require_react());

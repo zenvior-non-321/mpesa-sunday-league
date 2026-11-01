@@ -1304,6 +1304,42 @@ var PenLine = createLucideIcon("pen-line", [["path", {
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var PenTool = createLucideIcon("pen-tool", [
+	["path", {
+		d: "M15.707 21.293a1 1 0 0 1-1.414 0l-1.586-1.586a1 1 0 0 1 0-1.414l5.586-5.586a1 1 0 0 1 1.414 0l1.586 1.586a1 1 0 0 1 0 1.414z",
+		key: "nt11vn"
+	}],
+	["path", {
+		d: "m18 13-1.375-6.874a1 1 0 0 0-.746-.776L3.235 2.028a1 1 0 0 0-1.207 1.207L5.35 15.879a1 1 0 0 0 .776.746L13 18",
+		key: "15qc1e"
+	}],
+	["path", {
+		d: "m2.3 2.3 7.286 7.286",
+		key: "1wuzzi"
+	}],
+	["circle", {
+		cx: "11",
+		cy: "11",
+		r: "2",
+		key: "xmgehs"
+	}]
+]);
+/**
+* @license lucide-react v0.575.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var Pen = createLucideIcon("pen", [["path", {
+	d: "M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z",
+	key: "1a8usu"
+}]]);
+/**
+* @license lucide-react v0.575.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var Pin = createLucideIcon("pin", [["path", {
 	d: "M12 17v5",
 	key: "bb1du9"
@@ -2142,4 +2178,4 @@ var X = createLucideIcon("x", [["path", {
 	key: "d8bk6v"
 }]]);
 //#endregion
-export { ListMusic as $, Save as A, ChevronUp as At, PenLine as B, BookOpen as Bt, ShieldAlert as C, Copy as Ct, Search as D, CirclePlus as Dt, Send as E, ClipboardCheck as Et, QrCode as F, Camera as Ft, Monitor as G, Activity as Gt, PanelLeft as H, ArrowUp as Ht, Printer as I, Calendar as It, Mail as J, MessageSquare as K, Plus as L, CalendarDays as Lt, Repeat as M, ChevronLeft as Mt, RefreshCw as N, ChevronDown as Nt, Scroll as O, CircleCheck as Ot, Radio as P, Check as Pt, List as Q, Play as R, CalendarCheck2 as Rt, ShieldCheck as S, Cpu as St, Settings as T, Clock as Tt, PanelLeftClose as U, ArrowRight as Ut, Pause as V, Award as Vt, Music as W, ArrowDown as Wt, Lock as X, LogOut as Y, LockOpen as Z, SlidersVertical as _, Download as _t, Users as a, HardDrive as at, Shuffle as b, Database as bt, Upload as c, FolderArchive as ct, TrendingUp as d, FileText as dt, LayoutGrid as et, Trash2 as f, FileCheck as ft, Smartphone as g, ExternalLink as gt, Sparkles as h, EyeOff as ht, Volume2 as i, Headphones as it, RotateCcw as j, ChevronRight as jt, Scale as k, CircleAlert as kt, Trophy as l, Flame as lt, SquareCheckBig as m, Eye as mt, Vote as n, KeyRound as nt, UserPlus as o, Globe as ot, Star as p, FileCheckCorner as pt, MapPin as q, VolumeX as r, Heart as rt, UserCheck as s, Funnel as st, X as t, Layers as tt, TriangleAlert as u, Flag as ut, SkipForward as v, DollarSign as vt, Share2 as w, Code as wt, Shield as x, Crown as xt, SkipBack as y, Disc3 as yt, Pin as z, Briefcase as zt };
+export { LockOpen as $, Save as A, CircleCheck as At, Pen as B, CalendarCheck2 as Bt, ShieldAlert as C, Crown as Ct, Search as D, Clock as Dt, Send as E, Code as Et, QrCode as F, ChevronDown as Ft, PanelLeftClose as G, ArrowRight as Gt, PenLine as H, BookOpen as Ht, Printer as I, Check as It, MessageSquare as J, Music as K, ArrowDown as Kt, Plus as L, Camera as Lt, Repeat as M, ChevronUp as Mt, RefreshCw as N, ChevronRight as Nt, Scroll as O, ClipboardCheck as Ot, Radio as P, ChevronLeft as Pt, Lock as Q, Play as R, Calendar as Rt, ShieldCheck as S, Database as St, Settings as T, Copy as Tt, Pause as U, Award as Ut, PenTool as V, Briefcase as Vt, PanelLeft as W, ArrowUp as Wt, Mail as X, MapPin as Y, LogOut as Z, SlidersVertical as _, EyeOff as _t, Users as a, Heart as at, Shuffle as b, DollarSign as bt, Upload as c, Globe as ct, TrendingUp as d, Flame as dt, List as et, Trash2 as f, Flag as ft, Smartphone as g, Eye as gt, Sparkles as h, FileCheckCorner as ht, Volume2 as i, KeyRound as it, RotateCcw as j, CircleAlert as jt, Scale as k, CirclePlus as kt, Trophy as l, Funnel as lt, SquareCheckBig as m, FileCheck as mt, Vote as n, LayoutGrid as nt, UserPlus as o, Headphones as ot, Star as p, FileText as pt, Monitor as q, Activity as qt, VolumeX as r, Layers as rt, UserCheck as s, HardDrive as st, X as t, ListMusic as tt, TriangleAlert as u, FolderArchive as ut, SkipForward as v, ExternalLink as vt, Share2 as w, Cpu as wt, Shield as x, Disc3 as xt, SkipBack as y, Download as yt, Pin as z, CalendarDays as zt };

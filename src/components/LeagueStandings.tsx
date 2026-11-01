@@ -560,8 +560,85 @@ export function LeagueStandings() {
           }
         }
       }
+      // Auto-recalculate from fixtures and match reports if present
+      try {
+        const storedMatches = localStorage.getItem("mpesa_pes_matches_v6");
+        if (storedMatches) {
+          const fixtures = JSON.parse(storedMatches);
+          if (Array.isArray(fixtures)) {
+            const teamStatsMap: Record<number, { mp: number; w: number; d: number; l: number; gf: number; ga: number; pts: number; form: string[] }> = {};
+            activeList.forEach((t) => {
+              teamStatsMap[t.id] = { mp: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, pts: 0, form: [] };
+            });
+
+            fixtures.forEach((f: any) => {
+              const isFinished =
+                f.status === "FINISHED" ||
+                f.status === "COMPLETED" ||
+                (typeof f.homeScore === "number" && typeof f.awayScore === "number" && f.status !== "POSTPONED" && f.status !== "UPCOMING");
+
+              if (isFinished && typeof f.homeScore === "number" && typeof f.awayScore === "number") {
+                const hId = f.homeId;
+                const aId = f.awayId;
+                if (teamStatsMap[hId] && teamStatsMap[aId]) {
+                  teamStatsMap[hId].mp += 1;
+                  teamStatsMap[aId].mp += 1;
+                  teamStatsMap[hId].gf += f.homeScore;
+                  teamStatsMap[hId].ga += f.awayScore;
+                  teamStatsMap[aId].gf += f.awayScore;
+                  teamStatsMap[aId].ga += f.homeScore;
+                  if (f.homeScore > f.awayScore) {
+                    teamStatsMap[hId].w += 1;
+                    teamStatsMap[hId].pts += 3;
+                    teamStatsMap[hId].form.unshift("W");
+                    teamStatsMap[aId].l += 1;
+                    teamStatsMap[aId].form.unshift("L");
+                  } else if (f.homeScore < f.awayScore) {
+                    teamStatsMap[aId].w += 1;
+                    teamStatsMap[aId].pts += 3;
+                    teamStatsMap[aId].form.unshift("W");
+                    teamStatsMap[hId].l += 1;
+                    teamStatsMap[hId].form.unshift("L");
+                  } else {
+                    teamStatsMap[hId].d += 1;
+                    teamStatsMap[hId].pts += 1;
+                    teamStatsMap[hId].form.unshift("D");
+                    teamStatsMap[aId].d += 1;
+                    teamStatsMap[aId].pts += 1;
+                    teamStatsMap[aId].form.unshift("D");
+                  }
+                }
+              }
+            });
+
+            activeList = activeList.map((t) => {
+              const stats = teamStatsMap[t.id];
+              if (!stats || stats.mp === 0) return t;
+              return {
+                ...t,
+                mp: stats.mp,
+                played: stats.mp,
+                w: stats.w,
+                won: stats.w,
+                d: stats.d,
+                drawn: stats.d,
+                l: stats.l,
+                lost: stats.l,
+                gf: stats.gf,
+                ga: stats.ga,
+                gd: stats.gf - stats.ga,
+                pts: stats.pts,
+                points: stats.pts,
+                form: stats.form.slice(0, 5),
+              };
+            });
+          }
+        }
+      } catch (err) {
+        console.warn("Could not auto-calculate standings from fixtures:", err);
+      }
+
       setStandings(activeList);
-      // Persist cleaned list so legacy teams don't linger
       try {
         localStorage.setItem("mpesa_pes_teams_v6", JSON.stringify(activeList));
       } catch {
@@ -570,6 +647,98 @@ export function LeagueStandings() {
     } catch {
       setStandings(DEFAULT_STANDINGS);
     }
+
+    const handleSync = () => {
+      try {
+        const storedMatches = localStorage.getItem("mpesa_pes_matches_v6");
+        const storedTeams = localStorage.getItem("mpesa_pes_teams_v6");
+        if (!storedMatches || !storedTeams) return;
+        const fixtures = JSON.parse(storedMatches);
+        const parsedTeams: TeamStanding[] = JSON.parse(storedTeams);
+        const teamStatsMap: Record<number, { mp: number; w: number; d: number; l: number; gf: number; ga: number; pts: number; form: string[] }> = {};
+        parsedTeams.forEach((t) => {
+          teamStatsMap[t.id] = { mp: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, pts: 0, form: [] };
+        });
+
+        fixtures.forEach((f: any) => {
+          const isFinished =
+            f.status === "FINISHED" ||
+            f.status === "COMPLETED" ||
+            (typeof f.homeScore === "number" && typeof f.awayScore === "number" && f.status !== "POSTPONED" && f.status !== "UPCOMING");
+
+          if (isFinished && typeof f.homeScore === "number" && typeof f.awayScore === "number") {
+            const hId = f.homeId;
+            const aId = f.awayId;
+            if (teamStatsMap[hId] && teamStatsMap[aId]) {
+              teamStatsMap[hId].mp += 1;
+              teamStatsMap[aId].mp += 1;
+              teamStatsMap[hId].gf += f.homeScore;
+              teamStatsMap[hId].ga += f.awayScore;
+              teamStatsMap[aId].gf += f.awayScore;
+              teamStatsMap[aId].ga += f.homeScore;
+              if (f.homeScore > f.awayScore) {
+                teamStatsMap[hId].w += 1;
+                teamStatsMap[hId].pts += 3;
+                teamStatsMap[hId].form.unshift("W");
+                teamStatsMap[aId].l += 1;
+                teamStatsMap[aId].form.unshift("L");
+              } else if (f.homeScore < f.awayScore) {
+                teamStatsMap[aId].w += 1;
+                teamStatsMap[aId].pts += 3;
+                teamStatsMap[aId].form.unshift("W");
+                teamStatsMap[hId].l += 1;
+                teamStatsMap[hId].form.unshift("L");
+              } else {
+                teamStatsMap[hId].d += 1;
+                teamStatsMap[hId].pts += 1;
+                teamStatsMap[hId].form.unshift("D");
+                teamStatsMap[aId].d += 1;
+                teamStatsMap[aId].pts += 1;
+                teamStatsMap[aId].form.unshift("D");
+              }
+            }
+          }
+        });
+
+        const synced = parsedTeams.map((t) => {
+          const stats = teamStatsMap[t.id];
+          if (!stats || stats.mp === 0) return t;
+          return {
+            ...t,
+            mp: stats.mp,
+            played: stats.mp,
+            w: stats.w,
+            won: stats.w,
+            d: stats.d,
+            drawn: stats.d,
+            l: stats.l,
+            lost: stats.l,
+            gf: stats.gf,
+            ga: stats.ga,
+            gd: stats.gf - stats.ga,
+            pts: stats.pts,
+            points: stats.pts,
+            form: stats.form.slice(0, 5),
+          };
+        });
+        setStandings(synced);
+      } catch (e) {
+        console.warn(e);
+      }
+    };
+
+    window.addEventListener("storage", handleSync);
+    window.addEventListener("mpesa_matchreport_saved", handleSync);
+    window.addEventListener("mpesa_matchsheet_updated", handleSync);
+    window.addEventListener("mpesa_standings_updated", handleSync);
+    window.addEventListener("mpesa_db_updated", handleSync);
+    return () => {
+      window.removeEventListener("storage", handleSync);
+      window.removeEventListener("mpesa_matchreport_saved", handleSync);
+      window.removeEventListener("mpesa_matchsheet_updated", handleSync);
+      window.removeEventListener("mpesa_standings_updated", handleSync);
+      window.removeEventListener("mpesa_db_updated", handleSync);
+    };
   }, []);
 
   const handleDeleteTeam = (teamId: number, teamName: string) => {
@@ -624,8 +793,11 @@ export function LeagueStandings() {
     }));
     setStandings(reset);
     try {
+      localStorage.setItem("mpesa_table_cleared_v6", "true");
       localStorage.setItem("mpesa_pes_teams_v6", JSON.stringify(reset));
       localStorage.setItem("mpesa_pes_standings_v6", JSON.stringify(reset));
+      window.dispatchEvent(new CustomEvent("mpesa_standings_updated"));
+      window.dispatchEvent(new CustomEvent("mpesa_db_updated", { detail: { tableName: "standings" } }));
       window.dispatchEvent(new Event("storage"));
     } catch {
       // Ignore

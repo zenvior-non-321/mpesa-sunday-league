@@ -284,9 +284,18 @@ export function PermanentSidebarLayout({ children }: PermanentSidebarLayoutProps
     }
   };
 
-  // 1. SUPREME ADMIN HUB: Exact 14-item navigation menu requested by Super Admin
+  // 1. SUPREME ADMIN HUB: Exact navigation menu for Super Admin
   const supremeAdminNavItems = useMemo(
     () => [
+      {
+        to: "/workspaces",
+        adminSection: "database_console",
+        label: "Database Tables & Sync",
+        subLabel: "Real-time DB & Permanent CRUD",
+        icon: Database,
+        badge: "Live DB",
+        badgeColor: "bg-cyan-400/20 text-cyan-300 border-cyan-400/30",
+      },
       {
         to: "/workspaces",
         adminSection: "board_members",

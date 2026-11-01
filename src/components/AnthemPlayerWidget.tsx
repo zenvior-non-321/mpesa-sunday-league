@@ -13,6 +13,7 @@ import {
   Check,
 } from "lucide-react";
 import { useRoleAccess } from "../hooks/useRoleAccess";
+import { getAudioVaultBlobUrl } from "../lib/audioVault";
 
 export interface AnthemConfig {
   title: string;
@@ -43,6 +44,7 @@ export function AnthemPlayerWidget({ isCompact = false }: { isCompact?: boolean 
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [config, setConfig] = useState<AnthemConfig>(DEFAULT_ANTHEM);
   const [showSettingsModal, setShowSettingsModal] = useState<boolean>(false);
+  const [vaultAudioUrl, setVaultAudioUrl] = useState<string | null>(null);
 
   // Edit settings form
   const [editTitle, setEditTitle] = useState(DEFAULT_ANTHEM.title);
@@ -51,9 +53,15 @@ export function AnthemPlayerWidget({ isCompact = false }: { isCompact?: boolean 
   // Web Audio Context for realistic stadium synth fanfare & beat
   const audioCtxRef = useRef<AudioContext | null>(null);
   const timerRef = useRef<number | null>(null);
+  const vaultAudioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     const syncAnthemConfig = () => {
+      // Sync from IndexedDB Audio Vault first
+      getAudioVaultBlobUrl().then((url) => {
+        if (url) setVaultAudioUrl(url);
+      });
+
       try {
         const stored = localStorage.getItem("mpesa_pes_anthem_v3");
         if (stored) {
@@ -170,9 +178,11 @@ export function AnthemPlayerWidget({ isCompact = false }: { isCompact?: boolean 
 
   const togglePlay = () => {
     if (isPlaying) {
+      if (vaultAudioRef.current) {
+        vaultAudioRef.current.pause();
+      }
       stopSynthAnthem();
       setIsPlaying(false);
-      // Also try YouTube API if present
       if (
         typeof window !== "undefined" &&
         (window as unknown as { PesAnthem?: { pause: () => void } }).PesAnthem
@@ -181,7 +191,14 @@ export function AnthemPlayerWidget({ isCompact = false }: { isCompact?: boolean 
       }
     } else {
       setIsPlaying(true);
-      startSynthAnthem();
+      if (vaultAudioUrl && vaultAudioRef.current) {
+        vaultAudioRef.current.volume = volume;
+        vaultAudioRef.current.play().catch(() => {
+          startSynthAnthem();
+        });
+      } else {
+        startSynthAnthem();
+      }
       if (
         typeof window !== "undefined" &&
         (window as unknown as { PesAnthem?: { play: (id: string) => void } }).PesAnthem
@@ -195,6 +212,9 @@ export function AnthemPlayerWidget({ isCompact = false }: { isCompact?: boolean 
 
   const handleVolumeChange = (newVal: number) => {
     setVolume(newVal);
+    if (vaultAudioRef.current) {
+      vaultAudioRef.current.volume = newVal;
+    }
     if (newVal === 0) setIsMuted(true);
     else setIsMuted(false);
     if (
@@ -251,6 +271,13 @@ export function AnthemPlayerWidget({ isCompact = false }: { isCompact?: boolean 
   if (isCompact) {
     return (
       <div className="bg-[#120d2e] border border-cyan-400/30 rounded-2xl p-3 shadow-xl space-y-2.5">
+        <audio
+          ref={vaultAudioRef}
+          src={vaultAudioUrl || undefined}
+          loop
+          onEnded={() => setIsPlaying(false)}
+          className="hidden"
+        />
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div
@@ -526,6 +553,14 @@ export function AnthemPlayerWidget({ isCompact = false }: { isCompact?: boolean 
           </div>
         </div>
       )}
+      {/* Audio element for IndexedDB vault track playback */}
+      <audio
+        ref={vaultAudioRef}
+        src={vaultAudioUrl || undefined}
+        loop
+        onEnded={() => setIsPlaying(false)}
+        className="hidden"
+      />
     </div>
   );
 }

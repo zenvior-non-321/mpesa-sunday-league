@@ -25,31 +25,65 @@ export function SeasonStandingsSummaryWidget({ onNavigateTab }: SeasonStandingsS
   const [standings, setStandings] = useState<TeamStanding[]>(DEFAULT_STANDINGS);
 
   useEffect(() => {
-    try {
-      const stored =
-        localStorage.getItem("mpesa_pes_standings_v6") ||
-        localStorage.getItem("mpesa_pes_teams_v6");
-      let activeList: TeamStanding[] = DEFAULT_STANDINGS;
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          const active = parsed.filter(
-            (t: Record<string, unknown>) =>
-              !isTeamDeleted(Number(t.id), typeof t.name === "string" ? t.name : ""),
-          );
-          if (active.length > 0) {
-            activeList = active as unknown as TeamStanding[];
+    const syncStandings = () => {
+      try {
+        const tableCleared = localStorage.getItem("mpesa_table_cleared_v6") === "true";
+        const stored =
+          localStorage.getItem("mpesa_pes_standings_v6") ||
+          localStorage.getItem("mpesa_pes_teams_v6");
+        let activeList: TeamStanding[] = DEFAULT_STANDINGS;
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            const active = parsed.filter(
+              (t: Record<string, unknown>) =>
+                !isTeamDeleted(Number(t.id), typeof t.name === "string" ? t.name : ""),
+            );
+            if (active.length > 0) {
+              activeList = active as unknown as TeamStanding[];
+            }
           }
+        } else {
+          const activeDefault = DEFAULT_STANDINGS.filter((t) => !isTeamDeleted(t.id, t.name));
+          if (activeDefault.length > 0) activeList = activeDefault;
         }
-      } else {
-        const activeDefault = DEFAULT_STANDINGS.filter((t) => !isTeamDeleted(t.id, t.name));
-        if (activeDefault.length > 0) activeList = activeDefault;
-      }
 
-      setStandings(activeList);
-    } catch {
-      setStandings(DEFAULT_STANDINGS);
-    }
+        if (tableCleared) {
+          activeList = activeList.map((t) => ({
+            ...t,
+            mp: 0,
+            played: 0,
+            w: 0,
+            won: 0,
+            d: 0,
+            drawn: 0,
+            l: 0,
+            lost: 0,
+            gf: 0,
+            ga: 0,
+            gd: 0,
+            pts: 0,
+            points: 0,
+          }));
+        }
+
+        setStandings(activeList);
+      } catch {
+        setStandings(DEFAULT_STANDINGS);
+      }
+    };
+
+    syncStandings();
+    window.addEventListener("storage", syncStandings);
+    window.addEventListener("mpesa_standings_updated", syncStandings);
+    window.addEventListener("mpesa_db_updated", syncStandings);
+    window.addEventListener("mpesa_matchreport_saved", syncStandings);
+    return () => {
+      window.removeEventListener("storage", syncStandings);
+      window.removeEventListener("mpesa_standings_updated", syncStandings);
+      window.removeEventListener("mpesa_db_updated", syncStandings);
+      window.removeEventListener("mpesa_matchreport_saved", syncStandings);
+    };
   }, []);
 
   // Sort standings by points desc, then goal difference desc, then goals for desc

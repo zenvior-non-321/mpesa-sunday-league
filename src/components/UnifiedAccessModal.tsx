@@ -126,7 +126,7 @@ export function UnifiedAccessModal({ isOpen, onClose, onSuccess }: UnifiedAccess
                   setAccessCredential(e.target.value);
                   if (error) setError(null);
                 }}
-                placeholder="Enter Code (e.g. msl-27 or PRES-8491)"
+                placeholder="Enter authorization passkey"
                 className="w-full bg-[#161033] border border-[#3b2d6e] focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 rounded-2xl px-4 py-3 text-sm font-mono text-white outline-none pr-12 transition"
               />
               <button

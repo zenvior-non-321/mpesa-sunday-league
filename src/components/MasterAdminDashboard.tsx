@@ -54,12 +54,14 @@ import { FanCommunityComments } from "./FanCommunityComments";
 import { AdminVotingVoterAudit } from "./AdminVotingVoterAudit";
 import { BroadcastWorkspaceStudio } from "./BroadcastWorkspaceStudio";
 import { OfficialMatchSheetModal } from "./OfficialMatchSheetModal";
+import { InbuiltDatabaseConsole } from "./InbuiltDatabaseConsole";
 import { OFFICIAL_CLUBS_DATA } from "../lib/teamSquadsData";
 import { DEFAULT_TEAMS, DEFAULT_FIXTURES, isTeamDeleted } from "../lib/fixturesData";
 import { DEFAULT_STANDINGS, type TeamStanding } from "./LeagueStandings";
 import { useRoleAccess } from "../hooks/useRoleAccess";
 
 export type AdminSection =
+  | "database_console"
   | "board_members"
   | "seasons_leagues"
   | "teams_clubs"
@@ -477,13 +479,13 @@ export function MasterAdminDashboard({
       id: "log-1",
       action: "System Initialized & Security Hardened",
       timestamp: "Today, 08:30 EAT",
-      operator: "msl-27 (Super Admin)",
+      operator: "Super Administrator",
     },
     {
       id: "log-2",
       action: "Council Board Registry Verified",
       timestamp: "Today, 09:15 EAT",
-      operator: "msl-27 (Super Admin)",
+      operator: "Super Administrator",
     },
     {
       id: "log-3",
@@ -648,61 +650,61 @@ export function MasterAdminDashboard({
     const defaults: AdminPlayerStat[] = [
       {
         id: "stat-1",
-        name: "Jaycrack",
-        team: "Thunder FC",
-        teamId: 6,
+        name: "Wokabi",
+        team: "Samba",
+        teamId: 1,
         goals: 5,
-        assists: 3,
-        matchesPlayed: 4,
+        assists: 2,
+        matchesPlayed: 3,
         cleanSheets: 0,
-        yellowCards: 1,
+        yellowCards: 0,
         redCards: 0,
-        rating: 8.9,
+        rating: 9.1,
         mvpAwards: 2,
         photoUrl: "",
       },
       {
         id: "stat-2",
-        name: "Kelvin Mutua",
-        team: "Phoenix FC",
-        teamId: 1,
+        name: "Levis Wanyama",
+        team: "Royal Rangers",
+        teamId: 6,
         goals: 4,
-        assists: 2,
-        matchesPlayed: 4,
+        assists: 4,
+        matchesPlayed: 3,
         cleanSheets: 0,
-        yellowCards: 0,
+        yellowCards: 1,
         redCards: 0,
-        rating: 8.4,
+        rating: 8.8,
         mvpAwards: 1,
         photoUrl: "",
       },
       {
         id: "stat-3",
-        name: "Brian Ochieng",
-        team: "Royal Rangers",
+        name: "Elly Adams Otieno",
+        team: "Young Stars City",
         teamId: 7,
         goals: 3,
-        assists: 4,
-        matchesPlayed: 4,
-        cleanSheets: 1,
-        yellowCards: 2,
+        assists: 1,
+        matchesPlayed: 3,
+        cleanSheets: 0,
+        yellowCards: 0,
         redCards: 0,
-        rating: 8.1,
+        rating: 8.3,
         mvpAwards: 1,
         photoUrl: "",
       },
       {
         id: "stat-4",
-        name: "Daniel Mwangi",
-        team: "Victory Stars",
+        name: "Hamard Adan",
+        team: "Mzinga Boyz",
         teamId: 8,
         goals: 2,
         assists: 2,
-        matchesPlayed: 4,
-        cleanSheets: 2,
+        matchesPlayed: 3,
+        cleanSheets: 0,
         yellowCards: 0,
         redCards: 0,
-        rating: 7.9,
+        rating: 8.0,
         mvpAwards: 0,
         photoUrl: "",
       },
@@ -1162,7 +1164,7 @@ export function MasterAdminDashboard({
         id: `log-${Date.now()}`,
         action: `Generated ${generated.length} Round-Robin fixtures across ${mw} matchweeks`,
         timestamp: new Date().toLocaleTimeString(),
-        operator: "msl-27 (Super Admin)",
+        operator: "Super Administrator",
       },
       ...prev,
     ]);
@@ -1638,6 +1640,15 @@ export function MasterAdminDashboard({
 
       {/* Main Admin Console Layout: Full-Width Active Feature Panel Controlled via Main Sidebar */}
       <div className="w-full space-y-6">
+        {/* =========================================================
+              PANEL 0: INBUILT DATABASE CONSOLE & LIVE SYNC
+              ========================================================= */}
+        {activeSection === "database_console" && (
+          <div>
+            <InbuiltDatabaseConsole />
+          </div>
+        )}
+
         {/* =========================================================
               PANEL 1: BOARD MEMBERS REGISTRY (FULL CRUD + RBAC)
               ========================================================= */}

@@ -9,6 +9,7 @@ import {
   Copy,
   ExternalLink,
 } from "lucide-react";
+import { OFFICIAL_CLUBS_DATA } from "../lib/teamSquadsData";
 
 interface PlayerInfo {
   name: string;
@@ -54,225 +55,22 @@ export function PlayerPhotoUploadPortal() {
       console.warn("Could not load teams:", e);
     }
 
-    // Default fallback squads
-    const defaultTeams: TeamData[] = [
-      {
-        id: 1,
-        name: "Samba Boys",
-        shortCode: "SMB",
-        color: "#00ff85",
-        homePitch: "Samba Arena (School Lower Pitch)",
-        squad: [
-          {
-            name: "Wokabi",
-            number: 9,
-            position: "FWD",
-            foot: "Right",
-            admissionNumber: "ADM-2024-0101",
-            photoUrl:
-              "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
-          },
-          {
-            name: "Brian Mwangi",
-            number: 7,
-            position: "MID",
-            foot: "Right",
-            admissionNumber: "ADM-2024-0102",
-            photoUrl:
-              "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80",
-          },
-          {
-            name: "Dan Kiprop",
-            number: 1,
-            position: "GK",
-            foot: "Both",
-            admissionNumber: "ADM-2024-0103",
-            photoUrl:
-              "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80",
-          },
-          {
-            name: "Samuel Otieno",
-            number: 4,
-            position: "DEF",
-            foot: "Right",
-            admissionNumber: "ADM-2024-0104",
-          },
-          {
-            name: "Faith Chemutai",
-            number: 8,
-            position: "MID",
-            foot: "Left",
-            admissionNumber: "ADM-2024-0105",
-          },
-          {
-            name: "Victor Maina",
-            number: 11,
-            position: "FWD",
-            foot: "Right",
-            admissionNumber: "ADM-2024-0106",
-          },
-        ],
-      },
-      {
-        id: 2,
-        name: "Grade 10 A",
-        shortCode: "G10A",
-        color: "#00f0ff",
-        homePitch: "Academy Main Stadium",
-        squad: [
-          {
-            name: "Emmanuel Kip",
-            number: 9,
-            position: "FWD",
-            foot: "Left",
-            admissionNumber: "ADM-2024-0201",
-            photoUrl:
-              "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=150&auto=format&fit=crop&q=80",
-          },
-          {
-            name: "John Doe",
-            number: 1,
-            position: "GK",
-            foot: "Right",
-            admissionNumber: "ADM-2024-0202",
-            photoUrl:
-              "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80",
-          },
-          {
-            name: "Bradley Barasa",
-            number: 6,
-            position: "DEF",
-            foot: "Right",
-            admissionNumber: "ADM-2024-0203",
-          },
-          {
-            name: "George Ochieng",
-            number: 8,
-            position: "MID",
-            foot: "Both",
-            admissionNumber: "ADM-2024-0204",
-          },
-          {
-            name: "Ryan Gitonga",
-            number: 11,
-            position: "FWD",
-            foot: "Left",
-            admissionNumber: "ADM-2024-0205",
-          },
-        ],
-      },
-      {
-        id: 3,
-        name: "Grade 10 B",
-        shortCode: "G10B",
-        color: "#ffe600",
-        homePitch: "Yellow Fortress Pitch B",
-        squad: [
-          {
-            name: "Joshua Mutua",
-            number: 5,
-            position: "DEF",
-            foot: "Right",
-            admissionNumber: "ADM-2024-0301",
-          },
-          {
-            name: "Ian Mercer",
-            number: 10,
-            position: "MID",
-            foot: "Both",
-            admissionNumber: "ADM-2024-0303",
-          },
-          {
-            name: "Peter Kariuki",
-            number: 1,
-            position: "GK",
-            foot: "Right",
-            admissionNumber: "ADM-2024-0304",
-          },
-          {
-            name: "Kelvin Njoroge",
-            number: 7,
-            position: "FWD",
-            foot: "Right",
-            admissionNumber: "ADM-2024-0305",
-          },
-        ],
-      },
-      {
-        id: 4,
-        name: "DP 2 A",
-        shortCode: "DP2A",
-        color: "#ff0077",
-        homePitch: "Senior DP Complex",
-        squad: [
-          {
-            name: "Collins Wekesa",
-            number: 8,
-            position: "MID",
-            foot: "Right",
-            admissionNumber: "ADM-2023-0401",
-          },
-          {
-            name: "Alex Rono",
-            number: 11,
-            position: "FWD",
-            foot: "Left",
-            admissionNumber: "ADM-2023-0403",
-          },
-          {
-            name: "Timothy Cheruiyot",
-            number: 1,
-            position: "GK",
-            foot: "Both",
-            admissionNumber: "ADM-2023-0404",
-          },
-          {
-            name: "Kelvin Korir",
-            number: 9,
-            position: "FWD",
-            foot: "Right",
-            admissionNumber: "ADM-2023-0406",
-          },
-        ],
-      },
-      {
-        id: 5,
-        name: "DP 2 B",
-        shortCode: "DP2B",
-        color: "#a855f7",
-        homePitch: "Purple Pitch Arena",
-        squad: [
-          {
-            name: "Hassan Ali",
-            number: 10,
-            position: "MID",
-            foot: "Both",
-            admissionNumber: "ADM-2023-0501",
-          },
-          {
-            name: "Rashid Mohamed",
-            number: 6,
-            position: "DEF",
-            foot: "Right",
-            admissionNumber: "ADM-2023-0503",
-          },
-          {
-            name: "Brian Koech",
-            number: 1,
-            position: "GK",
-            foot: "Right",
-            admissionNumber: "ADM-2023-0504",
-          },
-          {
-            name: "Caleb Kibet",
-            number: 9,
-            position: "FWD",
-            foot: "Right",
-            admissionNumber: "ADM-2023-0505",
-          },
-        ],
-      },
-    ];
+    // Default official squads from authentic registered clubs
+    const defaultTeams: TeamData[] = OFFICIAL_CLUBS_DATA.map((c) => ({
+      id: c.id,
+      name: c.name,
+      shortCode: c.shortCode,
+      color: c.color,
+      homePitch: c.homePitch,
+      squad: c.squad.map((s) => ({
+        name: s.name,
+        number: s.number,
+        position: s.position,
+        foot: s.foot || "Right",
+        admissionNumber: `MFA-2026-${(c.id * 100 + (s.number || 1)).toString().padStart(4, "0")}`,
+        photoUrl: s.photoUrl || "",
+      })),
+    }));
 
     setTeams(defaultTeams);
     setSelectedTeamId(defaultTeams[0].id);

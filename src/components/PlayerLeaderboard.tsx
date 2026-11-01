@@ -304,7 +304,7 @@ export function calculateLeaderboardFromMatchRecords(baseList: PlayerStat[]): {
     // 6. Factor in historical MVP Hall of Fame
     const historyWinners = getMvpWinnersHistory();
     historyWinners.forEach((hw) => {
-      const target = findPlayer(hw.playerName);
+      const target = findPlayer(hw.winnerName || (hw as any).playerName);
       if (target) {
         target.mvpAccolades = (target.mvpAccolades || 0) + 1;
       }
@@ -367,6 +367,7 @@ export function PlayerLeaderboard() {
   const [activeHonorsCategory, setActiveHonorsCategory] = useState<
     "ALL" | "GOALS" | "ASSISTS" | "CLEAN_SHEETS" | "MVP"
   >("ALL");
+  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
 
   // Sorting state
   const [sortKey, setSortKey] = useState<SortKey>("goals");
@@ -480,6 +481,118 @@ export function PlayerLeaderboard() {
         .sort((a, b) => b.cleanSheets - a.cleanSheets)[0] || null
     );
   }, [stats]);
+
+  const topScorersList = useMemo(() => {
+    return [...stats]
+      .filter((s) => s.goals > 0)
+      .sort((a, b) => b.goals - a.goals || a.matches - b.matches)
+      .slice(0, 5);
+  }, [stats]);
+
+  const topAssistsList = useMemo(() => {
+    return [...stats]
+      .filter((s) => s.assists > 0)
+      .sort((a, b) => b.assists - a.assists || a.matches - b.matches)
+      .slice(0, 5);
+  }, [stats]);
+
+  const topKeepersList = useMemo(() => {
+    return [...stats]
+      .filter((s) => s.position === "GK")
+      .sort((a, b) => b.cleanSheets - a.cleanSheets || (b.rating ?? 7) - (a.rating ?? 7))
+      .slice(0, 5);
+  }, [stats]);
+
+  const teamRankings = useMemo(() => {
+    const map = new Map<number, {
+      id: number;
+      name: string;
+      shortCode: string;
+      color: string;
+      played: number;
+      won: number;
+      drawn: number;
+      lost: number;
+      gf: number;
+      ga: number;
+      gd: number;
+      points: number;
+    }>();
+
+    teams.forEach((t) => {
+      map.set(t.id, {
+        id: t.id,
+        name: t.name,
+        shortCode: t.shortCode,
+        color: t.color,
+        played: 0,
+        won: 0,
+        drawn: 0,
+        lost: 0,
+        gf: 0,
+        ga: 0,
+        gd: 0,
+        points: 0,
+      });
+    });
+
+    try {
+      const rawMatches = localStorage.getItem("mpesa_pes_matches_v6");
+      const fixtures: any[] = rawMatches ? JSON.parse(rawMatches) : [];
+      fixtures.forEach((fix) => {
+        const isCompleted =
+          fix.status === "COMPLETED" ||
+          fix.status === "FINISHED" ||
+          (fix.homeScore !== undefined && fix.awayScore !== undefined && fix.status !== "POSTPONED" && fix.status !== "UPCOMING");
+
+        if (!isCompleted) return;
+        const hs = Number(fix.homeScore) || 0;
+        const as = Number(fix.awayScore) || 0;
+        const hTeam = map.get(fix.homeId);
+        const aTeam = map.get(fix.awayId);
+
+        if (hTeam) {
+          hTeam.played += 1;
+          hTeam.gf += hs;
+          hTeam.ga += as;
+          hTeam.gd = hTeam.gf - hTeam.ga;
+          if (hs > as) {
+            hTeam.won += 1;
+            hTeam.points += 3;
+          } else if (hs === as) {
+            hTeam.drawn += 1;
+            hTeam.points += 1;
+          } else {
+            hTeam.lost += 1;
+          }
+        }
+
+        if (aTeam) {
+          aTeam.played += 1;
+          aTeam.gf += as;
+          aTeam.ga += hs;
+          aTeam.gd = aTeam.gf - aTeam.ga;
+          if (as > hs) {
+            aTeam.won += 1;
+            aTeam.points += 3;
+          } else if (as === hs) {
+            aTeam.drawn += 1;
+            aTeam.points += 1;
+          } else {
+            aTeam.lost += 1;
+          }
+        }
+      });
+    } catch {
+      // ignore
+    }
+
+    return Array.from(map.values()).sort((a, b) => {
+      if (b.points !== a.points) return b.points - a.points;
+      if (b.gd !== a.gd) return b.gd - a.gd;
+      return b.gf - a.gf;
+    });
+  }, [teams, stats]);
 
   // Handle column header sort click
   const handleSort = (key: SortKey) => {
@@ -862,86 +975,399 @@ export function PlayerLeaderboard() {
         </div>
       </div>
 
-      {/* CATEGORY HONOR TABS */}
-      <div className="flex flex-wrap items-center gap-2">
-        <button
-          type="button"
-          onClick={() => {
-            setActiveHonorsCategory("ALL");
-            setSortKey("goals");
-          }}
-          className={`px-4 py-2 rounded-2xl text-xs font-black uppercase transition ${
-            activeHonorsCategory === "ALL"
-              ? "bg-white text-black shadow-lg"
-              : "bg-[#141029] text-gray-400 hover:text-white border border-[#2e2554]"
-          }`}
-        >
-          All Players ({stats.length})
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            setActiveHonorsCategory("GOALS");
-            setSortKey("goals");
-            setSortOrder("desc");
-          }}
-          className={`px-4 py-2 rounded-2xl text-xs font-black uppercase transition flex items-center gap-1.5 ${
-            activeHonorsCategory === "GOALS"
-              ? "bg-amber-400 text-black shadow-lg"
-              : "bg-[#141029] text-amber-300 hover:text-white border border-amber-400/30"
-          }`}
-        >
-          ⚽ Golden Boot (Goals)
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            setActiveHonorsCategory("ASSISTS");
-            setSortKey("assists");
-            setSortOrder("desc");
-          }}
-          className={`px-4 py-2 rounded-2xl text-xs font-black uppercase transition flex items-center gap-1.5 ${
-            activeHonorsCategory === "ASSISTS"
-              ? "bg-[#00f0ff] text-black shadow-lg"
-              : "bg-[#141029] text-[#00f0ff] hover:text-white border border-[#00f0ff]/30"
-          }`}
-        >
-          🎯 Assist Kings (Playmakers)
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            setActiveHonorsCategory("CLEAN_SHEETS");
-            setSortKey("cleanSheets");
-            setSortOrder("desc");
-          }}
-          className={`px-4 py-2 rounded-2xl text-xs font-black uppercase transition flex items-center gap-1.5 ${
-            activeHonorsCategory === "CLEAN_SHEETS"
-              ? "bg-emerald-400 text-black shadow-lg"
-              : "bg-[#141029] text-emerald-300 hover:text-white border border-emerald-400/30"
-          }`}
-        >
-          🧤 Golden Glove (Clean Sheets)
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            setActiveHonorsCategory("MVP");
-            setSortKey("mvpAccolades");
-            setSortOrder("desc");
-          }}
-          className={`px-4 py-2 rounded-2xl text-xs font-black uppercase transition flex items-center gap-1.5 ${
-            activeHonorsCategory === "MVP"
-              ? "bg-purple-400 text-black shadow-lg"
-              : "bg-[#141029] text-purple-300 hover:text-white border border-purple-400/30"
-          }`}
-        >
-          ⭐ MVP Leaders & Ratings
-        </button>
+      {/* VIEW MODE TOGGLE & CATEGORY HONOR TABS */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setActiveHonorsCategory("ALL");
+              setSortKey("goals");
+            }}
+            className={`px-4 py-2 rounded-2xl text-xs font-black uppercase transition ${
+              activeHonorsCategory === "ALL"
+                ? "bg-white text-black shadow-lg"
+                : "bg-[#141029] text-gray-400 hover:text-white border border-[#2e2554]"
+            }`}
+          >
+            All Players ({stats.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setActiveHonorsCategory("GOALS");
+              setSortKey("goals");
+              setSortOrder("desc");
+            }}
+            className={`px-4 py-2 rounded-2xl text-xs font-black uppercase transition flex items-center gap-1.5 ${
+              activeHonorsCategory === "GOALS"
+                ? "bg-amber-400 text-black shadow-lg"
+                : "bg-[#141029] text-amber-300 hover:text-white border border-amber-400/30"
+            }`}
+          >
+            ⚽ Golden Boot (Goals)
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setActiveHonorsCategory("ASSISTS");
+              setSortKey("assists");
+              setSortOrder("desc");
+            }}
+            className={`px-4 py-2 rounded-2xl text-xs font-black uppercase transition flex items-center gap-1.5 ${
+              activeHonorsCategory === "ASSISTS"
+                ? "bg-[#00f0ff] text-black shadow-lg"
+                : "bg-[#141029] text-[#00f0ff] hover:text-white border border-[#00f0ff]/30"
+            }`}
+          >
+            🎯 Assist Kings (Playmakers)
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setActiveHonorsCategory("CLEAN_SHEETS");
+              setSortKey("cleanSheets");
+              setSortOrder("desc");
+            }}
+            className={`px-4 py-2 rounded-2xl text-xs font-black uppercase transition flex items-center gap-1.5 ${
+              activeHonorsCategory === "CLEAN_SHEETS"
+                ? "bg-emerald-400 text-black shadow-lg"
+                : "bg-[#141029] text-emerald-300 hover:text-white border border-emerald-400/30"
+            }`}
+          >
+            🧤 Golden Glove (Clean Sheets)
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setActiveHonorsCategory("MVP");
+              setSortKey("mvpAccolades");
+              setSortOrder("desc");
+            }}
+            className={`px-4 py-2 rounded-2xl text-xs font-black uppercase transition flex items-center gap-1.5 ${
+              activeHonorsCategory === "MVP"
+                ? "bg-purple-400 text-black shadow-lg"
+                : "bg-[#141029] text-purple-300 hover:text-white border border-purple-400/30"
+            }`}
+          >
+            ⭐ MVP Leaders & Ratings
+          </button>
+        </div>
+
+        {/* View Mode Switcher */}
+        <div className="flex items-center gap-1 bg-[#141029] p-1 rounded-2xl border border-[#2e2554] self-start sm:self-auto shrink-0">
+          <button
+            type="button"
+            onClick={() => setViewMode("grid")}
+            className={`px-3 py-1.5 rounded-xl text-xs font-black uppercase transition flex items-center gap-1.5 ${
+              viewMode === "grid"
+                ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-black shadow"
+                : "text-gray-400 hover:text-white"
+            }`}
+          >
+            <span>📊 Cards Dashboard</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode("table")}
+            className={`px-3 py-1.5 rounded-xl text-xs font-black uppercase transition flex items-center gap-1.5 ${
+              viewMode === "table"
+                ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-black shadow"
+                : "text-gray-400 hover:text-white"
+            }`}
+          >
+            <span>📋 Full Table</span>
+          </button>
+        </div>
       </div>
 
-      {/* SORTABLE TABLE LAYOUT */}
-      <div className="bg-[#0e0a26]/90 border border-[#2e2554] rounded-3xl overflow-hidden shadow-2xl">
+      {viewMode === "grid" ? (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Card 1: Golden Boot Top Scorers */}
+          <div className="bg-[#0e0a26]/90 border border-[#2e2554] rounded-3xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-[#2e2554] pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-amber-400/20 text-amber-300 rounded-xl">
+                  <Trophy className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="font-header text-sm font-black uppercase text-white tracking-wide">
+                    Golden Boot Leaders
+                  </h4>
+                  <p className="text-[11px] text-gray-400">Top registered goal scorers</p>
+                </div>
+              </div>
+              <span className="text-[10px] bg-amber-400/10 text-amber-300 px-2.5 py-1 rounded-full font-black uppercase">
+                Goals
+              </span>
+            </div>
+
+            <div className="divide-y divide-[#2e2554]/40">
+              {topScorersList.length === 0 ? (
+                <div className="py-6 text-center text-gray-500 text-xs italic">
+                  Goals recorded on match reports will be listed here.
+                </div>
+              ) : (
+                topScorersList.map((player, idx) => {
+                  const team = getTeam(player.teamId);
+                  return (
+                    <div key={player.id} className="py-3 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <span
+                          className={`w-6 h-6 rounded-full inline-flex items-center justify-center font-mono font-black text-xs ${
+                            idx === 0
+                              ? "bg-amber-400 text-black shadow-md"
+                              : idx === 1
+                              ? "bg-slate-300 text-black"
+                              : idx === 2
+                              ? "bg-amber-700 text-white"
+                              : "bg-white/10 text-gray-400"
+                          }`}
+                        >
+                          {idx + 1}
+                        </span>
+                        <div
+                          className="w-3 h-3 rounded-full shrink-0"
+                          style={{ backgroundColor: team.color }}
+                        />
+                        <div>
+                          <span className="font-bold text-white text-xs block">{player.name}</span>
+                          <span className="text-[10px] text-gray-400">
+                            {team.name} • {player.position}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className="px-2.5 py-1 rounded-xl bg-amber-400/15 text-amber-300 font-mono font-black text-sm">
+                          {player.goals} Goals
+                        </span>
+                        <span className="text-[10px] text-gray-500 block mt-0.5">
+                          {player.matches} Matches ({(player.goals / Math.max(1, player.matches)).toFixed(2)} G/M)
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+
+          {/* Card 2: Assist Kings & Playmakers */}
+          <div className="bg-[#0e0a26]/90 border border-[#2e2554] rounded-3xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-[#2e2554] pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-[#00f0ff]/20 text-[#00f0ff] rounded-xl">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="font-header text-sm font-black uppercase text-white tracking-wide">
+                    Assist Kings & Playmakers
+                  </h4>
+                  <p className="text-[11px] text-gray-400">Top assist providers and chance creators</p>
+                </div>
+              </div>
+              <span className="text-[10px] bg-[#00f0ff]/10 text-[#00f0ff] px-2.5 py-1 rounded-full font-black uppercase">
+                Assists
+              </span>
+            </div>
+
+            <div className="divide-y divide-[#2e2554]/40">
+              {topAssistsList.length === 0 ? (
+                <div className="py-6 text-center text-gray-500 text-xs italic">
+                  Assists recorded on match reports will be listed here.
+                </div>
+              ) : (
+                topAssistsList.map((player, idx) => {
+                  const team = getTeam(player.teamId);
+                  return (
+                    <div key={player.id} className="py-3 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <span
+                          className={`w-6 h-6 rounded-full inline-flex items-center justify-center font-mono font-black text-xs ${
+                            idx === 0
+                              ? "bg-[#00f0ff] text-black shadow-md"
+                              : idx === 1
+                              ? "bg-slate-300 text-black"
+                              : idx === 2
+                              ? "bg-amber-700 text-white"
+                              : "bg-white/10 text-gray-400"
+                          }`}
+                        >
+                          {idx + 1}
+                        </span>
+                        <div
+                          className="w-3 h-3 rounded-full shrink-0"
+                          style={{ backgroundColor: team.color }}
+                        />
+                        <div>
+                          <span className="font-bold text-white text-xs block">{player.name}</span>
+                          <span className="text-[10px] text-gray-400">
+                            {team.name} • {player.position}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className="px-2.5 py-1 rounded-xl bg-[#00f0ff]/15 text-[#00f0ff] font-mono font-black text-sm">
+                          {player.assists} Assists
+                        </span>
+                        <span className="text-[10px] text-gray-500 block mt-0.5">
+                          {player.matches} Matches Played
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+
+          {/* Card 3: Golden Glove & Clean Sheets */}
+          <div className="bg-[#0e0a26]/90 border border-[#2e2554] rounded-3xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-[#2e2554] pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-emerald-500/20 text-emerald-300 rounded-xl">
+                  <Shield className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="font-header text-sm font-black uppercase text-white tracking-wide">
+                    Golden Glove & Clean Sheets
+                  </h4>
+                  <p className="text-[11px] text-gray-400">Top goalkeepers with zero goals conceded</p>
+                </div>
+              </div>
+              <span className="text-[10px] bg-emerald-500/10 text-emerald-300 px-2.5 py-1 rounded-full font-black uppercase">
+                Clean Sheets
+              </span>
+            </div>
+
+            <div className="divide-y divide-[#2e2554]/40">
+              {topKeepersList.length === 0 ? (
+                <div className="py-6 text-center text-gray-500 text-xs italic">
+                  Clean sheets from completed matches will be displayed here.
+                </div>
+              ) : (
+                topKeepersList.map((player, idx) => {
+                  const team = getTeam(player.teamId);
+                  return (
+                    <div key={player.id} className="py-3 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <span
+                          className={`w-6 h-6 rounded-full inline-flex items-center justify-center font-mono font-black text-xs ${
+                            idx === 0
+                              ? "bg-emerald-400 text-black shadow-md"
+                              : idx === 1
+                              ? "bg-slate-300 text-black"
+                              : idx === 2
+                              ? "bg-amber-700 text-white"
+                              : "bg-white/10 text-gray-400"
+                          }`}
+                        >
+                          {idx + 1}
+                        </span>
+                        <div
+                          className="w-3 h-3 rounded-full shrink-0"
+                          style={{ backgroundColor: team.color }}
+                        />
+                        <div>
+                          <span className="font-bold text-white text-xs block">{player.name}</span>
+                          <span className="text-[10px] text-gray-400">
+                            {team.name} • GK
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className="px-2.5 py-1 rounded-xl bg-emerald-500/15 text-emerald-300 font-mono font-black text-sm">
+                          {player.cleanSheets} Clean Sheets
+                        </span>
+                        <span className="text-[10px] text-gray-500 block mt-0.5">
+                          Rating: {(player.rating ?? 7.0).toFixed(1)}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+
+          {/* Card 4: Official Team Rankings & Standings */}
+          <div className="bg-[#0e0a26]/90 border border-[#2e2554] rounded-3xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-[#2e2554] pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-purple-500/20 text-purple-300 rounded-xl">
+                  <Award className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="font-header text-sm font-black uppercase text-white tracking-wide">
+                    League Team Standings
+                  </h4>
+                  <p className="text-[11px] text-gray-400">Calculated directly from match reports</p>
+                </div>
+              </div>
+              <span className="text-[10px] bg-purple-500/10 text-purple-300 px-2.5 py-1 rounded-full font-black uppercase">
+                Rankings
+              </span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-[#2e2554] text-gray-400 text-[10px] uppercase font-bold">
+                    <th className="py-2 px-2 text-center w-8">#</th>
+                    <th className="py-2 px-2">Club</th>
+                    <th className="py-2 px-1 text-center">MP</th>
+                    <th className="py-2 px-1 text-center">W</th>
+                    <th className="py-2 px-1 text-center">D</th>
+                    <th className="py-2 px-1 text-center">L</th>
+                    <th className="py-2 px-1 text-center">GD</th>
+                    <th className="py-2 px-2 text-right">PTS</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#2e2554]/30 font-semibold">
+                  {teamRankings.map((t, idx) => (
+                    <tr key={t.id} className="hover:bg-white/5">
+                      <td className="py-2.5 px-2 text-center font-mono">
+                        <span
+                          className={`w-5 h-5 rounded-full inline-flex items-center justify-center text-[10px] font-bold ${
+                            idx === 0
+                              ? "bg-amber-400 text-black font-black"
+                              : idx === 1
+                              ? "bg-slate-300 text-black font-black"
+                              : "text-gray-400"
+                          }`}
+                        >
+                          {idx + 1}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-2">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-2.5 h-2.5 rounded-full shrink-0"
+                            style={{ backgroundColor: t.color }}
+                          />
+                          <span className="font-bold text-white truncate">{t.name}</span>
+                        </div>
+                      </td>
+                      <td className="py-2.5 px-1 text-center font-mono text-gray-300">{t.played}</td>
+                      <td className="py-2.5 px-1 text-center font-mono text-emerald-400">{t.won}</td>
+                      <td className="py-2.5 px-1 text-center font-mono text-gray-400">{t.drawn}</td>
+                      <td className="py-2.5 px-1 text-center font-mono text-rose-400">{t.lost}</td>
+                      <td className="py-2.5 px-1 text-center font-mono text-gray-300">
+                        {t.gd > 0 ? `+${t.gd}` : t.gd}
+                      </td>
+                      <td className="py-2.5 px-2 text-right font-mono font-black text-emerald-400 text-sm">
+                        {t.points}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* SORTABLE TABLE LAYOUT */
+        <div className="bg-[#0e0a26]/90 border border-[#2e2554] rounded-3xl overflow-hidden shadow-2xl">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             {/* Table Header with Clickable Sorting */}
@@ -1209,6 +1635,7 @@ export function PlayerLeaderboard() {
           </div>
         )}
       </div>
+      )}
 
       {/* EDIT / CREATE STAT MODAL */}
       {openModal && editingStat && (
@@ -1375,6 +1802,7 @@ export function PlayerLeaderboard() {
                   />
                 </div>
               </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-gray-400 font-bold uppercase mb-1">

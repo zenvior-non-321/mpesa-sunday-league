@@ -1,7 +1,7 @@
 import { o as __toESM } from "../_runtime.mjs";
 import { r as require_react } from "../_libs/react+tanstack__react-query.mjs";
 import { n as useRoleAccess } from "./useRoleAccess-qpujIbxr.mjs";
-import { At as ChevronUp, D as Search, E as Send, J as Mail, N as RefreshCw, Nt as ChevronDown, Ot as CircleCheck, S as ShieldCheck, Vt as Award, X as Lock, Z as LockOpen, _t as Download, a as Users, f as Trash2, h as Sparkles, j as RotateCcw, kt as CircleAlert, l as Trophy, n as Vote, nt as KeyRound, w as Share2, xt as Crown } from "../_libs/lucide-react.mjs";
+import { At as CircleAlert, D as Search, E as Send, Ht as Award, N as RefreshCw, Pt as ChevronDown, Q as LockOpen, S as ShieldCheck, St as Crown, Y as Mail, Z as Lock, a as Users, f as Trash2, h as Sparkles, j as RotateCcw, jt as ChevronUp, kt as CircleCheck, l as Trophy, n as Vote, rt as KeyRound, vt as Download, w as Share2 } from "../_libs/lucide-react.mjs";
 import { t as require_jsx_dev_runtime } from "../_libs/react.mjs";
 import { i as normalizeAcademyEmail, n as getEmailDisplayName, r as isEmailInConfirmedList, t as CONFIRMED_ACADEMY_EMAILS } from "./academyAuthorizedEmails-BDXqxAI_.mjs";
 //#region node_modules/.nitro/vite/services/ssr/assets/MatchMvpVoting-BXP9mm0N.js

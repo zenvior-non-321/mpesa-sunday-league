@@ -1,6 +1,6 @@
 import { o as __toESM } from "../_runtime.mjs";
 import { r as require_react } from "../_libs/react+tanstack__react-query.mjs";
-import { Ct as Copy, Ft as Camera, Ot as CircleCheck, c as Upload, gt as ExternalLink, h as Sparkles, s as UserCheck, x as Shield } from "../_libs/lucide-react.mjs";
+import { It as Camera, _t as ExternalLink, c as Upload, h as Sparkles, kt as CircleCheck, s as UserCheck, wt as Copy, x as Shield } from "../_libs/lucide-react.mjs";
 import { t as require_jsx_dev_runtime } from "../_libs/react.mjs";
 //#region node_modules/.nitro/vite/services/ssr/assets/upload-photo-DADU9z9r.js
 var import_react = /* @__PURE__ */ __toESM(require_react());

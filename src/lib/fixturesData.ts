@@ -77,6 +77,22 @@ export function sanitizeTeamsList(teams: Team[]): Team[] {
   return filtered.length > 0 ? filtered : OFFICIAL_ACTIVE_TEAMS;
 }
 
+export function markTeamAsDeleted(id: number, name?: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    const stored: (number | string)[] = JSON.parse(
+      localStorage.getItem("mpesa_pes_deleted_teams_v6") || "[]",
+    );
+    if (!stored.includes(id)) stored.push(id);
+    if (name && !stored.includes(name.trim().toLowerCase())) {
+      stored.push(name.trim().toLowerCase());
+    }
+    localStorage.setItem("mpesa_pes_deleted_teams_v6", JSON.stringify(stored));
+  } catch {
+    // Ignore
+  }
+}
+
 export const DEFAULT_FIXTURES: MatchFixture[] = [
   {
     id: 1,

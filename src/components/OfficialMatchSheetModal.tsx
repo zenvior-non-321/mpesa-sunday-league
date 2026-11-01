@@ -269,7 +269,7 @@ export function OfficialMatchSheetModal({
         assistantRef1: "Francis Ndirangu",
         assistantRef2: "Peter Otieno",
         fourthOfficial: "Victor Kamau",
-        commissioner: fixture.matchCommissioner || "Mitchelle Muthoni",
+        commissioner: (fixture as any).matchCommissioner || (fixture as any).chaplain || "Mitchelle Muthoni",
       },
       signatures: {
         homeCaptainSigned: false,

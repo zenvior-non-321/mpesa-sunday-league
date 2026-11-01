@@ -477,7 +477,7 @@ export function BoardMemberManager() {
                 <input
                   type="text"
                   required
-                  placeholder="e.g. PRES-8491"
+                  placeholder="Enter confidential passkey"
                   value={newCode}
                   onChange={(e) => setNewCode(e.target.value.toUpperCase())}
                   className="w-full bg-[#0a071b] border border-[#2e2554] focus:border-amber-400 rounded-xl px-3 py-2.5 text-xs font-mono font-bold text-amber-300 outline-none"

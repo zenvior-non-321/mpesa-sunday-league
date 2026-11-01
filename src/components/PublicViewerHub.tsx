@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import { DEFAULT_TEAMS, DEFAULT_FIXTURES, isTeamDeleted } from "../lib/fixturesData";
 import { DEFAULT_STANDINGS, type TeamStanding, type SquadMember } from "./LeagueStandings";
+import { RecentMatchHistory } from "./RecentMatchHistory";
 import { getCurrentRbacUser } from "../lib/rbacSystem";
 import { useRoleAccess } from "../hooks/useRoleAccess";
 
@@ -202,70 +203,112 @@ export function PublicViewerHub({
   const [fixtureClubFilter, setFixtureClubFilter] = useState<string>("ALL");
   const [fixtureStatusFilter, setFixtureStatusFilter] = useState<string>("ALL");
 
-  // Load live data from localStorage
+  // Load live data from localStorage and listen to real-time sync events
   const [teams, setTeams] = useState<TeamStanding[]>(DEFAULT_STANDINGS);
   const [fixtures, setFixtures] = useState(DEFAULT_FIXTURES);
 
   useEffect(() => {
-    try {
-      const storedStandings =
-        localStorage.getItem("mpesa_pes_standings_v6") ||
-        localStorage.getItem("mpesa_pes_teams_v6");
-      let activeList: TeamStanding[] = DEFAULT_STANDINGS;
-      if (storedStandings) {
-        const parsed = JSON.parse(storedStandings);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          const nonDeleted = parsed.filter(
-            (t: Record<string, unknown>) =>
-              !isTeamDeleted(Number(t.id), typeof t.name === "string" ? t.name : ""),
-          );
-          if (nonDeleted.length > 0) activeList = nonDeleted as unknown as TeamStanding[];
+    const syncData = () => {
+      try {
+        const tableCleared = localStorage.getItem("mpesa_table_cleared_v6") === "true";
+        const storedStandings =
+          localStorage.getItem("mpesa_pes_standings_v6") ||
+          localStorage.getItem("mpesa_pes_teams_v6");
+        let activeList: TeamStanding[] = DEFAULT_STANDINGS;
+        if (storedStandings) {
+          const parsed = JSON.parse(storedStandings);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            const nonDeleted = parsed.filter(
+              (t: Record<string, unknown>) =>
+                !isTeamDeleted(Number(t.id), typeof t.name === "string" ? t.name : ""),
+            );
+            if (nonDeleted.length > 0) activeList = nonDeleted as unknown as TeamStanding[];
+          }
         }
+
+        // Strict number normalization so NaN can never occur
+        const sanitized = activeList.map((t: any, idx) => {
+          const tName = String(t.name || `Club #${idx + 1}`);
+          if (tableCleared) {
+            return {
+              ...t,
+              id: t.id ?? idx + 1,
+              name: tName,
+              shortCode: t.shortCode || tName.slice(0, 3).toUpperCase(),
+              color: t.color || "#00f0ff",
+              homePitch: t.homePitch || "Official Home Ground",
+              mp: 0,
+              played: 0,
+              w: 0,
+              won: 0,
+              d: 0,
+              drawn: 0,
+              l: 0,
+              lost: 0,
+              gf: 0,
+              ga: 0,
+              gd: 0,
+              pts: 0,
+              points: 0,
+            };
+          }
+
+          const gf = Number(t.gf) || 0;
+          const ga = Number(t.ga) || 0;
+          const gd = typeof t.gd === "number" && Number.isFinite(t.gd) ? t.gd : gf - ga;
+          const mp = Number(t.mp ?? t.played) || 0;
+          const w = Number(t.w ?? t.won) || 0;
+          const d = Number(t.d ?? t.drawn) || 0;
+          const l = Number(t.l ?? t.lost) || 0;
+          const pts = Number(t.pts ?? t.points) || (w * 3 + d);
+
+          return {
+            ...t,
+            id: t.id ?? idx + 1,
+            name: tName,
+            shortCode: t.shortCode || tName.slice(0, 3).toUpperCase(),
+            color: t.color || "#00f0ff",
+            homePitch: t.homePitch || "Official Home Ground",
+            mp,
+            played: mp,
+            w,
+            won: w,
+            d,
+            drawn: d,
+            l,
+            lost: l,
+            gf,
+            ga,
+            gd,
+            pts,
+            points: pts,
+          };
+        });
+        setTeams(sanitized as unknown as TeamStanding[]);
+
+        const storedFixtures = localStorage.getItem("mpesa_pes_matches_v6");
+        if (storedFixtures) {
+          const parsed = JSON.parse(storedFixtures);
+          if (Array.isArray(parsed) && parsed.length > 0) setFixtures(parsed);
+        }
+      } catch {
+        // Ignore
       }
+    };
 
-      // Strict number normalization so NaN can never occur
-      const sanitized = activeList.map((t: Record<string, unknown>, idx) => {
-        const gf = Number(t.gf) || 0;
-        const ga = Number(t.ga) || 0;
-        const gd = typeof t.gd === "number" && Number.isFinite(t.gd) ? t.gd : gf - ga;
-        const pts = Number(t.pts ?? t.points) || 0;
-        const mp = Number(t.mp ?? t.played) || 0;
-        const w = Number(t.w ?? t.won) || 0;
-        const d = Number(t.d ?? t.drawn) || 0;
-        const l = Number(t.l ?? t.lost) || 0;
-
-        return {
-          ...t,
-          id: t.id ?? idx + 1,
-          name: t.name || `Club #${idx + 1}`,
-          shortCode: t.shortCode || (t.name ? t.name.slice(0, 3).toUpperCase() : `C${idx + 1}`),
-          color: t.color || "#00f0ff",
-          homePitch: t.homePitch || "Official Home Ground",
-          mp,
-          played: mp,
-          w,
-          won: w,
-          d,
-          drawn: d,
-          l,
-          lost: l,
-          gf,
-          ga,
-          gd,
-          pts,
-          points: pts,
-        };
-      });
-      setTeams(sanitized);
-
-      const storedFixtures = localStorage.getItem("mpesa_pes_matches_v6");
-      if (storedFixtures) {
-        const parsed = JSON.parse(storedFixtures);
-        if (Array.isArray(parsed) && parsed.length > 0) setFixtures(parsed);
-      }
-    } catch {
-      // Ignore
-    }
+    syncData();
+    window.addEventListener("storage", syncData);
+    window.addEventListener("mpesa_standings_updated", syncData);
+    window.addEventListener("mpesa_db_updated", syncData);
+    window.addEventListener("mpesa_matchreport_saved", syncData);
+    window.addEventListener("mpesa_matchsheet_updated", syncData);
+    return () => {
+      window.removeEventListener("storage", syncData);
+      window.removeEventListener("mpesa_standings_updated", syncData);
+      window.removeEventListener("mpesa_db_updated", syncData);
+      window.removeEventListener("mpesa_matchreport_saved", syncData);
+      window.removeEventListener("mpesa_matchsheet_updated", syncData);
+    };
   }, []);
 
   const showToast = (msg: string) => {
@@ -328,10 +371,10 @@ export function PublicViewerHub({
     showToast("✓ Inquiries dispatched to the League Secretariat desk!");
   };
 
-  // Standings with Bonus Points (BP) calculation and strict sorting
+  // Clean League Standings calculated strictly from official match results
   const sortedStandingsWithBonus = useMemo(() => {
     return teams
-      .map((st: Record<string, unknown>, idx) => {
+      .map((st: any) => {
         const played = Number(st.played ?? st.mp) || 0;
         const won = Number(st.won ?? st.w) || 0;
         const drawn = Number(st.drawn ?? st.d) || 0;
@@ -339,23 +382,15 @@ export function PublicViewerHub({
         const gf = Number(st.gf) || 0;
         const ga = Number(st.ga) || 0;
         const gd = typeof st.gd === "number" && Number.isFinite(st.gd) ? st.gd : gf - ga;
-        const points = Number(st.points ?? st.pts) || 0;
-
-        // Bonus Points (BP): fair play + spiritual recitation bonus points
-        const bonusPoints =
-          typeof st.bonusPoints === "number" && !isNaN(st.bonusPoints)
-            ? st.bonusPoints
-            : st.id === 6
-              ? 2
-              : st.id === 1
-                ? 1
-                : st.id === 7
-                  ? 2
-                  : 1;
-        const totalPoints = points + bonusPoints;
+        const points = Number(st.points ?? st.pts) || (won * 3 + drawn);
 
         return {
           ...st,
+          id: st.id,
+          name: st.name,
+          shortCode: st.shortCode,
+          color: st.color,
+          homePitch: st.homePitch,
           played,
           won,
           drawn,
@@ -364,13 +399,12 @@ export function PublicViewerHub({
           ga,
           gd,
           points,
-          bonusPoints,
-          totalPoints,
+          totalPoints: points,
         };
       })
       .sort(
-        (a, b) =>
-          (b.totalPoints || 0) - (a.totalPoints || 0) ||
+        (a: any, b: any) =>
+          (b.points || 0) - (a.points || 0) ||
           (b.gd || 0) - (a.gd || 0) ||
           (b.gf || 0) - (a.gf || 0),
       );
@@ -614,6 +648,9 @@ export function PublicViewerHub({
             <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-gradient-to-l from-cyan-500/10 to-transparent pointer-events-none" />
           </div>
 
+          {/* Recent Match History Component */}
+          <RecentMatchHistory maxItems={4} showFilters={true} />
+
           {/* Latest News & Editorial Articles */}
           <div className="space-y-4">
             <div className="flex items-center justify-between border-b border-[#2e2554] pb-3">
@@ -683,7 +720,7 @@ export function PublicViewerHub({
                   Official League Information & Downloads
                 </h3>
                 <p className="text-xs text-gray-400 mt-0.5">
-                  Access official documents, season rulebooks, Christian conduct charters, and
+                  Access official documents, season rulebooks, sportsmanship fair play charters, and
                   player eligibility waivers.
                 </p>
               </div>
@@ -837,20 +874,11 @@ export function PublicViewerHub({
                   <th className="py-3 px-2 text-center" title="Goal Difference">
                     GD
                   </th>
-                  <th className="py-3 px-2 text-center" title="Match Points (3 for W, 1 for D)">
-                    Pts
-                  </th>
-                  <th
-                    className="py-3 px-2 text-center text-amber-300 font-bold"
-                    title="Spiritual & Conduct Bonus Points"
-                  >
-                    BP
-                  </th>
                   <th
                     className="py-3 px-3 text-center text-cyan-300 font-black text-sm"
-                    title="Total Points = Match Pts + BP"
+                    title="Official Points (3 for Win, 1 for Draw, 0 for Loss)"
                   >
-                    Total Pts
+                    Pts
                   </th>
                   <th className="py-3 px-3 text-right">Profile</th>
                 </tr>
@@ -899,14 +927,8 @@ export function PublicViewerHub({
                     <td className="py-3.5 px-2 text-center text-cyan-300 font-bold">
                       {st.gd > 0 ? `+${st.gd}` : (st.gd ?? 0)}
                     </td>
-                    <td className="py-3.5 px-2 text-center font-bold text-gray-200">
-                      {st.points ?? 0}
-                    </td>
-                    <td className="py-3.5 px-2 text-center font-black text-amber-300">
-                      +{st.bonusPoints ?? 0}
-                    </td>
                     <td className="py-3.5 px-3 text-center font-black text-cyan-300 text-sm bg-cyan-500/10 rounded-xl">
-                      {st.totalPoints ?? 0}
+                      {st.points ?? 0}
                     </td>
                     <td className="py-3.5 px-3 text-right">
                       <button
@@ -924,8 +946,8 @@ export function PublicViewerHub({
           </div>
 
           <div className="p-3 bg-[#141029] rounded-2xl border border-[#2e2554] flex flex-wrap items-center justify-between text-xs text-gray-400 gap-2">
-            <span className="font-mono text-[11px]">
-              ⭐ BP = Fair Play & Disciplinary Bonus Points (+1 Technical Area Conduct, +1 Zero Red Card bonus)
+            <span className="font-mono text-[11px] text-gray-400">
+              Standard FIFA Match Scoring (Win = 3 Pts, Draw = 1 Pt, Loss = 0 Pts)
             </span>
             <span className="text-[11px] font-bold text-emerald-400">
               Top 2 Qualify for Academy Championship Cup
@@ -1264,7 +1286,7 @@ export function PublicViewerHub({
                 {[
                   { pos: 1, name: "Levis Wanyama", club: "Royal Rangers", assists: 4, matches: 3 },
                   { pos: 2, name: "George Victor", club: "Royal Rangers", assists: 3, matches: 3 },
-                  { pos: 3, name: "Kelvin Mutua", club: "Samba", assists: 2, matches: 3 },
+                  { pos: 3, name: "Jaycrack", club: "Samba", assists: 2, matches: 3 },
                   { pos: 4, name: "Tonny Odundo", club: "Royal Rangers", assists: 2, matches: 3 },
                 ].map((player) => (
                   <div

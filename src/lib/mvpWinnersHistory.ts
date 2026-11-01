@@ -51,7 +51,7 @@ export const DEFAULT_MVP_WINNERS: MvpWinnerRecord[] = [
     matchweek: 2,
     fixtureTitle: "Royal Rangers vs Mzinga Boyz",
     date: "Sunday, Nov 01, 2026",
-    winnerName: "Dan Kiprop",
+    winnerName: "Chris Koome",
     teamName: "Royal Rangers",
     position: "MID",
     number: 8,
