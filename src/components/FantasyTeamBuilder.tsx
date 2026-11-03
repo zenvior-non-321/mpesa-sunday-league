@@ -27,6 +27,7 @@ import {
   ChevronRight,
   TrendingUp,
   Lock,
+  Calendar,
 } from "lucide-react";
 import {
   type FantasyPlayer,
@@ -282,6 +283,8 @@ export function FantasyTeamBuilder() {
             teamName: "M-Pesa Academy XI",
             gameweekPoints: 59,
             totalPoints: 231,
+            gameweekScores: {},
+          gameweekScores: {},
             gameweekScores: { 1: 42, 2: 43, 3: 45, 4: 42, 5: 59 },
           },
           {
@@ -616,6 +619,7 @@ export function FantasyTeamBuilder() {
           teamName: "M-Pesa Academy XI",
           gameweekPoints: 59,
           totalPoints: 231,
+          gameweekScores: {},
         },
       ],
     };
@@ -653,6 +657,8 @@ export function FantasyTeamBuilder() {
             teamName: "M-Pesa Academy XI",
             gameweekPoints: 59,
             totalPoints: 231,
+            gameweekScores: {},
+          gameweekScores: {},
           },
         ].sort((a, b) => b.totalPoints - a.totalPoints);
 

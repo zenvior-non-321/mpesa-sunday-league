@@ -283,6 +283,15 @@ describe("Fantasy MSL Football Engine", () => {
       assists: 0,
       cleanSheets: 0,
       totalPoints: 0,
+      clubShortCode: "TEST",
+      clubColor: "",
+      jerseyNumber: 1,
+      gameweekPoints: 0,
+      saves: 0,
+      yellowCards: 0,
+      redCards: 0,
+      form: 0,
+      selectedPercent: 0,
     };
 
     const midPlayer: FantasyPlayer = {
@@ -299,6 +308,15 @@ describe("Fantasy MSL Football Engine", () => {
       assists: 0,
       cleanSheets: 0,
       totalPoints: 0,
+      clubShortCode: "TEST",
+      clubColor: "",
+      jerseyNumber: 1,
+      gameweekPoints: 0,
+      saves: 0,
+      yellowCards: 0,
+      redCards: 0,
+      form: 0,
+      selectedPercent: 0,
     };
 
     const defPlayer: FantasyPlayer = {
@@ -315,6 +333,15 @@ describe("Fantasy MSL Football Engine", () => {
       assists: 0,
       cleanSheets: 0,
       totalPoints: 0,
+      clubShortCode: "TEST",
+      clubColor: "",
+      jerseyNumber: 1,
+      gameweekPoints: 0,
+      saves: 0,
+      yellowCards: 0,
+      redCards: 0,
+      form: 0,
+      selectedPercent: 0,
     };
 
     const gkPlayer: FantasyPlayer = {
@@ -331,6 +358,15 @@ describe("Fantasy MSL Football Engine", () => {
       assists: 0,
       cleanSheets: 0,
       totalPoints: 0,
+      clubShortCode: "TEST",
+      clubColor: "",
+      jerseyNumber: 1,
+      gameweekPoints: 0,
+      saves: 0,
+      yellowCards: 0,
+      redCards: 0,
+      form: 0,
+      selectedPercent: 0,
     };
 
     it("should award +4 for Forward goal, +5 for Midfielder goal, +6 for Defender goal", () => {

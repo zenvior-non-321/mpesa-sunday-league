@@ -112,6 +112,7 @@ export function JoinMiniLeagueModal({
         teamName: userSquadName,
         gameweekPoints: userGameweekPoints,
         totalPoints: userTotalPoints,
+        gameweekScores: {},
       };
 
       const updatedEntries = [...foundLeague.entries, newEntry].sort(
