@@ -15,6 +15,7 @@ import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as ClubsRouteImport } from './routes/clubs'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as DeskRouteImport } from './routes/desk'
+import { Route as FantasyRouteImport } from './routes/fantasy'
 import { Route as FixturesRouteImport } from './routes/fixtures'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as MvpVotingRouteImport } from './routes/mvp-voting'
@@ -54,6 +55,11 @@ const CommunityRoute = CommunityRouteImport.update({
 const DeskRoute = DeskRouteImport.update({
   id: '/desk',
   path: '/desk',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FantasyRoute = FantasyRouteImport.update({
+  id: '/fantasy',
+  path: '/fantasy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FixturesRoute = FixturesRouteImport.update({
@@ -114,6 +120,7 @@ export interface FileRoutesByFullPath {
   '/clubs': typeof ClubsRoute
   '/community': typeof CommunityRoute
   '/desk': typeof DeskRoute
+  '/fantasy': typeof FantasyRoute
   '/fixtures': typeof FixturesRoute
   '/leaderboard': typeof LeaderboardRoute
   '/mvp-voting': typeof MvpVotingRoute
@@ -132,6 +139,7 @@ export interface FileRoutesByTo {
   '/clubs': typeof ClubsRoute
   '/community': typeof CommunityRoute
   '/desk': typeof DeskRoute
+  '/fantasy': typeof FantasyRoute
   '/fixtures': typeof FixturesRoute
   '/leaderboard': typeof LeaderboardRoute
   '/mvp-voting': typeof MvpVotingRoute
@@ -151,6 +159,7 @@ export interface FileRoutesById {
   '/clubs': typeof ClubsRoute
   '/community': typeof CommunityRoute
   '/desk': typeof DeskRoute
+  '/fantasy': typeof FantasyRoute
   '/fixtures': typeof FixturesRoute
   '/leaderboard': typeof LeaderboardRoute
   '/mvp-voting': typeof MvpVotingRoute
@@ -171,6 +180,7 @@ export interface FileRouteTypes {
     | '/clubs'
     | '/community'
     | '/desk'
+    | '/fantasy'
     | '/fixtures'
     | '/leaderboard'
     | '/mvp-voting'
@@ -189,6 +199,7 @@ export interface FileRouteTypes {
     | '/clubs'
     | '/community'
     | '/desk'
+    | '/fantasy'
     | '/fixtures'
     | '/leaderboard'
     | '/mvp-voting'
@@ -207,6 +218,7 @@ export interface FileRouteTypes {
     | '/clubs'
     | '/community'
     | '/desk'
+    | '/fantasy'
     | '/fixtures'
     | '/leaderboard'
     | '/mvp-voting'
@@ -226,6 +238,7 @@ export interface RootRouteChildren {
   ClubsRoute: typeof ClubsRoute
   CommunityRoute: typeof CommunityRoute
   DeskRoute: typeof DeskRoute
+  FantasyRoute: typeof FantasyRoute
   FixturesRoute: typeof FixturesRoute
   LeaderboardRoute: typeof LeaderboardRoute
   MvpVotingRoute: typeof MvpVotingRoute
@@ -280,6 +293,13 @@ declare module '@tanstack/react-router' {
       path: '/desk'
       fullPath: '/desk'
       preLoaderRoute: typeof DeskRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/fantasy': {
+      id: '/fantasy'
+      path: '/fantasy'
+      fullPath: '/fantasy'
+      preLoaderRoute: typeof FantasyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/fixtures': {
@@ -362,6 +382,7 @@ const rootRouteChildren: RootRouteChildren = {
   ClubsRoute: ClubsRoute,
   CommunityRoute: CommunityRoute,
   DeskRoute: DeskRoute,
+  FantasyRoute: FantasyRoute,
   FixturesRoute: FixturesRoute,
   LeaderboardRoute: LeaderboardRoute,
   MvpVotingRoute: MvpVotingRoute,

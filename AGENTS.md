@@ -12,3 +12,6 @@
 <!-- LOVABLE:END -->
 
 - Keep public league appointments in `public/league-officials.js`, separate from portal access records, so public titles never grant permissions.
+
+- Mirror authorized league_shared_state writes into dedicated league record tables with a transactional database trigger; this keeps managed records consistent without granting viewers write access.
+- Keep player contact and admission details in a private table; public player records contain sporting fields only.
