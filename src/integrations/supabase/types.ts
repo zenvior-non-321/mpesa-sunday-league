@@ -14,6 +14,176 @@ export type Database = {
   }
   public: {
     Tables: {
+      fixtures: {
+        Row: {
+          active: boolean
+          away_team_id: number
+          home_team_id: number
+          id: number
+          kickoff_time: string
+          match_date: string
+          matchweek: number
+          status: string
+          updated_at: string
+          venue: string
+        }
+        Insert: {
+          active?: boolean
+          away_team_id: number
+          home_team_id: number
+          id: number
+          kickoff_time?: string
+          match_date?: string
+          matchweek?: number
+          status?: string
+          updated_at?: string
+          venue?: string
+        }
+        Update: {
+          active?: boolean
+          away_team_id?: number
+          home_team_id?: number
+          id?: number
+          kickoff_time?: string
+          match_date?: string
+          matchweek?: number
+          status?: string
+          updated_at?: string
+          venue?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fixtures_away_team_id_fkey"
+            columns: ["away_team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fixtures_home_team_id_fkey"
+            columns: ["home_team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      league_highlights: {
+        Row: {
+          active: boolean
+          id: string
+          record: Json
+          title: string
+        }
+        Insert: {
+          active?: boolean
+          id: string
+          record?: Json
+          title?: string
+        }
+        Update: {
+          active?: boolean
+          id?: string
+          record?: Json
+          title?: string
+        }
+        Relationships: []
+      }
+      league_injuries: {
+        Row: {
+          active: boolean
+          id: string
+          record: Json
+          team_id: number | null
+        }
+        Insert: {
+          active?: boolean
+          id: string
+          record?: Json
+          team_id?: number | null
+        }
+        Update: {
+          active?: boolean
+          id?: string
+          record?: Json
+          team_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "league_injuries_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      league_media: {
+        Row: {
+          active: boolean
+          id: string
+          record: Json
+          title: string
+        }
+        Insert: {
+          active?: boolean
+          id: string
+          record?: Json
+          title?: string
+        }
+        Update: {
+          active?: boolean
+          id?: string
+          record?: Json
+          title?: string
+        }
+        Relationships: []
+      }
+      league_news: {
+        Row: {
+          active: boolean
+          id: string
+          record: Json
+          title: string
+        }
+        Insert: {
+          active?: boolean
+          id: string
+          record?: Json
+          title?: string
+        }
+        Update: {
+          active?: boolean
+          id?: string
+          record?: Json
+          title?: string
+        }
+        Relationships: []
+      }
+      league_rules: {
+        Row: {
+          active: boolean
+          description: string
+          id: string
+          record: Json
+          title: string
+        }
+        Insert: {
+          active?: boolean
+          description?: string
+          id: string
+          record?: Json
+          title?: string
+        }
+        Update: {
+          active?: boolean
+          description?: string
+          id?: string
+          record?: Json
+          title?: string
+        }
+        Relationships: []
+      }
       league_shared_state: {
         Row: {
           data: Json
@@ -34,6 +204,143 @@ export type Database = {
           revision?: number
         }
         Relationships: []
+      }
+      match_results: {
+        Row: {
+          away_score: number
+          fixture_id: number
+          home_score: number
+          scorers: Json
+          updated_at: string
+        }
+        Insert: {
+          away_score?: number
+          fixture_id: number
+          home_score?: number
+          scorers?: Json
+          updated_at?: string
+        }
+        Update: {
+          away_score?: number
+          fixture_id?: number
+          home_score?: number
+          scorers?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_results_fixture_id_fkey"
+            columns: ["fixture_id"]
+            isOneToOne: true
+            referencedRelation: "fixtures"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      player_private_details: {
+        Row: {
+          details: Json
+          player_id: string
+        }
+        Insert: {
+          details?: Json
+          player_id: string
+        }
+        Update: {
+          details?: Json
+          player_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_private_details_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: true
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      player_statistics: {
+        Row: {
+          active: boolean
+          assists: number
+          goals: number
+          id: string
+          player_name: string
+          record: Json
+          team_id: number
+        }
+        Insert: {
+          active?: boolean
+          assists?: number
+          goals?: number
+          id: string
+          player_name: string
+          record?: Json
+          team_id: number
+        }
+        Update: {
+          active?: boolean
+          assists?: number
+          goals?: number
+          id?: string
+          player_name?: string
+          record?: Json
+          team_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_statistics_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      players: {
+        Row: {
+          active: boolean
+          id: string
+          name: string
+          photo_url: string
+          position: string
+          preferred_foot: string
+          shirt_number: number | null
+          team_id: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          id: string
+          name: string
+          photo_url?: string
+          position?: string
+          preferred_foot?: string
+          shirt_number?: number | null
+          team_id: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          id?: string
+          name?: string
+          photo_url?: string
+          position?: string
+          preferred_foot?: string
+          shirt_number?: number | null
+          team_id?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "players_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       portal_access: {
         Row: {
@@ -121,6 +428,36 @@ export type Database = {
           updated_at?: string
           youtube_id?: string | null
           youtube_url?: string | null
+        }
+        Relationships: []
+      }
+      teams: {
+        Row: {
+          active: boolean
+          captain: string
+          home_pitch: string
+          id: number
+          name: string
+          short_code: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          captain?: string
+          home_pitch?: string
+          id: number
+          name: string
+          short_code?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          captain?: string
+          home_pitch?: string
+          id?: number
+          name?: string
+          short_code?: string
+          updated_at?: string
         }
         Relationships: []
       }

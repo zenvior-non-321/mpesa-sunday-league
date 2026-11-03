@@ -15,6 +15,13 @@
       "when": 1792432399282,
       "tag": "0001_secure_portal_access_and_shared_league_state",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793725931716,
+      "tag": "0002_create_league_record_tables",
+      "breakpoints": true
     }
   ]
 }
