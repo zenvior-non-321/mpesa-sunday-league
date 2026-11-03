@@ -40,6 +40,7 @@ import { AnthemPlayerWidget } from "./AnthemPlayerWidget";
 import { AnthemStudioAndPlaylist } from "./AnthemStudioAndPlaylist";
 import { UnifiedAccessModal } from "./UnifiedAccessModal";
 import { MasterAdminDashboard } from "./MasterAdminDashboard";
+import { FantasyTeamBuilder } from "./FantasyTeamBuilder";
 import { authenticateBoardMember } from "../lib/boardMembersRegistry";
 import { DEFAULT_FIXTURES, DEFAULT_TEAMS } from "../lib/fixturesData";
 
@@ -55,7 +56,8 @@ export type ViewerTab =
   | "stats"
   | "calendar"
   | "voting"
-  | "anthem";
+  | "anthem"
+  | "fantasy";
 
 interface UnifiedLeagueDashboardProps {
   initialMode?: DashboardMode;
@@ -359,6 +361,13 @@ export function UnifiedLeagueDashboard({
           {viewerTab === "anthem" && (
             <div className="space-y-4 animate-in fade-in duration-200">
               <AnthemStudioAndPlaylist />
+            </div>
+          )}
+
+          {/* Fantasy MSL Football & Team Builder */}
+          {viewerTab === "fantasy" && (
+            <div className="space-y-4 animate-in fade-in duration-200">
+              <FantasyTeamBuilder />
             </div>
           )}
         </div>

@@ -378,8 +378,35 @@ export function OfficialMatchSheetModal({
     }
   };
 
-  // Real jsPDF document generation supporting both Blank Pre-Match and Completed Post-Match modes
-  const handleDownloadPdf = (mode: "blank_form" | "completed") => {
+  // Helper to load M-Pesa Academy crest icon as base64 for PDF embedding
+  const loadAcademyLogoBase64 = (): Promise<string | null> => {
+    return new Promise((resolve) => {
+      try {
+        const img = new Image();
+        img.crossOrigin = "Anonymous";
+        img.onload = () => {
+          try {
+            const canvas = document.createElement("canvas");
+            canvas.width = img.naturalWidth || 160;
+            canvas.height = img.naturalHeight || 160;
+            const ctx = canvas.getContext("2d");
+            if (!ctx) return resolve(null);
+            ctx.drawImage(img, 0, 0);
+            resolve(canvas.toDataURL("image/png"));
+          } catch {
+            resolve(null);
+          }
+        };
+        img.onerror = () => resolve(null);
+        img.src = "/mpesa-academy-icon.png";
+      } catch {
+        resolve(null);
+      }
+    });
+  };
+
+  // Real jsPDF document generation in Times New Roman typography with Crest & Board Acknowledgment
+  const handleDownloadPdf = async (mode: "blank_form" | "completed") => {
     try {
       setIsGeneratingPdf(true);
       const doc = new jsPDF({
@@ -390,72 +417,103 @@ export function OfficialMatchSheetModal({
 
       const isBlank = mode === "blank_form";
 
-      // 1. Navy Header Banner
+      // 1. Navy Academic Header Banner
       doc.setFillColor(0, 32, 91); // #00205B Deep Navy
-      doc.rect(0, 0, 210, 36, "F");
+      doc.rect(0, 0, 210, 38, "F");
 
+      // Optional Safaricom Green Accent Stripe
+      doc.setFillColor(67, 176, 42); // #43B02A
+      doc.rect(0, 37, 210, 1.5, "F");
+
+      // Try embedding official M-Pesa Academy Crest
+      try {
+        const logoData = await loadAcademyLogoBase64();
+        if (logoData) {
+          doc.addImage(logoData, "PNG", 12, 4, 28, 28);
+        } else {
+          // Fallback crest medallion vector badge
+          doc.setFillColor(212, 175, 55); // Gold
+          doc.circle(26, 18, 12, "F");
+          doc.setFillColor(0, 32, 91);
+          doc.circle(26, 18, 10, "F");
+          doc.setTextColor(255, 255, 255);
+          doc.setFont("times", "bold");
+          doc.setFontSize(8);
+          doc.text("MFA", 26, 20.5, { align: "center" });
+        }
+      } catch {
+        // Continue safely without image
+      }
+
+      // Header Titles in Classic Times New Roman Serif
       doc.setTextColor(255, 255, 255);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(13);
+      doc.setFont("times", "bold");
+      doc.setFontSize(14);
+      doc.text("M-PESA FOUNDATION ACADEMY", 115, 11, { align: "center" });
+
+      doc.setFontSize(10.5);
       doc.text(
         isBlank
           ? "M-PESA SUNDAY LEAGUE • OFFICIAL MATCH DAY SHEET & SCORECARD"
           : "M-PESA SUNDAY LEAGUE • CERTIFIED OFFICIAL MATCH REPORT",
-        105,
-        12,
+        115,
+        17.5,
         { align: "center" }
       );
 
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(8.5);
+      doc.setFont("times", "italic");
+      doc.setFontSize(8);
+      doc.setTextColor(226, 232, 240);
       doc.text(
-        isBlank
-          ? "PRINTABLE PRE-FILLED ROSTER & PHYSICAL FILL-IN FORM FOR MATCH OFFICIALS & COACHES"
-          : "OFFICIAL VERIFIED RECORD ARCHIVED IN SUPREME LEAGUE DATABASE",
-        105,
-        18,
+        "Governing Authority: MSL Executive Board & Match Officiating Commission",
+        115,
+        23,
         { align: "center" }
       );
 
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(10);
+      doc.setFont("times", "bold");
+      doc.setFontSize(9);
+      doc.setTextColor(255, 255, 255);
       doc.text(
         `MATCHWEEK ${sheet.matchweek} • ${sheet.date} • KICKOFF: ${sheet.time}`,
-        105,
-        25,
+        115,
+        29,
         { align: "center" }
       );
 
-      doc.setFontSize(8);
-      doc.setFont("helvetica", "italic");
-      doc.text(`Venue: ${sheet.venue} • City: ${sheet.city}`, 105, 31, { align: "center" });
+      doc.setFont("times", "normal");
+      doc.setFontSize(7.5);
+      doc.setTextColor(203, 213, 225);
+      doc.text(`Venue: ${sheet.venue} • Location: ${sheet.city}`, 115, 34, { align: "center" });
 
       // 2. Score Banner
-      doc.setFillColor(245, 247, 250);
-      doc.rect(14, 40, 182, 18, "F");
+      doc.setFillColor(248, 250, 252);
+      doc.rect(14, 42, 182, 18, "F");
       doc.setDrawColor(0, 32, 91);
-      doc.rect(14, 40, 182, 18, "S");
+      doc.setLineWidth(0.4);
+      doc.rect(14, 42, 182, 18, "S");
 
       doc.setTextColor(0, 32, 91);
-      doc.setFont("helvetica", "bold");
+      doc.setFont("times", "bold");
       doc.setFontSize(12);
-      doc.text(`${homeClub.name.toUpperCase()} (HOME)`, 45, 48, { align: "center" });
-      doc.text(`${awayClub.name.toUpperCase()} (AWAY)`, 165, 48, { align: "center" });
+      doc.text(`${homeClub.name.toUpperCase()} (HOME)`, 45, 50, { align: "center" });
+      doc.text(`${awayClub.name.toUpperCase()} (AWAY)`, 165, 50, { align: "center" });
 
-      doc.setFontSize(16);
+      doc.setFontSize(15);
       doc.setTextColor(15, 23, 42);
       if (isBlank) {
-        doc.text("[  ___  ]      VS      [  ___  ]", 105, 50, { align: "center" });
+        doc.text("[  ___  ]      VS      [  ___  ]", 105, 51.5, { align: "center" });
       } else {
-        doc.text(`${sheet.stats.homeScore}   -   ${sheet.stats.awayScore}`, 105, 50, { align: "center" });
+        doc.text(`${sheet.stats.homeScore}   -   ${sheet.stats.awayScore}`, 105, 51.5, { align: "center" });
       }
 
       doc.setFontSize(8);
+      doc.setFont("times", "italic");
       doc.setTextColor(100, 116, 139);
       if (isBlank) {
-        doc.text("Half-Time Score: [  ___  ] - [  ___  ]", 105, 55, { align: "center" });
+        doc.text("Half-Time Score: [  ___  ] - [  ___  ]", 105, 56.5, { align: "center" });
       } else {
-        doc.text(`Half-Time Score: (${sheet.stats.homeHtScore} - ${sheet.stats.awayHtScore})`, 105, 55, {
+        doc.text(`Half-Time Score: (${sheet.stats.homeHtScore} - ${sheet.stats.awayHtScore})`, 105, 56.5, {
           align: "center",
         });
       }
@@ -490,7 +548,7 @@ export function OfficialMatchSheetModal({
       }
 
       autoTable(doc, {
-        startY: 61,
+        startY: 63,
         head: [
           [
             "#",
@@ -508,8 +566,9 @@ export function OfficialMatchSheetModal({
         ],
         body: combinedLineups,
         theme: "grid",
-        styles: { fontSize: 7, cellPadding: 1.4, halign: "center" },
-        headStyles: { fillColor: [0, 32, 91], textColor: [255, 255, 255], fontStyle: "bold" },
+        styles: { font: "times", fontSize: 7, cellPadding: 1.5, halign: "center" },
+        headStyles: { fillColor: [0, 32, 91], textColor: [255, 255, 255], font: "times", fontStyle: "bold" },
+        bodyStyles: { font: "times" },
         columnStyles: {
           0: { cellWidth: 7 },
           1: { cellWidth: 43, halign: "left" },
@@ -525,13 +584,13 @@ export function OfficialMatchSheetModal({
         },
       });
 
-      let currentY = ((doc as any).lastAutoTable?.finalY ?? 61) + 5;
+      let currentY = ((doc as any).lastAutoTable?.finalY ?? 63) + 4;
 
       // 4. Match Events & Scoring Log Table
       if (isBlank) {
         // Blank ruled lines for the referee to record incidents
         const blankEventRows: string[][] = [];
-        for (let r = 1; r <= 8; r++) {
+        for (let r = 1; r <= 6; r++) {
           blankEventRows.push([`___'`, "Home / Away", "________________________", "Goal / YC / RC / Sub", "________________________"]);
         }
         autoTable(doc, {
@@ -539,8 +598,9 @@ export function OfficialMatchSheetModal({
           head: [["Minute", "Team", "Scorer / Carded Player (#)", "Event Type (Goal, Pen, YC, RC)", "Assist / Sub-In Player"]],
           body: blankEventRows,
           theme: "grid",
-          styles: { fontSize: 7, cellPadding: 2, halign: "center" },
-          headStyles: { fillColor: [0, 32, 91], textColor: [255, 255, 255], fontStyle: "bold" },
+          styles: { font: "times", fontSize: 7, cellPadding: 1.8, halign: "center" },
+          headStyles: { fillColor: [0, 32, 91], textColor: [255, 255, 255], font: "times", fontStyle: "bold" },
+          bodyStyles: { font: "times" },
           columnStyles: {
             0: { cellWidth: 18 },
             1: { cellWidth: 28 },
@@ -560,15 +620,16 @@ export function OfficialMatchSheetModal({
                 e.eventType,
                 e.assistOrSubIn,
               ])
-            : [["-", "None", "No goals or cards recorded", "-", "-"]];
+            : [["-", "None", "No disciplinary cards or goals logged", "-", "-"]];
 
         autoTable(doc, {
           startY: currentY,
           head: [["Minute", "Team", "Player Name (#)", "Event Type", "Assist / Sub In"]],
           body: eventRows,
           theme: "grid",
-          styles: { fontSize: 7.5, cellPadding: 1.6 },
-          headStyles: { fillColor: [0, 32, 91], textColor: [255, 255, 255], fontStyle: "bold" },
+          styles: { font: "times", fontSize: 7.5, cellPadding: 1.6 },
+          headStyles: { fillColor: [0, 32, 91], textColor: [255, 255, 255], font: "times", fontStyle: "bold" },
+          bodyStyles: { font: "times" },
           columnStyles: {
             0: { cellWidth: 18, halign: "center", fontStyle: "bold" },
             1: { cellWidth: 35 },
@@ -579,7 +640,7 @@ export function OfficialMatchSheetModal({
         });
       }
 
-      currentY = ((doc as any).lastAutoTable?.finalY ?? 130) + 5;
+      currentY = ((doc as any).lastAutoTable?.finalY ?? 130) + 4;
 
       // 5. Official Measurable Statistics (No unmeasurable possession/passes)
       autoTable(doc, {
@@ -597,8 +658,9 @@ export function OfficialMatchSheetModal({
           ],
         ],
         theme: "striped",
-        styles: { fontSize: 7, cellPadding: 1.5, halign: "center" },
-        headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: "bold" },
+        styles: { font: "times", fontSize: 7, cellPadding: 1.4, halign: "center" },
+        headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], font: "times", fontStyle: "bold" },
+        bodyStyles: { font: "times" },
         columnStyles: {
           0: { cellWidth: 45, fontStyle: "bold" },
           1: { cellWidth: 92, fontStyle: "bold" },
@@ -606,53 +668,126 @@ export function OfficialMatchSheetModal({
         },
       });
 
-      currentY = ((doc as any).lastAutoTable?.finalY ?? 180) + 5;
+      currentY = ((doc as any).lastAutoTable?.finalY ?? 175) + 4;
 
-      if (currentY > 230) {
+      if (currentY > 215) {
         doc.addPage();
-        currentY = 18;
+        currentY = 16;
       }
 
-      // 6. Signatures & Official Handover Block
-      doc.setFillColor(241, 245, 249);
-      doc.rect(14, currentY, 182, 42, "F");
-      doc.setDrawColor(203, 213, 225);
-      doc.rect(14, currentY, 182, 42, "S");
+      // 6. MSL Board Members & Executive Council Acknowledgment Block
+      doc.setFillColor(248, 250, 252);
+      doc.rect(14, currentY, 182, 60, "F");
+      doc.setDrawColor(0, 32, 91);
+      doc.setLineWidth(0.4);
+      doc.rect(14, currentY, 182, 60, "S");
 
-      doc.setTextColor(15, 23, 42);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(8);
-      doc.text("POST-MATCH MUTUAL SIGN-OFF & STATUTORY HANDOVER TO LEAGUE ADMINISTRATOR", 105, currentY + 5, {
+      doc.setTextColor(0, 32, 91);
+      doc.setFont("times", "bold");
+      doc.setFontSize(8.5);
+      doc.text("MSL BOARD MEMBERS & EXECUTIVE COUNCIL ACKNOWLEDGMENT", 105, currentY + 5, {
         align: "center",
       });
 
-      doc.setFontSize(7);
-      doc.setFont("helvetica", "normal");
-      doc.text(`Home Captain Sign: _______________________ Date: ________`, 18, currentY + 11);
-      doc.text(`Away Captain Sign: _______________________ Date: ________`, 112, currentY + 11);
-
-      doc.text(`Home Head Coach Sign: ___________________ Date: ________`, 18, currentY + 18);
-      doc.text(`Away Head Coach Sign: ___________________ Date: ________`, 112, currentY + 18);
-
-      doc.text(`Center Referee Sign: _____________________ Licence: ________`, 18, currentY + 25);
-      doc.text(`Match Commissioner: _____________________ Stamp: ________`, 112, currentY + 25);
-
-      // Official Handover Clause
-      doc.setFillColor(254, 243, 199);
-      doc.rect(16, currentY + 30, 178, 10, "F");
-      doc.setTextColor(146, 64, 14);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(6.5);
+      doc.setFont("times", "normal");
+      doc.setFontSize(7.2);
+      doc.setTextColor(30, 41, 59);
       doc.text(
-        "OFFICIAL STATUTORY HANDOVER CLAUSE: Upon mutual signing after final whistle, this physical document is handed over to the",
+        "• Austin Brian Omondi (President)     • Levis Wanyama (Vice President)     • George Victor Kibet (Head of Technical Bench)",
         105,
-        currentY + 33.5,
+        currentY + 10,
         { align: "center" }
       );
       doc.text(
-        "Supreme League Administrator for official verification, digital entry into the league standings table, and player leaderboard calculations.",
+        "• Bidan Mwaura (Head of Referees)     • Mitchelle Muthoni (Chief Match Commissioner)     • Tonny Odundo (Disciplinary Chair)",
         105,
-        currentY + 37.5,
+        currentY + 14.5,
+        { align: "center" }
+      );
+
+      // Certification Text
+      doc.setFont("times", "italic");
+      doc.setFontSize(6.8);
+      doc.setTextColor(71, 85, 105);
+      doc.text(
+        "Certification: This Official Match Report is certified under the sovereign authority of the M-Pesa Sunday League (MSL) Executive Board &",
+        105,
+        currentY + 19.5,
+        { align: "center" }
+      );
+      doc.text(
+        "Governing Council. All scores, sanctions, cautions, and appearances recorded herein constitute the permanent historical archive of the Academy.",
+        105,
+        currentY + 23,
+        { align: "center" }
+      );
+
+      // Signature and Stamp Grid with Generous Spacing to Write
+      doc.setFont("times", "bold");
+      doc.setFontSize(7.5);
+      doc.setTextColor(15, 23, 42);
+
+      // Line 1: Center Referee & Match Commissioner
+      doc.text(
+        `Center Referee: ${sheet.officials.referee || "______________________"}   Licence: ${sheet.signatures.refereeLicence || "MFA-REF-01"}`,
+        18,
+        currentY + 29
+      );
+      doc.text(
+        `Referee Sign: ${sheet.signatures.refereeSigned ? "[ CERTIFIED ELECTRONICALLY ]" : "___________________________"}`,
+        112,
+        currentY + 29
+      );
+
+      const homeCap = homeClub.squad?.find((p) => p.isCaptain)?.name || "Team Captain";
+      const awayCap = awayClub.squad?.find((p) => p.isCaptain)?.name || "Team Captain";
+
+      // Line 2: Home Captain & Coach
+      doc.text(
+        `Home Captain: ${sheet.signatures.homeCaptainName || homeCap}  Sign: ${sheet.signatures.homeCaptainSigned ? "[ SIGNED ]" : "_________________"}`,
+        18,
+        currentY + 36
+      );
+      doc.text(
+        `Home Coach: ${sheet.signatures.homeCoachName || homeClub.coachName || "_________________"}  Sign: ${sheet.signatures.homeCoachSigned ? "[ SIGNED ]" : "_________________"}`,
+        112,
+        currentY + 36
+      );
+
+      // Line 3: Away Captain & Coach
+      doc.text(
+        `Away Captain: ${sheet.signatures.awayCaptainName || awayCap}  Sign: ${sheet.signatures.awayCaptainSigned ? "[ SIGNED ]" : "_________________"}`,
+        18,
+        currentY + 43
+      );
+      doc.text(
+        `Away Coach: ${sheet.signatures.awayCoachName || awayClub.coachName || "_________________"}  Sign: ${sheet.signatures.awayCoachSigned ? "[ SIGNED ]" : "_________________"}`,
+        112,
+        currentY + 43
+      );
+
+      // Line 4: Match Commissioner & Handover Seal
+      doc.text(
+        `Match Commissioner: ${sheet.officials.commissioner || "Mitchelle Muthoni"}  Sign: ___________________________`,
+        18,
+        currentY + 50
+      );
+      doc.text(
+        `Handover Status: ${sheet.adminHandover?.isHandedOver ? "[ VERIFIED & HANDED OVER ]" : "[ PENDING PHYSICAL HANDOVER ]"}`,
+        112,
+        currentY + 50
+      );
+
+      // Official Handover Clause
+      doc.setFillColor(254, 243, 199);
+      doc.rect(16, currentY + 53, 178, 5.5, "F");
+      doc.setTextColor(146, 64, 14);
+      doc.setFont("times", "bold");
+      doc.setFontSize(6.2);
+      doc.text(
+        "STATUTORY HANDOVER: Upon mutual post-match signing, this original form is archived in the Supreme League Registry for real-time standings recalculation.",
+        105,
+        currentY + 56.8,
         { align: "center" }
       );
 
@@ -1036,50 +1171,60 @@ export function OfficialMatchSheetModal({
         )}
 
         {/* Modal Scrollable Body */}
-        <div className="p-4 sm:p-6 overflow-y-auto space-y-6 print:p-0 print:overflow-visible">
+        <div className="p-4 sm:p-6 overflow-y-auto space-y-6 print:p-0 print:overflow-visible font-serif font-['Times_New_Roman',Times,serif]">
           {/* ==========================================
-              SECTION 1: HEADER & MATCH METADATA
+              SECTION 1: HEADER & MATCH METADATA (ACADEMY BRANDED)
               ========================================== */}
           <div className="border border-indigo-500/30 print:border-black rounded-2xl p-5 bg-[#120e2e] print:bg-white text-white print:text-black space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-indigo-500/20 print:border-black pb-4">
-              <div>
-                <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400 print:text-black">
-                  1. Competition & Fixture Details
-                </span>
-                <h2 className="text-xl sm:text-2xl font-black uppercase text-white print:text-black">
-                  {sheet.competitionName}
-                </h2>
-                <div className="flex flex-wrap items-center gap-3 text-xs text-gray-300 print:text-black mt-1">
-                  <span className="flex items-center gap-1 font-bold text-amber-300 print:text-black">
-                    <Calendar className="w-3.5 h-3.5" />
-                    Matchweek {sheet.matchweek}
+              <div className="flex items-center gap-4">
+                <img
+                  src="/mpesa-academy-logo.svg"
+                  alt="M-Pesa Foundation Academy Crest"
+                  className="w-14 h-14 sm:w-16 sm:h-16 object-contain shrink-0 drop-shadow-md print:invert-0"
+                />
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 print:text-black">
+                    M-Pesa Foundation Academy • Official Fixture Sheet
                   </span>
-                  <span>•</span>
-                  <span className="flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5 text-cyan-400 print:text-black" />
-                    {sheet.date} ({sheet.time})
-                  </span>
-                  <span>•</span>
-                  <span className="flex items-center gap-1">
-                    <MapPin className="w-3.5 h-3.5 text-rose-400 print:text-black" />
-                    {sheet.venue}, {sheet.city}
-                  </span>
+                  <h2 className="text-xl sm:text-2xl font-bold uppercase text-white print:text-black font-['Times_New_Roman',Times,serif]">
+                    {sheet.competitionName}
+                  </h2>
+                  <p className="text-[11px] text-amber-300 print:text-black italic font-['Times_New_Roman',Times,serif]">
+                    Governing Body: MSL Executive Council & Match Officiating Commission
+                  </p>
+                  <div className="flex flex-wrap items-center gap-3 text-xs text-gray-300 print:text-black mt-1 font-['Times_New_Roman',Times,serif]">
+                    <span className="flex items-center gap-1 font-bold text-amber-300 print:text-black">
+                      <Calendar className="w-3.5 h-3.5" />
+                      Matchweek {sheet.matchweek}
+                    </span>
+                    <span>•</span>
+                    <span className="flex items-center gap-1">
+                      <Clock className="w-3.5 h-3.5 text-cyan-400 print:text-black" />
+                      {sheet.date} ({sheet.time})
+                    </span>
+                    <span>•</span>
+                    <span className="flex items-center gap-1">
+                      <MapPin className="w-3.5 h-3.5 text-rose-400 print:text-black" />
+                      {sheet.venue}, {sheet.city}
+                    </span>
+                  </div>
                 </div>
               </div>
 
               {/* Match Officials Assigned */}
-              <div className="p-3 bg-black/40 print:bg-gray-100 rounded-xl border border-white/10 print:border-black text-xs space-y-1">
+              <div className="p-3 bg-black/40 print:bg-gray-100 rounded-xl border border-white/10 print:border-black text-xs space-y-1 font-['Times_New_Roman',Times,serif]">
                 <span className="font-bold text-gray-400 print:text-black text-[10px] uppercase block">
                   Assigned Match Officials:
                 </span>
-                <div className="text-gray-200 print:text-black font-mono text-[11px]">
-                  <strong>Ref:</strong> {sheet.officials.referee}
+                <div className="text-gray-200 print:text-black text-[11px]">
+                  <strong>Referee:</strong> {sheet.officials.referee}
                 </div>
                 <div className="text-gray-400 print:text-black text-[10px]">
-                  <strong>AR1/AR2:</strong> {sheet.officials.assistantRef1} • {sheet.officials.assistantRef2}
+                  <strong>AR1 / AR2:</strong> {sheet.officials.assistantRef1} • {sheet.officials.assistantRef2}
                 </div>
                 <div className="text-gray-400 print:text-black text-[10px]">
-                  <strong>4th / Comm:</strong> {sheet.officials.fourthOfficial} • {sheet.officials.commissioner}
+                  <strong>Commissioner:</strong> {sheet.officials.commissioner}
                 </div>
               </div>
             </div>
@@ -1459,22 +1604,63 @@ export function OfficialMatchSheetModal({
           </div>
 
           {/* ==========================================
-              SECTION 5: STATUTORY SIGN-OFF & HANDOVER
+              SECTION 5: MSL BOARD MEMBERS ACKNOWLEDGMENT & STATUTORY SIGN-OFF
               ========================================== */}
-          <div className="border-2 border-indigo-500/40 print:border-black rounded-2xl p-5 bg-[#120e2e] print:bg-white space-y-4">
+          <div className="border-2 border-indigo-500/40 print:border-black rounded-2xl p-5 sm:p-6 bg-[#120e2e] print:bg-white space-y-5 font-['Times_New_Roman',Times,serif]">
+            {/* Board Members Acknowledgment Banner */}
+            <div className="p-4 rounded-xl border border-amber-400/30 bg-gradient-to-r from-amber-950/20 via-[#0a071b] to-blue-950/20 print:bg-gray-50 print:border-black space-y-2.5">
+              <div className="flex items-center justify-between border-b border-amber-400/20 print:border-black pb-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-amber-300 print:text-black">
+                  🏛️ MSL Board Members & Executive Council Acknowledgment
+                </span>
+                <span className="text-[10px] text-gray-400 print:text-black uppercase">
+                  Certified Constitutional Record
+                </span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 text-xs text-gray-200 print:text-black">
+                <div className="p-2 bg-black/30 print:bg-white rounded border border-white/5 print:border-black">
+                  <div className="text-[10px] text-amber-400 print:text-black font-bold uppercase">President</div>
+                  <div className="font-bold text-sm">Austin Brian Omondi</div>
+                </div>
+                <div className="p-2 bg-black/30 print:bg-white rounded border border-white/5 print:border-black">
+                  <div className="text-[10px] text-blue-400 print:text-black font-bold uppercase">Vice President</div>
+                  <div className="font-bold text-sm">Levis Wanyama</div>
+                </div>
+                <div className="p-2 bg-black/30 print:bg-white rounded border border-white/5 print:border-black">
+                  <div className="text-[10px] text-emerald-400 print:text-black font-bold uppercase">Head of Technical Bench</div>
+                  <div className="font-bold text-sm">George Victor Kibet</div>
+                </div>
+                <div className="p-2 bg-black/30 print:bg-white rounded border border-white/5 print:border-black">
+                  <div className="text-[10px] text-yellow-400 print:text-black font-bold uppercase">Head of Referees</div>
+                  <div className="font-bold text-sm">Bidan Mwaura</div>
+                </div>
+                <div className="p-2 bg-black/30 print:bg-white rounded border border-white/5 print:border-black">
+                  <div className="text-[10px] text-purple-400 print:text-black font-bold uppercase">Chief Match Commissioner</div>
+                  <div className="font-bold text-sm">Mitchelle Muthoni</div>
+                </div>
+                <div className="p-2 bg-black/30 print:bg-white rounded border border-white/5 print:border-black">
+                  <div className="text-[10px] text-rose-400 print:text-black font-bold uppercase">Disciplinary Committee Chair</div>
+                  <div className="font-bold text-sm">Tonny Odundo</div>
+                </div>
+              </div>
+              <p className="text-[11px] text-gray-300 print:text-black italic pt-1 border-t border-white/10 print:border-black text-center">
+                &ldquo;This Official Match Report is certified under the sovereign authority of the M-Pesa Sunday League (MSL) Executive Board. All scores, sanctions, disciplinary cautions, and player appearances recorded herein are final and constitute the verified historical archive of the M-Pesa Foundation Academy League.&rdquo;
+              </p>
+            </div>
+
             <div className="flex items-center justify-between border-b border-indigo-500/20 print:border-black pb-2">
-              <h3 className="font-header text-sm font-black uppercase text-white print:text-black flex items-center gap-2">
+              <h3 className="text-sm font-bold uppercase text-white print:text-black flex items-center gap-2">
                 <UserCheck className="w-4 h-4 text-emerald-400 print:text-black" />
-                5. Statutory Sign-offs & Post-Match Handover to League Administrator
+                Statutory Signatures & Verification (Well-Spaced Certification Grid)
               </h3>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
               {/* Home Bench Sign */}
-              <div className="p-4 bg-black/40 print:bg-gray-50 rounded-xl border border-emerald-500/30 print:border-black space-y-2">
+              <div className="p-4 bg-black/40 print:bg-gray-50 rounded-xl border border-emerald-500/30 print:border-black space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="font-black text-emerald-400 print:text-black uppercase text-xs">
-                    {homeClub.name} Bench
+                  <span className="font-bold text-emerald-400 print:text-black uppercase text-xs">
+                    {homeClub.name} Bench Sign-off
                   </span>
                   {sheet.signatures.homeCaptainSigned && (
                     <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-bold">
@@ -1482,9 +1668,12 @@ export function OfficialMatchSheetModal({
                     </span>
                   )}
                 </div>
-                <div className="text-gray-300 print:text-black text-[11px] space-y-1">
-                  <div>Captain: <strong>{sheet.signatures.homeCaptainName}</strong></div>
-                  <div>Head Coach: <strong>{sheet.signatures.homeCoachName}</strong></div>
+                <div className="text-gray-300 print:text-black text-xs space-y-1.5">
+                  <div>Captain: <strong>{sheet.signatures.homeCaptainName || homeClub.squad?.find((p) => p.isCaptain)?.name || "Team Captain"}</strong></div>
+                  <div>Head Coach: <strong>{sheet.signatures.homeCoachName || homeClub.coachName || "_________________"}</strong></div>
+                  <div className="pt-2 text-[10px] text-gray-400 print:text-black font-mono">
+                    Signature: {sheet.signatures.homeCaptainSigned ? "Verified Electronically" : "__________________________"}
+                  </div>
                 </div>
                 {!sheet.signatures.homeCaptainSigned && (
                   <button
@@ -1498,10 +1687,10 @@ export function OfficialMatchSheetModal({
               </div>
 
               {/* Away Bench Sign */}
-              <div className="p-4 bg-black/40 print:bg-gray-50 rounded-xl border border-blue-500/30 print:border-black space-y-2">
+              <div className="p-4 bg-black/40 print:bg-gray-50 rounded-xl border border-blue-500/30 print:border-black space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="font-black text-blue-400 print:text-black uppercase text-xs">
-                    {awayClub.name} Bench
+                  <span className="font-bold text-blue-400 print:text-black uppercase text-xs">
+                    {awayClub.name} Bench Sign-off
                   </span>
                   {sheet.signatures.awayCaptainSigned && (
                     <span className="text-[10px] bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full font-bold">
@@ -1509,9 +1698,12 @@ export function OfficialMatchSheetModal({
                     </span>
                   )}
                 </div>
-                <div className="text-gray-300 print:text-black text-[11px] space-y-1">
-                  <div>Captain: <strong>{sheet.signatures.awayCaptainName}</strong></div>
-                  <div>Head Coach: <strong>{sheet.signatures.awayCoachName}</strong></div>
+                <div className="text-gray-300 print:text-black text-xs space-y-1.5">
+                  <div>Captain: <strong>{sheet.signatures.awayCaptainName || awayClub.squad?.find((p) => p.isCaptain)?.name || "Team Captain"}</strong></div>
+                  <div>Head Coach: <strong>{sheet.signatures.awayCoachName || awayClub.coachName || "_________________"}</strong></div>
+                  <div className="pt-2 text-[10px] text-gray-400 print:text-black font-mono">
+                    Signature: {sheet.signatures.awayCaptainSigned ? "Verified Electronically" : "__________________________"}
+                  </div>
                 </div>
                 {!sheet.signatures.awayCaptainSigned && (
                   <button
@@ -1525,10 +1717,10 @@ export function OfficialMatchSheetModal({
               </div>
 
               {/* Match Officials Sign */}
-              <div className="p-4 bg-black/40 print:bg-gray-50 rounded-xl border border-amber-500/30 print:border-black space-y-2">
+              <div className="p-4 bg-black/40 print:bg-gray-50 rounded-xl border border-amber-500/30 print:border-black space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="font-black text-amber-300 print:text-black uppercase text-xs">
-                    Match Referee Crew
+                  <span className="font-bold text-amber-300 print:text-black uppercase text-xs">
+                    Match Referee Crew & Comm
                   </span>
                   {sheet.signatures.refereeSigned && (
                     <span className="text-[10px] bg-amber-400/20 text-amber-300 px-2 py-0.5 rounded-full font-bold">
@@ -1536,9 +1728,12 @@ export function OfficialMatchSheetModal({
                     </span>
                   )}
                 </div>
-                <div className="text-gray-300 print:text-black text-[11px] space-y-1">
-                  <div>Ref: <strong>{sheet.officials.referee}</strong></div>
-                  <div>Badge: <strong>{sheet.signatures.refereeLicence}</strong></div>
+                <div className="text-gray-300 print:text-black text-xs space-y-1.5">
+                  <div>Referee: <strong>{sheet.officials.referee}</strong></div>
+                  <div>Licence: <strong>{sheet.signatures.refereeLicence}</strong></div>
+                  <div className="pt-2 text-[10px] text-gray-400 print:text-black font-mono">
+                    Signature: {sheet.signatures.refereeSigned ? "Verified Electronically" : "__________________________"}
+                  </div>
                 </div>
                 {!sheet.signatures.refereeSigned && (
                   <button
@@ -1555,14 +1750,14 @@ export function OfficialMatchSheetModal({
             {/* Official Handover Statutory Notice */}
             <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-center justify-between gap-3 text-xs">
               <div className="space-y-0.5">
-                <span className="text-amber-300 font-black uppercase text-[10px] block">
+                <span className="text-amber-300 font-bold uppercase text-[10px] block">
                   📜 Mandatory Post-Match Statutory Handover
                 </span>
                 <p className="text-gray-300 text-[11px]">
                   After the final whistle and signing by both captains, coaches, and referee, this official physical sheet is handed directly to the League Administrator to be recorded into the official league database.
                 </p>
               </div>
-              <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase shrink-0 ${
+              <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase shrink-0 ${
                 sheet.adminHandover?.isHandedOver
                   ? "bg-emerald-500 text-black"
                   : "bg-amber-400/20 text-amber-300"

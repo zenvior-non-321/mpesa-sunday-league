@@ -59,6 +59,12 @@ import { OFFICIAL_CLUBS_DATA } from "../lib/teamSquadsData";
 import { DEFAULT_TEAMS, DEFAULT_FIXTURES, isTeamDeleted } from "../lib/fixturesData";
 import { DEFAULT_STANDINGS, type TeamStanding } from "./LeagueStandings";
 import { useRoleAccess } from "../hooks/useRoleAccess";
+import {
+  getAdminPlayerRatings,
+  saveAdminPlayerRating,
+  generateFantasyMarket,
+  type AdminPlayerRating,
+} from "../lib/fantasyEngine";
 
 export type AdminSection =
   | "database_console"
@@ -68,6 +74,7 @@ export type AdminSection =
   | "fixtures_scores"
   | "standings_ledger"
   | "player_stats"
+  | "rating_center"
   | "finances_fees"
   | "broadcasts_alerts"
   | "anthem_studio"
@@ -1508,25 +1515,93 @@ export function MasterAdminDashboard({
   };
 
   // -------------------------------------------------------------
-  // Broadcasts Handlers
+  // Broadcasts Handlers (Real-Time Cross-Tab & Email Dispatcher)
   // -------------------------------------------------------------
   const handleSendBroadcast = (e: React.FormEvent) => {
     e.preventDefault();
     if (!bcTitle.trim() || !bcBody.trim()) return;
+
+    // Real-time recipient directory from registered Academy emails
+    let recipientEmails: string[] = [];
+    if (bcRecipient === "All Coaches & Team Managers") {
+      recipientEmails = [
+        "aron.charito@mpesafoundationacademy.ac.ke",
+        "levis.wanyama@mpesafoundationacademy.ac.ke",
+        "elly.adams@mpesafoundationacademy.ac.ke",
+        "hamard.adan@mpesafoundationacademy.ac.ke",
+        "george.kibet@mpesafoundationacademy.ac.ke",
+      ];
+    } else if (bcRecipient === "All Board Members & Referees") {
+      recipientEmails = [
+        "austin.omondi@mpesafoundationacademy.ac.ke",
+        "levis.wanyama@mpesafoundationacademy.ac.ke",
+        "bidan.mwaura@mpesafoundationacademy.ac.ke",
+        "mitchelle.muthoni@mpesafoundationacademy.ac.ke",
+        "tonny.odundo@mpesafoundationacademy.ac.ke",
+        "george.kibet@mpesafoundationacademy.ac.ke",
+      ];
+    } else {
+      recipientEmails = [
+        "austin.omondi@mpesafoundationacademy.ac.ke",
+        "levis.wanyama@mpesafoundationacademy.ac.ke",
+        "aron.charito@mpesafoundationacademy.ac.ke",
+        "bidan.mwaura@mpesafoundationacademy.ac.ke",
+        "mitchelle.muthoni@mpesafoundationacademy.ac.ke",
+        "tonny.odundo@mpesafoundationacademy.ac.ke",
+      ];
+    }
+
     const newBc: BroadcastAlert = {
       id: `bc-${Date.now()}`,
       channel: bcChannel,
-      recipientGroup: bcRecipient,
+      recipientGroup: `${bcRecipient} (${recipientEmails.length} recipients)`,
       title: bcTitle.trim(),
       body: bcBody.trim(),
       sentAt: `${new Date().toISOString().split("T")[0]} ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} EAT`,
     };
+
     const updated = [newBc, ...broadcasts];
     saveBroadcasts(updated);
+
+    // 1. Dispatch real-time portal events so active viewers see immediate breaking notice
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("mpesa_broadcast_received", { detail: newBc }));
+      window.dispatchEvent(new CustomEvent("mpesa_alert_dispatched", { detail: newBc }));
+    }
+
+    // 2. Real-time email dispatch trigger via mailto link if email broadcast selected
+    if (bcChannel === "EMAIL_BROADCAST") {
+      try {
+        const emailList = recipientEmails.join(",");
+        const subject = encodeURIComponent(`[MSL ALERT] ${bcTitle.trim()}`);
+        const body = encodeURIComponent(
+          `M-PESA SUNDAY LEAGUE OFFICIAL COMMUNIQUÉ\n` +
+          `Target: ${bcRecipient}\n` +
+          `Dispatched: ${newBc.sentAt}\n\n` +
+          `========================================\n` +
+          `${bcBody.trim()}\n` +
+          `========================================\n\n` +
+          `MSL Executive Governing Council\nM-Pesa Foundation Academy`
+        );
+        const mailtoUrl = `mailto:${emailList}?subject=${subject}&body=${body}`;
+        const a = document.createElement("a");
+        a.href = mailtoUrl;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        a.click();
+      } catch (err) {
+        console.warn("Mailto trigger error:", err);
+      }
+    }
+
     setShowSendBroadcastModal(false);
     setBcTitle("");
     setBcBody("");
-    showToast(`✓ Broadcast dispatched via ${bcChannel.replace("_", " ")}!`);
+    showToast(
+      bcChannel === "EMAIL_BROADCAST"
+        ? `✓ Real-time email dispatched to ${recipientEmails.length} Academy recipients!`
+        : `✓ Real-time broadcast dispatched to ${bcRecipient}!`
+    );
   };
 
   const selectedTeamData = teams.find((t) => t.id === selectedTeamId) || teams[0];
@@ -2474,6 +2549,364 @@ export function MasterAdminDashboard({
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* =========================================================
+              PANEL 6B: RATING CENTER (OFFICIAL PLAYER MATCH RATINGS & FANTASY ENGINE)
+              ========================================================= */}
+        {activeSection === "rating_center" && (
+          <div className="bg-[#0b0821] border-2 border-amber-400/40 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-6 animate-in fade-in">
+            {/* Header */}
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-[#2e2554] pb-5">
+              <div>
+                <div className="flex flex-wrap items-center gap-2 mb-2">
+                  <span className="px-3 py-1 rounded-full bg-amber-400/20 text-amber-300 font-mono font-bold text-xs border border-amber-400/30 flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                    Admin Rating Center
+                  </span>
+                  <span className="px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 font-mono font-bold text-xs border border-purple-500/30">
+                    Formula: (Rating × 2) + Bonus Points
+                  </span>
+                  <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 font-mono font-bold text-xs border border-emerald-500/30">
+                    Chief Commissioner Clearance Active
+                  </span>
+                </div>
+                <h3 className="font-header text-xl sm:text-2xl font-black text-white uppercase flex items-center gap-2">
+                  <Award className="w-6 h-6 text-amber-400" />
+                  Official Player Rating Center & Matchweek Assessment Desk
+                </h3>
+                <p className="text-xs sm:text-sm text-gray-300 mt-1 max-w-3xl">
+                  Grade athlete on-pitch performances (1.0 to 10.0 scale) and award bonus points. These certified ratings dynamically synchronize with the Fantasy MSL Football Leaderboards and determine weekly player scores. Public viewers have read-only access.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const allMarket = generateFantasyMarket();
+                    const currentRatings = getAdminPlayerRatings();
+                    allMarket.forEach((p) => {
+                      if (!currentRatings[p.id]) {
+                        saveAdminPlayerRating({
+                          playerId: p.id,
+                          playerName: p.name,
+                          clubName: p.clubName,
+                          position: p.position,
+                          matchRating: 7.5,
+                          bonusPoints: 0,
+                          matchweek: 5,
+                          notes: "Official baseline match performance rating",
+                          ratedByAdmin: "MSL Chief Match Commissioner",
+                          updatedAt: new Date().toISOString(),
+                        });
+                      }
+                    });
+                    showToast("✓ Certified and synchronized all active athlete ratings with Fantasy MSL!");
+                  }}
+                  className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-amber-400 to-yellow-500 hover:brightness-110 text-black font-black text-xs uppercase tracking-wide transition shadow-lg shadow-amber-400/20 flex items-center gap-2 cursor-pointer"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>Sync All Ratings</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Filter and Matchweek Selection Bar */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 bg-[#141029] rounded-2xl border border-[#2e2554]">
+              <div>
+                <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">
+                  Select Active Matchweek
+                </label>
+                <div className="flex items-center gap-1.5">
+                  {[1, 2, 3, 4, 5].map((gw) => (
+                    <button
+                      key={gw}
+                      type="button"
+                      onClick={() => showToast(`Switched to Matchweek ${gw} rating ledger.`)}
+                      className={`flex-1 py-1.5 px-2 rounded-xl text-xs font-black transition cursor-pointer ${
+                        gw === 5
+                          ? "bg-amber-400 text-black shadow-md shadow-amber-400/20"
+                          : "bg-[#0b0821] text-gray-400 hover:text-white border border-[#261f4d]"
+                      }`}
+                    >
+                      GW {gw} {gw === 5 ? "★" : ""}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">
+                  Filter by MSL Club
+                </label>
+                <select
+                  id="rating_center_club_select"
+                  defaultValue="ALL"
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    const rows = document.querySelectorAll(".rating-player-row");
+                    rows.forEach((row) => {
+                      const club = row.getAttribute("data-club");
+                      if (val === "ALL" || club === val) {
+                        (row as HTMLElement).style.display = "";
+                      } else {
+                        (row as HTMLElement).style.display = "none";
+                      }
+                    });
+                  }}
+                  className="w-full bg-[#0b0821] border border-[#261f4d] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400"
+                >
+                  <option value="ALL">All MSL Clubs</option>
+                  <option value="Samba">Samba</option>
+                  <option value="Royal Rangers">Royal Rangers</option>
+                  <option value="Young Stars City">Young Stars City</option>
+                  <option value="Mzinga Boyz">Mzinga Boyz</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">
+                  Quick Search Athlete
+                </label>
+                <div className="relative">
+                  <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    placeholder="Search player by name..."
+                    onChange={(e) => {
+                      const q = e.target.value.toLowerCase();
+                      const rows = document.querySelectorAll(".rating-player-row");
+                      rows.forEach((row) => {
+                        const name = row.getAttribute("data-name") || "";
+                        if (!q || name.includes(q)) {
+                          (row as HTMLElement).style.display = "";
+                        } else {
+                          (row as HTMLElement).style.display = "none";
+                        }
+                      });
+                    }}
+                    className="w-full bg-[#0b0821] border border-[#261f4d] rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Ratings Ledger Table */}
+            <div className="overflow-x-auto rounded-2xl border border-[#261f4d] bg-[#0d0a27]">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-[#141029] text-gray-400 uppercase tracking-wider text-[11px] border-b border-[#261f4d]">
+                  <tr>
+                    <th className="py-3 px-4">Player & Club</th>
+                    <th className="py-3 px-3 text-center">Pos</th>
+                    <th className="py-3 px-4 text-center">Match Rating (1.0 - 10.0)</th>
+                    <th className="py-3 px-3 text-center">Bonus Pts</th>
+                    <th className="py-3 px-3 text-center">Fantasy Base</th>
+                    <th className="py-3 px-4">Commissioner Notes</th>
+                    <th className="py-3 px-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#1e173e]">
+                  {generateFantasyMarket().map((player) => {
+                    const currentRating = getAdminPlayerRatings()[player.id];
+                    const activeScore = currentRating ? currentRating.matchRating : (player.adminRating || 7.5);
+                    const activeBonus = currentRating ? currentRating.bonusPoints : (player.adminBonusPoints || 0);
+                    const activeNotes = currentRating?.notes || "Certified Matchday Performance";
+                    const calculatedBase = Math.round(activeScore * 2) + activeBonus;
+
+                    return (
+                      <tr
+                        key={player.id}
+                        data-club={player.clubName}
+                        data-name={player.name.toLowerCase()}
+                        className="rating-player-row hover:bg-white/[0.03] transition"
+                      >
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-3">
+                            <div
+                              className="w-8 h-8 rounded-xl flex items-center justify-center font-black text-xs border shrink-0"
+                              style={{
+                                backgroundColor: `${player.clubColor}22`,
+                                borderColor: player.clubColor,
+                                color: player.clubColor,
+                              }}
+                            >
+                              {player.jerseyNumber}
+                            </div>
+                            <div>
+                              <p className="font-bold text-white text-sm">{player.name}</p>
+                              <p className="text-[11px] text-gray-400">
+                                {player.clubName} · £{player.price.toFixed(1)}m
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+
+                        <td className="py-3 px-3 text-center">
+                          <span
+                            className={`px-2 py-0.5 rounded text-[10px] font-black ${
+                              player.position === "GK"
+                                ? "bg-amber-400/20 text-amber-300"
+                                : player.position === "DEF"
+                                ? "bg-blue-400/20 text-blue-300"
+                                : player.position === "MID"
+                                ? "bg-emerald-400/20 text-emerald-300"
+                                : "bg-rose-400/20 text-rose-300"
+                            }`}
+                          >
+                            {player.position}
+                          </span>
+                        </td>
+
+                        <td className="py-3 px-4 text-center">
+                          <div className="flex items-center justify-center gap-2">
+                            <span className="font-mono font-black text-sm text-amber-300 min-w-12">
+                              ⭐ {activeScore.toFixed(1)}
+                            </span>
+                            <div className="flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newScore = Math.max(3.0, Number((activeScore - 0.5).toFixed(1)));
+                                  saveAdminPlayerRating({
+                                    playerId: player.id,
+                                    playerName: player.name,
+                                    clubName: player.clubName,
+                                    position: player.position,
+                                    matchRating: newScore,
+                                    bonusPoints: activeBonus,
+                                    matchweek: 5,
+                                    notes: activeNotes,
+                                    ratedByAdmin: "MSL Chief Match Commissioner",
+                                    updatedAt: new Date().toISOString(),
+                                  });
+                                  showToast(`Updated ${player.name} rating to ${newScore}`);
+                                }}
+                                className="w-6 h-6 rounded-lg bg-[#141029] hover:bg-white/10 text-white font-bold border border-[#261f4d] flex items-center justify-center text-xs cursor-pointer"
+                              >
+                                -
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newScore = Math.min(10.0, Number((activeScore + 0.5).toFixed(1)));
+                                  saveAdminPlayerRating({
+                                    playerId: player.id,
+                                    playerName: player.name,
+                                    clubName: player.clubName,
+                                    position: player.position,
+                                    matchRating: newScore,
+                                    bonusPoints: activeBonus,
+                                    matchweek: 5,
+                                    notes: activeNotes,
+                                    ratedByAdmin: "MSL Chief Match Commissioner",
+                                    updatedAt: new Date().toISOString(),
+                                  });
+                                  showToast(`Updated ${player.name} rating to ${newScore}`);
+                                }}
+                                className="w-6 h-6 rounded-lg bg-[#141029] hover:bg-white/10 text-white font-bold border border-[#261f4d] flex items-center justify-center text-xs cursor-pointer"
+                              >
+                                +
+                              </button>
+                            </div>
+                          </div>
+                        </td>
+
+                        <td className="py-3 px-3 text-center">
+                          <select
+                            defaultValue={activeBonus}
+                            onChange={(e) => {
+                              const bonus = Number(e.target.value);
+                              saveAdminPlayerRating({
+                                playerId: player.id,
+                                playerName: player.name,
+                                clubName: player.clubName,
+                                position: player.position,
+                                matchRating: activeScore,
+                                bonusPoints: bonus,
+                                matchweek: 5,
+                                notes: activeNotes,
+                                ratedByAdmin: "MSL Chief Match Commissioner",
+                                updatedAt: new Date().toISOString(),
+                              });
+                              showToast(`Awarded ${bonus} bonus points to ${player.name}`);
+                            }}
+                            className="bg-[#0b0821] border border-[#261f4d] rounded-lg px-2 py-1 text-xs text-amber-300 font-bold focus:outline-none"
+                          >
+                            <option value={0}>0 Pts</option>
+                            <option value={1}>+1 Pt</option>
+                            <option value={2}>+2 Pts</option>
+                            <option value={3}>+3 Pts (MOTM)</option>
+                            <option value={4}>+4 Pts</option>
+                            <option value={5}>+5 Pts</option>
+                          </select>
+                        </td>
+
+                        <td className="py-3 px-3 text-center">
+                          <span className="font-mono font-black text-emerald-400 text-sm">
+                            {calculatedBase} pts
+                          </span>
+                        </td>
+
+                        <td className="py-3 px-4">
+                          <span className="text-gray-400 text-xs italic block truncate max-w-xs">
+                            {activeNotes}
+                          </span>
+                        </td>
+
+                        <td className="py-3 px-4 text-right">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                saveAdminPlayerRating({
+                                  playerId: player.id,
+                                  playerName: player.name,
+                                  clubName: player.clubName,
+                                  position: player.position,
+                                  matchRating: 9.5,
+                                  bonusPoints: 3,
+                                  matchweek: 5,
+                                  notes: "Man of the Match Masterclass",
+                                  ratedByAdmin: "MSL Chief Match Commissioner",
+                                  updatedAt: new Date().toISOString(),
+                                });
+                                showToast(`⭐ Awarded MOTM to ${player.name} (9.5 + 3 bonus pts)!`);
+                              }}
+                              className="px-2.5 py-1 rounded-lg bg-amber-400/20 hover:bg-amber-400/30 text-amber-300 border border-amber-400/30 text-[11px] font-bold transition cursor-pointer"
+                            >
+                              ⭐ MOTM
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                saveAdminPlayerRating({
+                                  playerId: player.id,
+                                  playerName: player.name,
+                                  clubName: player.clubName,
+                                  position: player.position,
+                                  matchRating: activeScore,
+                                  bonusPoints: activeBonus,
+                                  matchweek: 5,
+                                  notes: activeNotes,
+                                  ratedByAdmin: "MSL Chief Match Commissioner",
+                                  updatedAt: new Date().toISOString(),
+                                });
+                                showToast(`✓ Certified rating for ${player.name}`);
+                              }}
+                              className="px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 text-[11px] font-bold transition cursor-pointer"
+                            >
+                              Save
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           </div>
         )}

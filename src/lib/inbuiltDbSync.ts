@@ -551,3 +551,53 @@ export function recalculateStandingsFromReports() {
     // Ignore
   }
 }
+
+/**
+ * Compute real-time Form (Last 5 matches) strictly from completed matches.
+ * If 0 matches played, returns empty [] (blank in UI).
+ */
+export function computeTeamFormFromFixtures(
+  teamId: number,
+  fixtures: Array<{
+    homeId: number;
+    awayId: number;
+    homeScore?: number;
+    awayScore?: number;
+    status?: string;
+    matchweek?: number;
+  }>,
+): ("W" | "D" | "L")[] {
+  if (!Array.isArray(fixtures) || fixtures.length === 0) return [];
+
+  const completed = fixtures.filter((f) => {
+    const s = String(f.status || "");
+    const isDone =
+      s === "COMPLETED" ||
+      s === "FINISHED" ||
+      (typeof f.homeScore === "number" &&
+        typeof f.awayScore === "number" &&
+        s !== "SCHEDULED" &&
+        s !== "POSTPONED" &&
+        s !== "UPCOMING");
+    return isDone && (f.homeId === teamId || f.awayId === teamId);
+  });
+
+  completed.sort((a, b) => (a.matchweek || 0) - (b.matchweek || 0));
+
+  const results: ("W" | "D" | "L")[] = [];
+  completed.forEach((f) => {
+    if (typeof f.homeScore !== "number" || typeof f.awayScore !== "number") return;
+    if (f.homeId === teamId) {
+      if (f.homeScore > f.awayScore) results.push("W");
+      else if (f.homeScore < f.awayScore) results.push("L");
+      else results.push("D");
+    } else if (f.awayId === teamId) {
+      if (f.awayScore > f.homeScore) results.push("W");
+      else if (f.awayScore < f.homeScore) results.push("L");
+      else results.push("D");
+    }
+  });
+
+  return results.slice(-5);
+}
+

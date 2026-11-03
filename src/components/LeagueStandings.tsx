@@ -139,148 +139,26 @@ export const DEFAULT_STANDINGS: TeamStanding[] = [
       ],
     },
     squad: [
-      {
-        name: "Levis Wanyama",
-        number: 10,
-        position: "MID",
-        role: "Owner & Captain",
-        email: "levis.wanyama@mpesafoundationacademy.ac.ke",
-        photoUrl:
-          "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
-      },
-      {
-        name: "Tonny Odundo",
-        number: 7,
-        position: "MID",
-        role: "Member",
-        email: "tonny.odundo@mpesafoundationacademy.ac.ke",
-      },
-      {
-        name: "Ali Guyo",
-        number: 2,
-        position: "DEF",
-        role: "Member",
-        email: "ali.diba@mpesafoundationacademy.ac.ke",
-      },
-      {
-        name: "Chris Koome",
-        number: 8,
-        position: "MID",
-        role: "Member",
-        email: "chris.koome@mpesafoundationacademy.ac.ke",
-      },
-      {
-        name: "Dennis Thoya",
-        number: 3,
-        position: "DEF",
-        role: "Member",
-        email: "dennis.thoya@mpesafoundationacademy.ac.ke",
-      },
-      {
-        name: "Elvis Kingoo",
-        number: 9,
-        position: "FWD",
-        role: "Member",
-        email: "elvis.kingoo@mpesafoundationacademy.ac.ke",
-      },
-      {
-        name: "Gabriel Ekitui",
-        number: 4,
-        position: "DEF",
-        role: "Member",
-        email: "gabriel.alukwar@mpesafoundationacademy.ac.ke",
-      },
-      {
-        name: "George Victor",
-        number: 6,
-        position: "MID",
-        role: "Assistant Coach & Member",
-        email: "george.kibet@mpesafoundationacademy.ac.ke",
-      },
-      {
-        name: "Grout Olal",
-        number: 11,
-        position: "FWD",
-        role: "Member",
-        email: "grout.olal@mpesafoundationacademy.ac.ke",
-      },
-      {
-        name: "Idi Sebantu",
-        number: 1,
-        position: "GK",
-        role: "Member",
-        email: "idi.sebantu@mpesafoundationacademy.ac.ke",
-      },
-      {
-        name: "Ken Neepe",
-        number: 5,
-        position: "DEF",
-        role: "Member",
-        email: "ken.leneepa@mpesafoundationacademy.ac.ke",
-      },
-      {
-        name: "King David",
-        number: 14,
-        position: "MID",
-        role: "Member",
-        email: "king.amani@mpesafoundationacademy.ac.ke",
-      },
-      {
-        name: "Lewis Trady",
-        number: 17,
-        position: "FWD",
-        role: "Member",
-        email: "trady.lewis@mpesafoundationacademy.ac.ke",
-      },
-      {
-        name: "Mahad Abdi",
-        number: 12,
-        position: "MID",
-        role: "Member",
-        email: "mahad.sihal@mpesafoundationacademy.ac.ke",
-      },
-      {
-        name: "Mark Tonny",
-        number: 15,
-        position: "MID",
-        role: "Member",
-        email: "tonny.odundo@mpesafoundationacademy.ac.ke",
-      },
-      {
-        name: "Nimrod Khayumbi",
-        number: 16,
-        position: "DEF",
-        role: "Member",
-        email: "nimrod.khayumbi@mpesafoundationacademy.ac.ke",
-      },
-      {
-        name: "Reagan Ogora",
-        number: 18,
-        position: "DEF",
-        role: "Member",
-        email: "reagan.onsongo@mpesafoundationacademy.ac.ke",
-      },
-      {
-        name: "Ryan Kiarago",
-        number: 20,
-        position: "MID",
-        role: "Member",
-        email: "ryan.kiarago@mpesafoundationacademy.ac.ke",
-      },
-      {
-        name: "Ryan Odiwuor",
-        number: 21,
-        position: "GK",
-        role: "Member",
-        email: "ryan.odiwuor@mpesafoundationacademy.ac.ke",
-      },
-      {
-        name: "Wayne Kiptoo",
-        number: 22,
-        position: "MID",
-        role: "Member",
-        email: "wayne.kiptoo@mpesafoundationacademy.ac.ke",
-      },
+      { name: "Brian", number: 1, position: "GK", role: "Goalkeeper" },
+      { name: "Gregory", number: 13, position: "GK", role: "Goalkeeper" },
+      { name: "Jattan", number: 2, position: "DEF", role: "Defender" },
+      { name: "Atibu", number: 3, position: "DEF", role: "Defender" },
+      { name: "Haron", number: 4, position: "DEF", role: "Team Captain & Defender" },
+      { name: "Edgar", number: 5, position: "DEF", role: "Defender" },
+      { name: "Mutwiri", number: 6, position: "DEF", role: "Defender" },
+      { name: "Kichuma", number: 12, position: "DEF", role: "Defender" },
+      { name: "Abdiaziz", number: 15, position: "DEF", role: "Defender" },
+      { name: "Eugene", number: 7, position: "MID", role: "Midfielder" },
+      { name: "Shawn", number: 8, position: "MID", role: "Midfielder" },
+      { name: "Jaycrack", number: 10, position: "MID", role: "Team Captain & Playmaker" },
+      { name: "Phisael", number: 14, position: "MID", role: "Midfielder" },
+      { name: "Opiyo", number: 16, position: "MID", role: "Midfielder" },
+      { name: "Abdirashid", number: 17, position: "MID", role: "Midfielder" },
+      { name: "Stafford", number: 18, position: "MID", role: "Midfielder" },
+      { name: "Vincent", number: 20, position: "MID", role: "Midfielder" },
+      { name: "Wokabi", number: 9, position: "FWD", role: "Forward" },
+      { name: "Edwin", number: 11, position: "FWD", role: "Forward" },
+      { name: "Carson", number: 19, position: "FWD", role: "Forward" },
     ],
     mp: 0,
     w: 0,
@@ -333,26 +211,113 @@ export const DEFAULT_STANDINGS: TeamStanding[] = [
       ],
     },
     squad: [
-      { name: "Brian", number: 1, position: "GK", role: "Goalkeeper" },
-      { name: "Gregory", number: 13, position: "GK", role: "Goalkeeper" },
-      { name: "Jattan", number: 2, position: "DEF", role: "Defender" },
-      { name: "Atibu", number: 3, position: "DEF", role: "Defender" },
-      { name: "Haron", number: 4, position: "DEF", role: "Team Captain & Defender" },
-      { name: "Edgar", number: 5, position: "DEF", role: "Defender" },
-      { name: "Mutwiri", number: 6, position: "DEF", role: "Defender" },
-      { name: "Kichuma", number: 12, position: "DEF", role: "Defender" },
-      { name: "Abdiaziz", number: 15, position: "DEF", role: "Defender" },
-      { name: "Eugene", number: 7, position: "MID", role: "Midfielder" },
-      { name: "Shawn", number: 8, position: "MID", role: "Midfielder" },
-      { name: "Jaycrack", number: 10, position: "MID", role: "Team Captain & Playmaker" },
-      { name: "Phisael", number: 14, position: "MID", role: "Midfielder" },
-      { name: "Opiyo", number: 16, position: "MID", role: "Midfielder" },
-      { name: "Abdirashid", number: 17, position: "MID", role: "Midfielder" },
-      { name: "Stafford", number: 18, position: "MID", role: "Midfielder" },
-      { name: "Vincent", number: 20, position: "MID", role: "Midfielder" },
-      { name: "Wokabi", number: 9, position: "FWD", role: "Forward" },
-      { name: "Edwin", number: 11, position: "FWD", role: "Forward" },
-      { name: "Carson", number: 19, position: "FWD", role: "Forward" },
+      {
+        name: "Idi Sebantu",
+        number: 1,
+        position: "GK",
+        role: "Goalkeeper",
+        email: "idi.sebantu@mpesafoundationacademy.ac.ke",
+      },
+      {
+        name: "Ali Guyo",
+        number: 2,
+        position: "DEF",
+        role: "Defender",
+        email: "ali.diba@mpesafoundationacademy.ac.ke",
+      },
+      {
+        name: "Dennis Thoya",
+        number: 3,
+        position: "DEF",
+        role: "Defender",
+        email: "dennis.thoya@mpesafoundationacademy.ac.ke",
+      },
+      {
+        name: "Gabriel Ekitui",
+        number: 4,
+        position: "DEF",
+        role: "Defender",
+        email: "gabriel.alukwar@mpesafoundationacademy.ac.ke",
+      },
+      {
+        name: "Ken Neepe",
+        number: 5,
+        position: "DEF",
+        role: "Defender",
+        email: "ken.leneepa@mpesafoundationacademy.ac.ke",
+      },
+      {
+        name: "Levis Wanyama",
+        number: 10,
+        position: "MID",
+        role: "Owner & Captain",
+        email: "levis.wanyama@mpesafoundationacademy.ac.ke",
+        photoUrl:
+          "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
+      },
+      {
+        name: "Tonny Odundo",
+        number: 7,
+        position: "MID",
+        role: "Vice Captain & Member",
+        email: "tonny.odundo@mpesafoundationacademy.ac.ke",
+      },
+      {
+        name: "Chris Koome",
+        number: 8,
+        position: "MID",
+        role: "Member",
+        email: "chris.koome@mpesafoundationacademy.ac.ke",
+      },
+      {
+        name: "George Victor",
+        number: 6,
+        position: "MID",
+        role: "Assistant Coach & Member",
+        email: "george.kibet@mpesafoundationacademy.ac.ke",
+      },
+      {
+        name: "King David",
+        number: 14,
+        position: "MID",
+        role: "Member",
+        email: "king.amani@mpesafoundationacademy.ac.ke",
+      },
+      {
+        name: "Mahad Abdi",
+        number: 12,
+        position: "MID",
+        role: "Member",
+        email: "mahad.sihal@mpesafoundationacademy.ac.ke",
+      },
+      {
+        name: "Mark Tonny",
+        number: 15,
+        position: "MID",
+        role: "Member",
+        email: "tonny.odundo@mpesafoundationacademy.ac.ke",
+      },
+      {
+        name: "Elvis Kingoo",
+        number: 9,
+        position: "FWD",
+        role: "Striker",
+        email: "elvis.kingoo@mpesafoundationacademy.ac.ke",
+      },
+      {
+        name: "Grout Olal",
+        number: 11,
+        position: "FWD",
+        role: "Member",
+        email: "grout.olal@mpesafoundationacademy.ac.ke",
+      },
+      {
+        name: "Lewis Trady",
+        number: 17,
+        position: "FWD",
+        role: "Member",
+        email: "trady.lewis@mpesafoundationacademy.ac.ke",
+      },
     ],
     mp: 0,
     w: 0,
@@ -1531,24 +1496,28 @@ export function LeagueStandings() {
 
                     {/* Form */}
                     <td className="py-4 px-4 text-center hidden lg:table-cell">
-                      <div className="flex items-center justify-center gap-1">
-                        {team.form.map((res, i) => (
-                          <span
-                            key={i}
-                            className={`w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-black text-white uppercase ${
-                              res === "W"
-                                ? "bg-emerald-500 shadow-sm shadow-emerald-500/20"
-                                : res === "D"
-                                  ? "bg-amber-500 shadow-sm shadow-amber-500/20"
-                                  : res === "L"
-                                    ? "bg-rose-500 shadow-sm shadow-rose-500/20"
-                                    : "bg-gray-800 text-gray-400"
-                            }`}
-                          >
-                            {res}
-                          </span>
-                        ))}
-                      </div>
+                      {team.form && team.form.length > 0 ? (
+                        <div className="flex items-center justify-center gap-1">
+                          {team.form.map((res, i) => (
+                            <span
+                              key={i}
+                              className={`w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-black text-white uppercase ${
+                                res === "W"
+                                  ? "bg-emerald-500 shadow-sm shadow-emerald-500/20"
+                                  : res === "D"
+                                    ? "bg-amber-500 shadow-sm shadow-amber-500/20"
+                                    : res === "L"
+                                      ? "bg-rose-500 shadow-sm shadow-rose-500/20"
+                                      : "bg-gray-800 text-gray-400"
+                              }`}
+                            >
+                              {res}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-gray-500 font-mono text-xs">—</span>
+                      )}
                     </td>
                   </tr>
                 );

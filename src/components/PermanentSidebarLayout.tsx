@@ -31,6 +31,7 @@ import {
   Database,
   Flag,
   Layers,
+  Sparkles,
 } from "lucide-react";
 import { useRoleAccess } from "../hooks/useRoleAccess";
 import { AnthemPlayerWidget } from "./AnthemPlayerWidget";
@@ -162,6 +163,13 @@ export function PermanentSidebarLayout({ children }: PermanentSidebarLayoutProps
         icon: Trophy,
         badge: "Standings",
         badgeColor: "bg-cyan-400/20 text-[#00f0ff] border-cyan-400/30",
+      },
+      {
+        to: "/fantasy",
+        label: "Fantasy MSL Football",
+        icon: Sparkles,
+        badge: "£100m Game",
+        badgeColor: "bg-[#00ff85]/20 text-[#00ff85] border-[#00ff85]/30",
       },
       {
         to: "/clubs",
@@ -349,6 +357,15 @@ export function PermanentSidebarLayout({ children }: PermanentSidebarLayoutProps
         icon: Award,
         badge: "Stats",
         badgeColor: "bg-purple-400/20 text-purple-300 border-purple-400/30",
+      },
+      {
+        to: "/workspaces",
+        adminSection: "rating_center",
+        label: "Rating Center",
+        subLabel: "Matchweek Ratings & FPL Points",
+        icon: Sparkles,
+        badge: "Ratings",
+        badgeColor: "bg-amber-400/20 text-amber-300 border-amber-400/30",
       },
       {
         to: "/workspaces",

@@ -47,7 +47,7 @@ const DEFAULT_TEAMS: Team[] = [
   { id: 8, name: "Mzinga Boyz", shortCode: "MZB", color: "#eab308" },
 ];
 
-const DEFAULT_STATS: PlayerStat[] = getAllRegisteredPlayers().map((p, idx) => ({
+export const DEFAULT_STATS: PlayerStat[] = getAllRegisteredPlayers().map((p, idx) => ({
   id: p.id || idx + 1,
   name: p.name,
   teamId: p.teamId,

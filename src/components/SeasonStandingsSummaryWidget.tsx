@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { DEFAULT_STANDINGS, type TeamStanding } from "./LeagueStandings";
 import { isTeamDeleted } from "../lib/fixturesData";
+import { computeTeamFormFromFixtures } from "../lib/inbuiltDbSync";
 
 interface SeasonStandingsSummaryWidgetProps {
   onNavigateTab?: (
@@ -48,6 +49,9 @@ export function SeasonStandingsSummaryWidget({ onNavigateTab }: SeasonStandingsS
           if (activeDefault.length > 0) activeList = activeDefault;
         }
 
+        const storedMatches = localStorage.getItem("mpesa_pes_matches_v6");
+        const fixtures = storedMatches ? JSON.parse(storedMatches) : [];
+
         if (tableCleared) {
           activeList = activeList.map((t) => ({
             ...t,
@@ -64,6 +68,12 @@ export function SeasonStandingsSummaryWidget({ onNavigateTab }: SeasonStandingsS
             gd: 0,
             pts: 0,
             points: 0,
+            form: [],
+          }));
+        } else {
+          activeList = activeList.map((t) => ({
+            ...t,
+            form: computeTeamFormFromFixtures(Number(t.id), fixtures),
           }));
         }
 

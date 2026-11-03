@@ -4,6 +4,7 @@ import { DEFAULT_TEAMS, DEFAULT_FIXTURES, isTeamDeleted } from "../lib/fixturesD
 import { OfficialMatchSheetModal } from "./OfficialMatchSheetModal";
 import {
   Crown,
+  Trophy,
   Shield,
   Users,
   Award,
@@ -1794,7 +1795,7 @@ export function BoardWorkspaces() {
                       <div>
                         <h6 className="text-xs font-black text-white">{ca.name}</h6>
                         <span className="text-[11px] text-gray-400">
-                          {ca.parish} • Requested by: {ca.requestedBy}
+                          {(ca as any).parish || ca.division} • Requested by: {ca.requestedBy}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
@@ -2384,7 +2385,7 @@ export function BoardWorkspaces() {
                     >
                       <div>
                         <h6 className="text-xs font-black text-white">{cr.clubName}</h6>
-                        <span className="text-[11px] text-gray-400">{cr.parish}</span>
+                        <span className="text-[11px] text-gray-400">{(cr as any).parish || cr.clubZone}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <span
@@ -3023,7 +3024,7 @@ export function BoardWorkspaces() {
                         const newId = Number(e.target.value);
                         setSchedFixtureId(newId);
                         const match = fixtures.find((f) => f.id === newId);
-                        if (match?.chaplain) setSchedChaplain(match.chaplain);
+                        if ((match as any)?.chaplain) setSchedChaplain((match as any).chaplain);
                       }}
                       className="w-full bg-[#0a071b] border border-[#2e2554] focus:border-purple-400 rounded-xl px-3 py-2.5 text-xs font-bold text-white outline-none"
                     >
@@ -3190,7 +3191,7 @@ export function BoardWorkspaces() {
                                 Match Commissioner:
                               </span>
                               <span className="text-gray-200 text-xs font-mono">
-                                {f.chaplain || "Mitchelle Muthoni (Commissioner)"}
+                                {(f as any).chaplain || "Mitchelle Muthoni (Commissioner)"}
                               </span>
                             </div>
                           </div>
@@ -4131,7 +4132,7 @@ export function BoardWorkspaces() {
           isOpen={!!selectedMatchSheetFixture}
           onClose={() => setSelectedMatchSheetFixture(null)}
           fixture={selectedMatchSheetFixture}
-          teams={teams}
+          teams={teams as any}
         />
       )}
     </div>

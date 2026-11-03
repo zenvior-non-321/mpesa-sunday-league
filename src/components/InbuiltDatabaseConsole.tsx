@@ -53,8 +53,9 @@ import {
   type AudioVaultMetadata,
 } from "../lib/audioVault";
 import { OFFICIAL_CLUBS_DATA } from "../lib/teamSquadsData";
+import { SportsDatabaseSchemaViewer } from "./SportsDatabaseSchemaViewer";
 
-type DbTab = "teams" | "players" | "fixtures" | "reports" | "anthem" | "mvp_votes";
+type DbTab = "teams" | "players" | "fixtures" | "reports" | "anthem" | "schema_sync";
 
 export function InbuiltDatabaseConsole() {
   const [activeTab, setActiveTab] = useState<DbTab>("teams");
@@ -444,6 +445,7 @@ export function InbuiltDatabaseConsole() {
           { id: "fixtures", label: "Fixtures & Scores", icon: Calendar, count: fixtures.length },
           { id: "reports", label: "Official Match Reports", icon: FileText, count: reports.length },
           { id: "anthem", label: "Anthem Audio Vault", icon: Music, count: anthemMeta ? 1 : 0 },
+          { id: "schema_sync", label: "Database Schema & Sync", icon: Database, count: 9 },
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -999,9 +1001,10 @@ export function InbuiltDatabaseConsole() {
         </div>
       )}
 
-      {/* =========================================================
-          MODALS: EDIT TEAM
-          ========================================================= */}
+      {/* Tab 6: Complete Database Schema Design & Real-World Sports Web API Sync Engine */}
+      {activeTab === "schema_sync" && (
+        <SportsDatabaseSchemaViewer />
+      )}
       {editingTeam && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="w-full max-w-md bg-[#0f0b24] border border-[#2e2554] rounded-3xl p-6 space-y-4 shadow-2xl">

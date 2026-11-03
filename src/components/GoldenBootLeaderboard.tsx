@@ -10,6 +10,7 @@ import {
   Filter,
   BarChart2,
 } from "lucide-react";
+import { calculateLeaderboardFromMatchRecords, DEFAULT_STATS } from "./PlayerLeaderboard";
 
 export interface GoldenBootContender {
   id: number;
@@ -167,48 +168,72 @@ export function GoldenBootLeaderboard({ customContenders }: GoldenBootLeaderboar
   const [highlightedPlayer, setHighlightedPlayer] = useState<string | null>("Wokabi");
   const [liveContenders, setLiveContenders] = useState<GoldenBootContender[]>(DEFAULT_CONTENDERS);
 
-  // Sync with live player stats in localStorage
+  // Sync strictly with calculated match records & live events
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem("mpesa_pes_stats_v6");
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          const clubMap: Record<number, { name: string; code: string; color: string }> = {
-            1: { name: "Samba", code: "SAM", color: "#00ff85" },
-            6: { name: "Royal Rangers", code: "RR", color: "#3b82f6" },
-            7: { name: "Young Stars City", code: "YSC", color: "#f97316" },
-            8: { name: "Mzinga Boyz", code: "MZB", color: "#eab308" },
-          };
-          const mapped: GoldenBootContender[] = parsed
-            .filter((p: any) => p.position === "FWD" || p.position === "MID" || (p.goals || 0) > 0)
-            .map((p: any, idx: number) => {
-              const club = clubMap[p.teamId] || { name: "Club", code: "CLB", color: "#00f0ff" };
-              return {
-                id: p.id || idx + 1,
-                name: p.name,
-                clubName: club.name,
-                clubShortCode: club.code,
-                clubColor: club.color,
-                position: p.position === "FWD" ? "Forward" : "Midfielder",
-                matchesPlayed: p.matches || 0,
-                goals: p.goals || 0,
-                assists: p.assists || 0,
-                shotsOnTarget: Math.round((p.goals || 0) * 1.8),
-                penalties: 0,
-                openPlayGoals: p.goals || 0,
-                photoUrl: p.photoUrl,
-                matchweekGoals: [0, p.goals || 0],
-              };
-            });
+    const syncGoldenBoot = () => {
+      try {
+        const clubMap: Record<number, { name: string; code: string; color: string }> = {
+          1: { name: "Samba", code: "SMB", color: "#00ff85" },
+          6: { name: "Royal Rangers", code: "RR", color: "#3b82f6" },
+          7: { name: "Young Stars City", code: "YSC", color: "#f97316" },
+          8: { name: "Mzinga Boyz", code: "MZB", color: "#eab308" },
+        };
+
+        // 1. Calculate live player stats directly from verified fixtures & match reports
+        const { calculatedStats } = calculateLeaderboardFromMatchRecords(DEFAULT_STATS);
+
+        if (Array.isArray(calculatedStats) && calculatedStats.length > 0) {
+          const eligible = calculatedStats.filter(
+            (p) => p.position === "FWD" || p.position === "MID" || (p.goals || 0) > 0,
+          );
+
+          const mapped: GoldenBootContender[] = eligible.map((p, idx) => {
+            const club = clubMap[p.teamId] || { name: "Club", code: "CLB", color: "#00f0ff" };
+            return {
+              id: p.id || idx + 1,
+              name: p.name,
+              clubName: club.name,
+              clubShortCode: club.code,
+              clubColor: club.color,
+              position: p.position === "FWD" ? "Forward" : "Midfielder",
+              matchesPlayed: p.matches || 0,
+              goals: p.goals || 0,
+              assists: p.assists || 0,
+              shotsOnTarget: Math.round((p.goals || 0) * 1.8),
+              penalties: 0,
+              openPlayGoals: p.goals || 0,
+              photoUrl: p.photoUrl,
+              matchweekGoals: [0, p.goals || 0],
+            };
+          });
+
+          // Sort by goals descending, then assists descending
+          mapped.sort((a, b) => b.goals - a.goals || b.assists - a.assists || a.matchesPlayed - b.matchesPlayed);
+
           if (mapped.length > 0) {
             setLiveContenders(mapped);
+            return;
           }
         }
+      } catch (err) {
+        console.warn("Could not calculate live Golden Boot stats:", err);
       }
-    } catch {
-      // fallback
-    }
+    };
+
+    syncGoldenBoot();
+    window.addEventListener("storage", syncGoldenBoot);
+    window.addEventListener("mpesa_db_updated", syncGoldenBoot);
+    window.addEventListener("mpesa_matchreport_saved", syncGoldenBoot);
+    window.addEventListener("mpesa_matchsheet_updated", syncGoldenBoot);
+    window.addEventListener("mpesa_standings_updated", syncGoldenBoot);
+
+    return () => {
+      window.removeEventListener("storage", syncGoldenBoot);
+      window.removeEventListener("mpesa_db_updated", syncGoldenBoot);
+      window.removeEventListener("mpesa_matchreport_saved", syncGoldenBoot);
+      window.removeEventListener("mpesa_matchsheet_updated", syncGoldenBoot);
+      window.removeEventListener("mpesa_standings_updated", syncGoldenBoot);
+    };
   }, []);
 
   const contenders = customContenders || liveContenders;

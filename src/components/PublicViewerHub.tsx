@@ -36,6 +36,7 @@ import { DEFAULT_STANDINGS, type TeamStanding, type SquadMember } from "./League
 import { RecentMatchHistory } from "./RecentMatchHistory";
 import { getCurrentRbacUser } from "../lib/rbacSystem";
 import { useRoleAccess } from "../hooks/useRoleAccess";
+import { computeTeamFormFromFixtures } from "../lib/inbuiltDbSync";
 
 export interface PublicNewsArticle {
   id: string;
@@ -510,19 +511,12 @@ export function PublicViewerHub({
         if (f.homeId !== cId && f.awayId !== cId) return false;
       }
       if (fixtureStatusFilter !== "ALL") {
-        if (
-          fixtureStatusFilter === "FINISHED" &&
-          f.status !== "FINISHED" &&
-          f.status !== "COMPLETED"
-        )
+        const s = String(f.status);
+        if (fixtureStatusFilter === "FINISHED" && s !== "FINISHED" && s !== "COMPLETED")
           return false;
-        if (
-          fixtureStatusFilter === "UPCOMING" &&
-          f.status !== "UPCOMING" &&
-          f.status !== "SCHEDULED"
-        )
+        if (fixtureStatusFilter === "UPCOMING" && s !== "UPCOMING" && s !== "SCHEDULED")
           return false;
-        if (fixtureStatusFilter === "LIVE" && f.status !== "LIVE") return false;
+        if (fixtureStatusFilter === "LIVE" && s !== "LIVE") return false;
       }
       return true;
     });
@@ -641,6 +635,14 @@ export function PublicViewerHub({
                 >
                   <span>Championship Table</span>
                 </button>
+
+                <a
+                  href="/fantasy"
+                  className="px-5 py-2.5 rounded-xl bg-[#00ff85]/20 hover:bg-[#00ff85]/30 text-[#00ff85] border border-[#00ff85]/40 font-black text-xs uppercase tracking-wide transition flex items-center gap-2 cursor-pointer shadow-lg"
+                >
+                  <Sparkles className="w-4 h-4 text-[#00ff85]" />
+                  <span>Fantasy MSL (£100m Squad)</span>
+                </a>
               </div>
             </div>
 
@@ -875,6 +877,12 @@ export function PublicViewerHub({
                     GD
                   </th>
                   <th
+                    className="py-3 px-3 text-center text-gray-300 font-mono text-[11px]"
+                    title="Real Match Form (Last 5 Fixtures)"
+                  >
+                    Form (Last 5)
+                  </th>
+                  <th
                     className="py-3 px-3 text-center text-cyan-300 font-black text-sm"
                     title="Official Points (3 for Win, 1 for Draw, 0 for Loss)"
                   >
@@ -926,6 +934,33 @@ export function PublicViewerHub({
                     <td className="py-3.5 px-2 text-center text-gray-400">{st.ga ?? 0}</td>
                     <td className="py-3.5 px-2 text-center text-cyan-300 font-bold">
                       {st.gd > 0 ? `+${st.gd}` : (st.gd ?? 0)}
+                    </td>
+                    <td className="py-3.5 px-3 text-center">
+                      {(() => {
+                        const form = computeTeamFormFromFixtures(st.id, fixtures);
+                        if (!form || form.length === 0) {
+                          return <span className="text-gray-500 font-mono text-[11px]">—</span>;
+                        }
+                        return (
+                          <div className="flex items-center justify-center gap-1">
+                            {form.map((res, rIdx) => (
+                              <span
+                                key={rIdx}
+                                className={`w-4 h-4 rounded-full text-[9px] font-black flex items-center justify-center text-white ${
+                                  res === "W"
+                                    ? "bg-emerald-500 shadow-sm shadow-emerald-500/30"
+                                    : res === "D"
+                                      ? "bg-amber-500 shadow-sm shadow-amber-500/30"
+                                      : "bg-rose-500 shadow-sm shadow-rose-500/30"
+                                }`}
+                                title={res === "W" ? "Win" : res === "D" ? "Draw" : "Loss"}
+                              >
+                                {res}
+                              </span>
+                            ))}
+                          </div>
+                        );
+                      })()}
                     </td>
                     <td className="py-3.5 px-3 text-center font-black text-cyan-300 text-sm bg-cyan-500/10 rounded-xl">
                       {st.points ?? 0}
@@ -1009,7 +1044,7 @@ export function PublicViewerHub({
             {filteredFixtures.map((fix) => {
               const h = teams.find((t) => t.id === fix.homeId);
               const a = teams.find((t) => t.id === fix.awayId);
-              const isFinished = fix.status === "FINISHED" || fix.status === "COMPLETED";
+              const isFinished = String(fix.status) === "FINISHED" || String(fix.status) === "COMPLETED";
 
               return (
                 <div
@@ -1171,12 +1206,7 @@ export function PublicViewerHub({
 
                 <div className="pt-2 border-t border-[#261f4d] flex items-center justify-between">
                   <span className="text-xs text-gray-400 font-mono">
-                    Points:{" "}
-                    {Number(
-                      (club as Record<string, unknown>).points ??
-                        (club as Record<string, unknown>).pts,
-                    ) || 0}{" "}
-                    Pts
+                    Points: {Number(club.pts ?? (club as any).points) || 0} Pts
                   </span>
                   <button
                     type="button"
