@@ -7,6 +7,7 @@ import {
   mayDeleteTeam,
   boardRoles,
   removeDeletedTeams,
+  classifyStoreKey,
 } from "./portal-policy";
 
 const encode = (bytes: Uint8Array) =>
@@ -150,6 +151,56 @@ export const handlePortal = createServerOnlyFn(async (request: Request) => {
     } catch {
       return result({ error: "Invalid request." }, 400);
     }
+  }
+  if (action === "store") {
+    const isSuper = session?.role === "SUPER_ADMIN";
+    if (request.method === "GET") {
+      const classes = isSuper ? ["managed", "community", "private", "device"] : ["managed", "community"];
+      const deviceId = new URL(request.url).searchParams.get("device") || "";
+      const { data, error } = await db
+        .from("app_data_store")
+        .select("key,access_class,data")
+        .in("access_class", classes);
+      if (error) return result({ error: "League data unavailable." }, 503);
+      const rows = (data || []).filter(
+        (r) => r.access_class !== "device" || isSuper || r.key.startsWith(`device:${deviceId}:`),
+      );
+      if (!isSuper && /^[a-z0-9-]{8,64}$/.test(deviceId)) {
+        const { data: own } = await db
+          .from("app_data_store")
+          .select("key,access_class,data")
+          .like("key", `device:${deviceId}:%`);
+        rows.push(...(own || []));
+      }
+      return result({ rows });
+    }
+    const key = String(body["key"] || "");
+    const cls = classifyStoreKey(key);
+    if (!cls || key.length > 200) return result({ error: "Unknown data." }, 400);
+    if (cls === "private" && !isSuper) return result({ error: "Not allowed." }, 403);
+    if (cls === "managed" && !session) return result({ error: "Sign in to save league data." }, 403);
+    let storeKey = key;
+    if (cls === "device") {
+      const deviceId = String(body["device"] || "");
+      if (!/^[a-z0-9-]{8,64}$/.test(deviceId)) return result({ error: "Invalid device." }, 400);
+      storeKey = `device:${deviceId}:${key}`;
+    }
+    let value = body["data"] ?? null;
+    if (cls === "community" && !session) {
+      // Viewers may only add entries, never remove other people's entries.
+      const { data: existing } = await db.from("app_data_store").select("data").eq("key", key).maybeSingle();
+      const old = Array.isArray(existing?.data) ? (existing!.data as unknown[]) : [];
+      if (!Array.isArray(value)) return result({ error: "Invalid data." }, 400);
+      const seen = new Set(old.map((x) => JSON.stringify(x)));
+      value = [...old, ...value.filter((x) => !seen.has(JSON.stringify(x)))].slice(-5000);
+    }
+    const { error } = await db.from("app_data_store").upsert({
+      key: storeKey,
+      access_class: cls,
+      data: value as never,
+      updated_at: new Date().toISOString(),
+    });
+    return error ? result({ error: "Save failed." }, 503) : result({ ok: true });
   }
   if (action === "logout") return result({ ok: true }, 200, cookieFor(request, "", 0));
   if (action === "login" && request.method === "POST") {

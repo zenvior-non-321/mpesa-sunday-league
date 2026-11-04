@@ -15,3 +15,4 @@
 
 - Mirror authorized league_shared_state writes into dedicated league record tables with a transactional database trigger; this keeps managed records consistent without granting viewers write access.
 - Keep player contact and admission details in a private table; public player records contain sporting fields only.
+- All browser-saved `mpesa_*` records sync through `public/cloud-sync.js` to `app_data_store` via the portal `store` action; `classifyStoreKey` decides access, and a trigger mirrors each record into its dedicated table — one sync path keeps every page consistent across devices.

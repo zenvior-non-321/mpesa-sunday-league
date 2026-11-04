@@ -80,3 +80,27 @@ export function removeDeletedTeams(data: Record<string, unknown>, deleted: numbe
     injuryReports: rawInjuries.filter((p) => !p.teamId || present.has(p.teamId)),
   };
 }
+
+export type StoreClass = "managed" | "community" | "private" | "device";
+const skipStorePrefixes = [
+  "mpesa_pes_auth_user", "mpesa_pes_super_admin", "mpesa_pes_auth_role", "mpesa_admin_active_section",
+  "mpesa_board_sub_tab", "mpesa_shared_revision", "mpesa_sync_audit", "mpesa_audio_vault",
+];
+const privateStorePrefixes = [
+  "mpesa_pes_registered_board_members", "mpesa_board_access_locks", "mpesa_pes_registered_school_emails",
+  "mpesa_pes_pending_verifications", "mpesa_pes_voted_emails", "mpesa_pes_inquiries",
+  "mpesa_pes_club_applications", "mpesa_pes_tryout_requests", "mpesa_pes_email_dispatches", "mpesa_pes_finances",
+];
+const communityStorePrefixes = ["mpesa_pes_comments", "mpesa_pes_mvp_votes"];
+const deviceStorePrefixes = ["mpesa_fantasy_squad_gw_", "mpesa_match_report_form_"];
+
+/** Decides who may read/write a saved app record; null means it never leaves the device. */
+export function classifyStoreKey(key: string): StoreClass | null {
+  if (!/^mpesa_[A-Za-z0-9_-]+$/.test(key)) return null;
+  const has = (list: string[]) => list.some((p) => key.startsWith(p));
+  if (has(skipStorePrefixes)) return null;
+  if (has(privateStorePrefixes)) return "private";
+  if (has(communityStorePrefixes)) return "community";
+  if (has(deviceStorePrefixes)) return "device";
+  return "managed";
+}

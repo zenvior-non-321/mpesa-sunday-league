@@ -116,6 +116,7 @@ function RootShell({ children }: { children: ReactNode }) {
     <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
+        <script src="/cloud-sync.js" />
       </head>
       <body suppressHydrationWarning>
         {/* Persistent background YouTube player (active iframe container so audio stream works across pages) */}

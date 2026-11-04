@@ -14,6 +14,195 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_data_store: {
+        Row: {
+          access_class: string
+          data: Json
+          key: string
+          updated_at: string
+        }
+        Insert: {
+          access_class?: string
+          data?: Json
+          key: string
+          updated_at?: string
+        }
+        Update: {
+          access_class?: string
+          data?: Json
+          key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      board_registry: {
+        Row: {
+          record: Json
+          row_key: string
+          store_key: string
+          updated_at: string
+        }
+        Insert: {
+          record?: Json
+          row_key: string
+          store_key: string
+          updated_at?: string
+        }
+        Update: {
+          record?: Json
+          row_key?: string
+          store_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      calendar_activities: {
+        Row: {
+          record: Json
+          row_key: string
+          store_key: string
+          updated_at: string
+        }
+        Insert: {
+          record?: Json
+          row_key: string
+          store_key: string
+          updated_at?: string
+        }
+        Update: {
+          record?: Json
+          row_key?: string
+          store_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      club_applications: {
+        Row: {
+          record: Json
+          row_key: string
+          store_key: string
+          updated_at: string
+        }
+        Insert: {
+          record?: Json
+          row_key: string
+          store_key: string
+          updated_at?: string
+        }
+        Update: {
+          record?: Json
+          row_key?: string
+          store_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      community_comments: {
+        Row: {
+          record: Json
+          row_key: string
+          store_key: string
+          updated_at: string
+        }
+        Insert: {
+          record?: Json
+          row_key: string
+          store_key: string
+          updated_at?: string
+        }
+        Update: {
+          record?: Json
+          row_key?: string
+          store_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      email_dispatches: {
+        Row: {
+          record: Json
+          row_key: string
+          store_key: string
+          updated_at: string
+        }
+        Insert: {
+          record?: Json
+          row_key: string
+          store_key: string
+          updated_at?: string
+        }
+        Update: {
+          record?: Json
+          row_key?: string
+          store_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      fantasy_challenges: {
+        Row: {
+          record: Json
+          row_key: string
+          store_key: string
+          updated_at: string
+        }
+        Insert: {
+          record?: Json
+          row_key: string
+          store_key: string
+          updated_at?: string
+        }
+        Update: {
+          record?: Json
+          row_key?: string
+          store_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      fantasy_ratings: {
+        Row: {
+          record: Json
+          row_key: string
+          store_key: string
+          updated_at: string
+        }
+        Insert: {
+          record?: Json
+          row_key: string
+          store_key: string
+          updated_at?: string
+        }
+        Update: {
+          record?: Json
+          row_key?: string
+          store_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      fantasy_squads: {
+        Row: {
+          record: Json
+          row_key: string
+          store_key: string
+          updated_at: string
+        }
+        Insert: {
+          record?: Json
+          row_key: string
+          store_key: string
+          updated_at?: string
+        }
+        Update: {
+          record?: Json
+          row_key?: string
+          store_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       fixtures: {
         Row: {
           active: boolean
@@ -68,6 +257,69 @@ export type Database = {
           },
         ]
       }
+      league_broadcasts: {
+        Row: {
+          record: Json
+          row_key: string
+          store_key: string
+          updated_at: string
+        }
+        Insert: {
+          record?: Json
+          row_key: string
+          store_key: string
+          updated_at?: string
+        }
+        Update: {
+          record?: Json
+          row_key?: string
+          store_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      league_decrees: {
+        Row: {
+          record: Json
+          row_key: string
+          store_key: string
+          updated_at: string
+        }
+        Insert: {
+          record?: Json
+          row_key: string
+          store_key: string
+          updated_at?: string
+        }
+        Update: {
+          record?: Json
+          row_key?: string
+          store_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      league_finances: {
+        Row: {
+          record: Json
+          row_key: string
+          store_key: string
+          updated_at: string
+        }
+        Insert: {
+          record?: Json
+          row_key: string
+          store_key: string
+          updated_at?: string
+        }
+        Update: {
+          record?: Json
+          row_key?: string
+          store_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       league_highlights: {
         Row: {
           active: boolean
@@ -118,6 +370,27 @@ export type Database = {
           },
         ]
       }
+      league_inquiries: {
+        Row: {
+          record: Json
+          row_key: string
+          store_key: string
+          updated_at: string
+        }
+        Insert: {
+          record?: Json
+          row_key: string
+          store_key: string
+          updated_at?: string
+        }
+        Update: {
+          record?: Json
+          row_key?: string
+          store_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       league_media: {
         Row: {
           active: boolean
@@ -160,6 +433,27 @@ export type Database = {
         }
         Relationships: []
       }
+      league_referees: {
+        Row: {
+          record: Json
+          row_key: string
+          store_key: string
+          updated_at: string
+        }
+        Insert: {
+          record?: Json
+          row_key: string
+          store_key: string
+          updated_at?: string
+        }
+        Update: {
+          record?: Json
+          row_key?: string
+          store_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       league_rules: {
         Row: {
           active: boolean
@@ -184,6 +478,27 @@ export type Database = {
         }
         Relationships: []
       }
+      league_seasons: {
+        Row: {
+          record: Json
+          row_key: string
+          store_key: string
+          updated_at: string
+        }
+        Insert: {
+          record?: Json
+          row_key: string
+          store_key: string
+          updated_at?: string
+        }
+        Update: {
+          record?: Json
+          row_key?: string
+          store_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       league_shared_state: {
         Row: {
           data: Json
@@ -202,6 +517,48 @@ export type Database = {
           deleted_team_ids?: Json
           id?: number
           revision?: number
+        }
+        Relationships: []
+      }
+      league_standings_records: {
+        Row: {
+          record: Json
+          row_key: string
+          store_key: string
+          updated_at: string
+        }
+        Insert: {
+          record?: Json
+          row_key: string
+          store_key: string
+          updated_at?: string
+        }
+        Update: {
+          record?: Json
+          row_key?: string
+          store_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      match_reports: {
+        Row: {
+          record: Json
+          row_key: string
+          store_key: string
+          updated_at: string
+        }
+        Insert: {
+          record?: Json
+          row_key: string
+          store_key: string
+          updated_at?: string
+        }
+        Update: {
+          record?: Json
+          row_key?: string
+          store_key?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -236,6 +593,90 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      match_sheets: {
+        Row: {
+          record: Json
+          row_key: string
+          store_key: string
+          updated_at: string
+        }
+        Insert: {
+          record?: Json
+          row_key: string
+          store_key: string
+          updated_at?: string
+        }
+        Update: {
+          record?: Json
+          row_key?: string
+          store_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      mvp_votes: {
+        Row: {
+          record: Json
+          row_key: string
+          store_key: string
+          updated_at: string
+        }
+        Insert: {
+          record?: Json
+          row_key: string
+          store_key: string
+          updated_at?: string
+        }
+        Update: {
+          record?: Json
+          row_key?: string
+          store_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      mvp_winners: {
+        Row: {
+          record: Json
+          row_key: string
+          store_key: string
+          updated_at: string
+        }
+        Insert: {
+          record?: Json
+          row_key: string
+          store_key: string
+          updated_at?: string
+        }
+        Update: {
+          record?: Json
+          row_key?: string
+          store_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      other_league_records: {
+        Row: {
+          record: Json
+          row_key: string
+          store_key: string
+          updated_at: string
+        }
+        Insert: {
+          record?: Json
+          row_key: string
+          store_key: string
+          updated_at?: string
+        }
+        Update: {
+          record?: Json
+          row_key?: string
+          store_key?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       player_private_details: {
         Row: {
@@ -341,6 +782,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      playlists: {
+        Row: {
+          record: Json
+          row_key: string
+          store_key: string
+          updated_at: string
+        }
+        Insert: {
+          record?: Json
+          row_key: string
+          store_key: string
+          updated_at?: string
+        }
+        Update: {
+          record?: Json
+          row_key?: string
+          store_key?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       portal_access: {
         Row: {
@@ -457,6 +919,48 @@ export type Database = {
           id?: number
           name?: string
           short_code?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      tryout_requests: {
+        Row: {
+          record: Json
+          row_key: string
+          store_key: string
+          updated_at: string
+        }
+        Insert: {
+          record?: Json
+          row_key: string
+          store_key: string
+          updated_at?: string
+        }
+        Update: {
+          record?: Json
+          row_key?: string
+          store_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      voter_verifications: {
+        Row: {
+          record: Json
+          row_key: string
+          store_key: string
+          updated_at: string
+        }
+        Insert: {
+          record?: Json
+          row_key: string
+          store_key: string
+          updated_at?: string
+        }
+        Update: {
+          record?: Json
+          row_key?: string
+          store_key?: string
           updated_at?: string
         }
         Relationships: []
