@@ -176,6 +176,7 @@ export function saveAdminPlayerRating(rating: AdminPlayerRating): void {
 
 export interface FantasyPlayer {
   id: number;
+  isRatedByAdmin?: boolean;
   name: string;
   clubId: number;
   clubName: string;
