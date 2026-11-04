@@ -675,5 +675,119 @@ describe("Fantasy MSL Football Engine", () => {
       });
     });
   });
+
+  describe("11-Player Pitch Selection & 3-Player Club Rule Enforcement", () => {
+    it("should enforce the 3-player maximum rule for an 11-player squad", () => {
+      // Create an 11-player squad with exactly 3 players from Samba, 3 from Royal Rangers, 3 from Young Stars City, and 2 from Mzinga
+      const createDummy = (id: number, clubName: string, pos: "GK" | "DEF" | "MID" | "FWD"): FantasyPlayer => ({
+        id,
+        name: `Player ${id}`,
+        clubId: id,
+        clubName,
+        clubShortCode: clubName.slice(0, 3).toUpperCase(),
+        clubColor: "#00ff85",
+        position: pos,
+        price: 5.5,
+        jerseyNumber: id,
+        totalPoints: 20,
+        gameweekPoints: 6,
+        goals: 0,
+        assists: 0,
+        cleanSheets: 0,
+        saves: 0,
+        yellowCards: 0,
+        redCards: 0,
+        form: 7.0,
+        selectedPercent: 15.0,
+      });
+
+      const compliant11: FantasyPlayer[] = [
+        createDummy(1, "Samba", "GK"),
+        createDummy(2, "Samba", "DEF"),
+        createDummy(3, "Samba", "DEF"), // 3 from Samba (allowed)
+        createDummy(4, "Royal Rangers", "DEF"),
+        createDummy(5, "Royal Rangers", "DEF"),
+        createDummy(6, "Royal Rangers", "MID"), // 3 from Royal Rangers (allowed)
+        createDummy(7, "Young Stars City", "MID"),
+        createDummy(8, "Young Stars City", "MID"),
+        createDummy(9, "Young Stars City", "MID"), // 3 from Young Stars City (allowed)
+        createDummy(10, "Mzinga", "FWD"),
+        createDummy(11, "Mzinga", "FWD"), // 2 from Mzinga (allowed)
+      ];
+
+      expect(compliant11.length).toBe(11);
+      const compliance = checkClubLimit(compliant11, 3);
+      expect(compliance.isCompliant).toBe(true);
+      expect(compliance.violatedClubs.length).toBe(0);
+
+      // Now add a 4th player from Samba -> should violate the 3-player maximum rule
+      const nonCompliant = [...compliant11.slice(0, 10), createDummy(12, "Samba", "FWD")];
+      const nonCompliance = checkClubLimit(nonCompliant, 3);
+      expect(nonCompliance.isCompliant).toBe(false);
+      expect(nonCompliance.violatedClubs.some((c) => c.includes("Samba"))).toBe(true);
+    });
+
+    it("should validate valid 11-player formations including 4-3-3 and 4-4-2", () => {
+      const createPosDummy = (id: number, pos: "GK" | "DEF" | "MID" | "FWD"): FantasyPlayer => ({
+        id,
+        name: `Athlete ${id}`,
+        clubId: (id % 4) + 1,
+        clubName: `Club ${(id % 4) + 1}`,
+        clubShortCode: `C${(id % 4) + 1}`,
+        clubColor: "#3b82f6",
+        position: pos,
+        price: 5.0,
+        jerseyNumber: id,
+        totalPoints: 25,
+        gameweekPoints: 7,
+        goals: 0,
+        assists: 0,
+        cleanSheets: 0,
+        saves: 0,
+        yellowCards: 0,
+        redCards: 0,
+        form: 6.8,
+        selectedPercent: 12.0,
+      });
+
+      // 4-3-3: 1 GK, 4 DEF, 3 MID, 3 FWD
+      const squad433 = [
+        createPosDummy(1, "GK"),
+        createPosDummy(2, "DEF"),
+        createPosDummy(3, "DEF"),
+        createPosDummy(4, "DEF"),
+        createPosDummy(5, "DEF"),
+        createPosDummy(6, "MID"),
+        createPosDummy(7, "MID"),
+        createPosDummy(8, "MID"),
+        createPosDummy(9, "FWD"),
+        createPosDummy(10, "FWD"),
+        createPosDummy(11, "FWD"),
+      ];
+
+      const res433 = validateFormation(squad433);
+      expect(res433.isValid).toBe(true);
+      expect(res433.formationName).toBe("4-3-3");
+
+      // 4-4-2: 1 GK, 4 DEF, 4 MID, 2 FWD
+      const squad442 = [
+        createPosDummy(1, "GK"),
+        createPosDummy(2, "DEF"),
+        createPosDummy(3, "DEF"),
+        createPosDummy(4, "DEF"),
+        createPosDummy(5, "DEF"),
+        createPosDummy(6, "MID"),
+        createPosDummy(7, "MID"),
+        createPosDummy(8, "MID"),
+        createPosDummy(9, "MID"),
+        createPosDummy(10, "FWD"),
+        createPosDummy(11, "FWD"),
+      ];
+
+      const res442 = validateFormation(squad442);
+      expect(res442.isValid).toBe(true);
+      expect(res442.formationName).toBe("4-4-2");
+    });
+  });
 });
 

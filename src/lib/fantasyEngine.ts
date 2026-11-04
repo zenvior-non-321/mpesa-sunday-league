@@ -14,7 +14,107 @@
  */
 
 import { OFFICIAL_CLUBS_DATA, getAllRegisteredPlayers, type SquadMember } from "./teamSquadsData";
-import { getDbFixtures, getDbMatchReports } from "./inbuiltDbSync";
+import { getDbFixtures, getDbMatchReports, getDbPlayers, getDbTeams } from "./inbuiltDbSync";
+import { isTeamDeleted } from "./fixturesData";
+
+export interface GameweekChallenge {
+  gameweek: number;
+  title: string;
+  description: string;
+  badgeText?: string;
+  specialBonus?: string;
+  updatedBy?: string;
+  updatedAt?: string;
+}
+
+export const DEFAULT_GAMEWEEK_CHALLENGES: Record<number, GameweekChallenge> = {
+  1: {
+    gameweek: 1,
+    title: "Championship Kickoff",
+    description: "Earn +2 points for every clean sheet kept and +3 points for team captains who score first in the opening round. Maximum 3 players per club.",
+    badgeText: "Season Opener",
+    specialBonus: "+2 Clean Sheet Bonus",
+  },
+  2: {
+    gameweek: 2,
+    title: "Academy Derby Clásico",
+    description: "Double bonus points (+4) for midfielders providing assists from open play in local rivalry fixtures. Maximum 3 players per club.",
+    badgeText: "Rivalry Round",
+    specialBonus: "Double Assist Points",
+  },
+  3: {
+    gameweek: 3,
+    title: "Tactical Masterclass",
+    description: "Defenders who complete 90 minutes without conceding a goal or receiving cards receive +3 tactical bonus points. Maximum 3 players per club.",
+    badgeText: "Defensive Fortress",
+    specialBonus: "+3 Discipline Points",
+  },
+  4: {
+    gameweek: 4,
+    title: "Midfield Maestros",
+    description: "All midfielders receive +1 point for every 3 successful key passes and +5 points for outside-the-box goals. Maximum 3 players per club.",
+    badgeText: "Playmaker Focus",
+    specialBonus: "+5 Long Range Goals",
+  },
+  5: {
+    gameweek: 5,
+    title: "Golden Boot Sprint",
+    description: "Forwards earn +6 points per goal (boosted from +4) and an extra +3 bonus for hat-tricks. Maximum 3 players per club.",
+    badgeText: "Striker Surge",
+    specialBonus: "+6 Forward Goals",
+  },
+  10: {
+    gameweek: 10,
+    title: "Spectacular",
+    description: "Your players earn +1 point for every shot on target from outside the penalty area and +5 points for every goal scored from outside the penalty area. Maximum 3 players per club. Unlimited budget.",
+    badgeText: "Spectacular",
+    specialBonus: "+5 Long Range Goals",
+  },
+};
+
+export const GW_CHALLENGES_STORAGE_KEY = "mpesa_fantasy_gw_challenges_v1";
+
+export function getGameweekChallenge(gameweek: number): GameweekChallenge {
+  if (typeof window !== "undefined") {
+    try {
+      const stored = localStorage.getItem(GW_CHALLENGES_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed[gameweek]) return parsed[gameweek];
+      }
+    } catch {
+      // ignore
+    }
+  }
+  return (
+    DEFAULT_GAMEWEEK_CHALLENGES[gameweek] || {
+      gameweek,
+      title: `Gameweek ${gameweek} Challenge`,
+      description: `Compete for maximum matchweek points under certified MSL rules. Maximum 3 players per club.`,
+      badgeText: `GW${gameweek}`,
+      specialBonus: "Standard Rules",
+    }
+  );
+}
+
+export function saveGameweekChallenge(challenge: GameweekChallenge): void {
+  if (typeof window === "undefined") return;
+  try {
+    let all: Record<number, GameweekChallenge> = { ...DEFAULT_GAMEWEEK_CHALLENGES };
+    const stored = localStorage.getItem(GW_CHALLENGES_STORAGE_KEY);
+    if (stored) {
+      all = { ...all, ...JSON.parse(stored) };
+    }
+    all[challenge.gameweek] = {
+      ...challenge,
+      updatedAt: new Date().toISOString(),
+    };
+    localStorage.setItem(GW_CHALLENGES_STORAGE_KEY, JSON.stringify(all));
+    window.dispatchEvent(new CustomEvent("mpesa_fantasy_challenge_updated", { detail: challenge }));
+  } catch {
+    // ignore
+  }
+}
 
 export interface AdminPlayerRating {
   playerId: number;
@@ -23,7 +123,10 @@ export interface AdminPlayerRating {
   position: "GK" | "DEF" | "MID" | "FWD";
   matchRating: number; // Official rating e.g. 8.5 / 10
   bonusPoints: number; // Official bonus pts e.g. 0 to 5
-  matchweek?: number; // Official Matchweek (e.g. 1 to 5)
+  matchweek?: number; // Official Matchweek (e.g. 1 to 10)
+  goalsScored?: number;
+  assistsLogged?: number;
+  cleanSheetLogged?: boolean;
   notes?: string;
   ratedByAdmin: string;
   updatedAt: string;
@@ -31,11 +134,24 @@ export interface AdminPlayerRating {
 
 export const ADMIN_RATINGS_STORAGE_KEY = "mpesa_fantasy_admin_ratings_v2";
 
-export function getAdminPlayerRatings(): Record<number, AdminPlayerRating> {
+export function getAdminPlayerRatings(matchweek?: number): Record<number, AdminPlayerRating> {
   if (typeof window === "undefined") return {};
   try {
     const raw = localStorage.getItem(ADMIN_RATINGS_STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (matchweek) {
+        const filtered: Record<number, AdminPlayerRating> = {};
+        Object.entries(parsed).forEach(([key, val]: [string, any]) => {
+          if (val && (val.matchweek === matchweek || key.startsWith(`gw${matchweek}_`))) {
+            filtered[val.playerId] = val;
+          }
+        });
+        // If matchweek specific ratings exist, return them
+        if (Object.keys(filtered).length > 0) return filtered;
+      }
+      return parsed;
+    }
   } catch {
     // ignore
   }
@@ -45,8 +161,12 @@ export function getAdminPlayerRatings(): Record<number, AdminPlayerRating> {
 export function saveAdminPlayerRating(rating: AdminPlayerRating): void {
   if (typeof window === "undefined") return;
   try {
-    const current = getAdminPlayerRatings();
+    const raw = localStorage.getItem(ADMIN_RATINGS_STORAGE_KEY);
+    const current: Record<string | number, AdminPlayerRating> = raw ? JSON.parse(raw) : {};
     current[rating.playerId] = rating;
+    if (rating.matchweek) {
+      current[`gw${rating.matchweek}_p${rating.playerId}`] = rating;
+    }
     localStorage.setItem(ADMIN_RATINGS_STORAGE_KEY, JSON.stringify(current));
     window.dispatchEvent(new CustomEvent("mpesa_fantasy_ratings_updated", { detail: rating }));
   } catch {
@@ -131,24 +251,38 @@ export interface MiniLeague {
   entries: MiniLeagueEntry[];
 }
 
-// Player price determination algorithm based on registered role & position
+// Player price determination algorithm based on registered role & position from real website data
 export function generateFantasyMarket(
   customRatings?: Record<number, AdminPlayerRating>,
+  matchweek?: number,
 ): FantasyPlayer[] {
-  const registered = getAllRegisteredPlayers();
-  const adminRatings = customRatings || getAdminPlayerRatings();
+  // Load real registered players and clubs from live database, fallback to official clubs
+  const dbPlayers = getDbPlayers();
+  const dbTeams = getDbTeams().filter((t) => !isTeamDeleted(t.id, t.name));
+  const teamColorMap: Record<number, { name: string; code: string; color: string }> = {};
+  dbTeams.forEach((t) => {
+    teamColorMap[t.id] = { name: t.name, code: t.shortCode, color: t.color };
+  });
 
   const clubMap: Record<number, { name: string; code: string; color: string }> = {
     1: { name: "Samba", code: "SAM", color: "#00ff85" },
     6: { name: "Royal Rangers", code: "RR", color: "#3b82f6" },
     7: { name: "Young Stars City", code: "YSC", color: "#f97316" },
     8: { name: "Mzinga Boyz", code: "MZB", color: "#eab308" },
+    ...teamColorMap,
   };
 
+  const registeredSource =
+    dbPlayers.length > 0
+      ? dbPlayers.filter((p) => !isTeamDeleted(p.teamId, p.teamName))
+      : getAllRegisteredPlayers().filter((p) => !isTeamDeleted(p.teamId, p.teamName));
+
+  const adminRatings = customRatings || getAdminPlayerRatings(matchweek);
+
   // Base pricing calibrated strictly below 10.0m (max 8.8m)
-  return registered.map((p, idx) => {
-    const playerId = p.id || idx + 1;
-    const club = clubMap[p.teamId] || { name: "Club", code: "CLB", color: "#00f0ff" };
+  return registeredSource.map((p: any, idx: number) => {
+    const playerId = p.id || p.teamId * 100 + (p.number || idx + 1);
+    const club = clubMap[p.teamId] || { name: p.teamName || "Club", code: p.teamCode || "CLB", color: p.teamColor || "#00f0ff" };
     let rawPrice = 5.0;
     if (p.position === "FWD") {
       rawPrice = p.isCaptain ? 8.5 : 6.5 + (idx % 3) * 0.5;
@@ -157,27 +291,42 @@ export function generateFantasyMarket(
     } else if (p.position === "DEF") {
       rawPrice = p.isCaptain ? 6.0 : 4.5 + (idx % 3) * 0.5;
     } else if (p.position === "GK") {
-      rawPrice = (idx % 2 === 0) ? 5.5 : 4.5;
+      rawPrice = idx % 2 === 0 ? 5.5 : 4.5;
     }
 
     // Strict ceiling: Everyone is strictly below 10.0M
     const price = Math.min(Number(rawPrice.toFixed(1)), 8.8);
 
-    // Official Admin match rating and bonus points
-    const adminData = adminRatings[playerId];
-    const matchRating = adminData ? adminData.matchRating : Number((7.0 + (idx % 4) * 0.4).toFixed(1));
-    const adminBonus = adminData ? adminData.bonusPoints : (idx % 5 === 0 ? 2 : 0);
+    // Official Admin match rating and bonus points (specific to matchweek if provided)
+    const adminData =
+      (matchweek ? (adminRatings as any)[`gw${matchweek}_p${playerId}`] : undefined) ||
+      adminRatings[playerId];
+    const isRatedByAdmin = Boolean(adminData && typeof adminData.matchRating === "number");
+    const matchRating = isRatedByAdmin ? adminData.matchRating : undefined;
+    const adminBonus = isRatedByAdmin ? (adminData.bonusPoints || 0) : 0;
 
-    // Points calculation driven by Admin Match Rating + On-pitch actions
-    const goals = p.position === "FWD" ? (idx % 2 === 0 ? 3 : 1) : p.position === "MID" ? (idx % 3 === 0 ? 2 : 0) : 0;
-    const assists = p.position === "MID" ? (idx % 2 === 0 ? 2 : 1) : p.position === "FWD" ? 1 : 0;
-    const cleanSheets = (p.position === "GK" || p.position === "DEF") ? 2 : 0;
-    const saves = p.position === "GK" ? 11 : 0;
+    // Verified on-pitch stats
+    const goals = adminData?.goalsScored ?? p.goals ?? 0;
+    const assists = adminData?.assistsLogged ?? p.assists ?? 0;
+    const cleanSheets = (adminData?.cleanSheetLogged ? 1 : p.cleanSheets) ?? 0;
+    const saves = p.saves ?? (p.position === "GK" ? 4 : 0);
 
-    // Rating points formula: (Admin Match Rating * 2) + Admin Bonus Points
-    const ratingBasePts = Math.round(matchRating * 2) + adminBonus;
-    const totalPoints = ratingBasePts + goals * (p.position === "FWD" ? 4 : 5) + assists * 3 + cleanSheets * 4 + Math.floor(saves / 3);
-    const gameweekPoints = Math.max(2, Math.round(matchRating + goals * 3 + assists * 2 + adminBonus));
+    // Points rule: Counted after admin has logged the player ratings
+    let gameweekPoints = 0;
+    if (isRatedByAdmin && matchRating !== undefined) {
+      const ratingBasePts = Math.round(matchRating * 2) + adminBonus;
+      gameweekPoints =
+        ratingBasePts +
+        goals * (p.position === "FWD" ? 4 : 5) +
+        assists * 3 +
+        cleanSheets * 4 +
+        Math.floor(saves / 3);
+    } else if (customRatings && adminData?.matchRating) {
+      gameweekPoints = Math.round(adminData.matchRating * 2) + adminBonus;
+    }
+
+    const totalPoints = gameweekPoints + goals * 4 + assists * 3;
+    const form = isRatedByAdmin && matchRating !== undefined ? matchRating : Number((6.5 + (idx % 4) * 0.4).toFixed(1));
 
     return {
       id: playerId,
@@ -191,16 +340,17 @@ export function generateFantasyMarket(
       jerseyNumber: p.number,
       totalPoints,
       gameweekPoints,
+      isRatedByAdmin,
       adminRating: matchRating,
       adminBonusPoints: adminBonus,
       goals,
       assists,
       cleanSheets,
       saves,
-      yellowCards: idx % 4 === 0 ? 1 : 0,
-      redCards: 0,
-      form: Number(matchRating.toFixed(1)),
-      selectedPercent: Number((12.5 + (idx % 7) * 4.2).toFixed(1)),
+      yellowCards: p.yellowCards || 0,
+      redCards: p.redCards || 0,
+      form,
+      selectedPercent: Number((14.0 + (idx % 7) * 4.2).toFixed(1)),
     };
   });
 }

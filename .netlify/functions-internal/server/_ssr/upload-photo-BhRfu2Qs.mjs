@@ -1,6 +1,6 @@
 import { o as __toESM } from "../_runtime.mjs";
 import { r as require_react } from "../_libs/react+tanstack__react-query.mjs";
-import { At as CircleCheck, Lt as Camera, Tt as Copy, c as Upload, h as Sparkles, s as UserCheck, vt as ExternalLink, x as Shield } from "../_libs/lucide-react.mjs";
+import { At as Copy, C as Shield, Ct as ExternalLink, It as CircleCheck, Ut as Camera, _ as Sparkles, c as UserCheck, l as Upload } from "../_libs/lucide-react.mjs";
 import { t as require_jsx_dev_runtime } from "../_libs/react.mjs";
 import { t as OFFICIAL_CLUBS_DATA } from "./teamSquadsData-CHaV0Ocp.mjs";
 //#region node_modules/.nitro/vite/services/ssr/assets/upload-photo-BhRfu2Qs.js

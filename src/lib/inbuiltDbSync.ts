@@ -196,6 +196,7 @@ export function permanentlyDeleteDbTeam(teamId: number, teamName: string) {
   markTeamAsDeleted(teamId, teamName);
   const current = getDbTeams().filter((t) => t.id !== teamId);
   saveDbTeams(current);
+  syncDeletedTeamToServer(teamId).catch(() => {});
 }
 
 /**
@@ -599,5 +600,102 @@ export function computeTeamFormFromFixtures(
   });
 
   return results.slice(-5);
+}
+
+/**
+ * Push deleted team to portal API for transactional database synchronization
+ */
+export async function syncDeletedTeamToServer(teamId: number, revision = 0): Promise<boolean> {
+  if (typeof window === "undefined") return false;
+  try {
+    const res = await fetch("/api/public/portal?action=delete-team", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ teamId, revision }),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Fetch authoritative shared league state from Supabase portal API
+ */
+export async function fetchSharedLeagueState(): Promise<boolean> {
+  if (typeof window === "undefined") return false;
+  try {
+    const res = await fetch("/api/public/portal?action=state", { cache: "no-store" });
+    if (!res.ok) return false;
+    const body = await res.json();
+    if (!body || !body.data) return false;
+
+    const data = body.data;
+    const deletedIds: number[] = Array.isArray(body.deleted_team_ids) ? body.deleted_team_ids : [];
+
+    // Purge deleted teams
+    for (const did of deletedIds) {
+      markTeamAsDeleted(did, `Team #${did}`);
+    }
+
+    let changed = false;
+    if (Array.isArray(data.teams) && data.teams.length > 0) {
+      const activeTeams = (data.teams as DbTeam[]).filter(
+        (t) => !deletedIds.includes(t.id) && !isTeamDeleted(t.id, t.name),
+      );
+      localStorage.setItem(STORAGE_KEYS.TEAMS, JSON.stringify(activeTeams));
+      localStorage.setItem(STORAGE_KEYS.STANDINGS, JSON.stringify(activeTeams));
+      changed = true;
+    }
+
+    if (Array.isArray(data.matches) && data.matches.length > 0) {
+      const activeMatches = (data.matches as DbFixture[]).filter(
+        (m) => !deletedIds.includes(m.homeId) && !deletedIds.includes(m.awayId),
+      );
+      localStorage.setItem(STORAGE_KEYS.FIXTURES, JSON.stringify(activeMatches));
+      changed = true;
+    }
+
+    if (Array.isArray(data.playerStatsList) && data.playerStatsList.length > 0) {
+      localStorage.setItem(STORAGE_KEYS.PLAYERS, JSON.stringify(data.playerStatsList));
+      changed = true;
+    }
+
+    if (body.revision) {
+      localStorage.setItem("mpesa_shared_revision_v1", String(body.revision));
+    }
+
+    if (changed) {
+      broadcastDbChange("all");
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Push authorized league changes to Supabase portal API
+ */
+export async function syncSharedLeagueStateToServer(patch: Record<string, unknown>): Promise<boolean> {
+  if (typeof window === "undefined") return false;
+  try {
+    const revision = Number(localStorage.getItem("mpesa_shared_revision_v1") || 0);
+    const res = await fetch("/api/public/portal?action=state", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ data: patch, revision }),
+    });
+    if (res.ok) {
+      const result = await res.json();
+      if (result?.revision) {
+        localStorage.setItem("mpesa_shared_revision_v1", String(result.revision));
+      }
+      return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
 }
 

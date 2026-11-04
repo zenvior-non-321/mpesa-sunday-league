@@ -51,6 +51,8 @@ import {
 } from "../lib/fantasyEngine";
 import { useRoleAccess } from "../hooks/useRoleAccess";
 import { JoinMiniLeagueModal } from "./JoinMiniLeagueModal";
+import { FantasyTeamSelection } from "./FantasyTeamSelection";
+import { MyFantasySquad } from "./MyFantasySquad";
 
 const STORAGE_KEY = "fantasy_msl_squad_v3";
 const MINI_LEAGUES_STORAGE_KEY = "fantasy_msl_minileagues_real_v3";
@@ -195,8 +197,10 @@ export function FantasyTeamBuilder() {
     ...DEFAULT_CHIPS,
   });
 
-  // Active Tab: "pitch" | "market" | "ratings" | "leagues" | "rules"
-  const [activeTab, setActiveTab] = useState<"pitch" | "market" | "ratings" | "leagues" | "rules">("pitch");
+  // Active Tab: "selection" | "my_squad" | "pitch" | "market" | "ratings" | "leagues" | "rules"
+  const [activeTab, setActiveTab] = useState<
+    "selection" | "my_squad" | "pitch" | "market" | "ratings" | "leagues" | "rules"
+  >("selection");
 
   // Slot Selector Modal (When user clicks a slot to add/change a player)
   const [selectedSlotForPicker, setSelectedSlotForPicker] = useState<SquadSlotDef | null>(null);
@@ -854,6 +858,28 @@ export function FantasyTeamBuilder() {
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-3">
         <div className="flex flex-wrap items-center gap-2 bg-[#0d1527] p-1.5 rounded-2xl border border-white/10">
           <button
+            onClick={() => setActiveTab("selection")}
+            className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 ${
+              activeTab === "selection"
+                ? "bg-gradient-to-r from-cyan-400 to-emerald-400 text-slate-950 shadow-md shadow-cyan-400/25"
+                : "text-slate-300 hover:text-white hover:bg-white/5"
+            }`}
+          >
+            <Sparkles className="w-4 h-4 text-emerald-400" />
+            11-Player Pitch Selection
+          </button>
+          <button
+            onClick={() => setActiveTab("my_squad")}
+            className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 ${
+              activeTab === "my_squad"
+                ? "bg-cyan-400 text-slate-950 shadow-md shadow-cyan-400/25"
+                : "text-slate-300 hover:text-white hover:bg-white/5"
+            }`}
+          >
+            <Shield className="w-4 h-4 text-cyan-300" />
+            My Fantasy Squad
+          </button>
+          <button
             onClick={() => setActiveTab("pitch")}
             className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 ${
               activeTab === "pitch"
@@ -861,8 +887,8 @@ export function FantasyTeamBuilder() {
                 : "text-slate-300 hover:text-white hover:bg-white/5"
             }`}
           >
-            <Shield className="w-4 h-4" />
-            Tactical Pitch Grid (11 + 4)
+            <Users className="w-4 h-4" />
+            15-Squad Roster (11 + 4)
           </button>
           <button
             onClick={() => setActiveTab("ratings")}
@@ -953,6 +979,28 @@ export function FantasyTeamBuilder() {
             <strong>{clubCompliance.violatedClubs.join(", ")}</strong>. Please remove surplus players to comply with the 2-player rule.
           </div>
         </div>
+      )}
+
+      {/* ========================================================
+          TAB: 11-PLAYER PITCH SELECTION (MATCHES ATTACHED SCREENSHOTS)
+          ======================================================== */}
+      {activeTab === "selection" && (
+        <FantasyTeamSelection
+          initialGameweek={selectedMatchweek}
+          onSaved={() => {
+            showToast("Lineup saved! Check 'My Fantasy Squad' to view match performance.");
+          }}
+        />
+      )}
+
+      {/* ========================================================
+          TAB: MY FANTASY SQUAD (VALIDATES 3-PLAYER CLUB RULE)
+          ======================================================== */}
+      {activeTab === "my_squad" && (
+        <MyFantasySquad
+          initialGameweek={selectedMatchweek}
+          onEditLineup={() => setActiveTab("selection")}
+        />
       )}
 
       {/* ========================================================

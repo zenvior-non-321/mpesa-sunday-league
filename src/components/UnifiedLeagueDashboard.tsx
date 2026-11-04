@@ -43,6 +43,7 @@ import { MasterAdminDashboard } from "./MasterAdminDashboard";
 import { FantasyTeamBuilder } from "./FantasyTeamBuilder";
 import { authenticateBoardMember } from "../lib/boardMembersRegistry";
 import { DEFAULT_FIXTURES, DEFAULT_TEAMS } from "../lib/fixturesData";
+import { fetchSharedLeagueState } from "../lib/inbuiltDbSync";
 
 export type DashboardMode = "viewer" | "board" | "admin";
 export type ViewerTab =
@@ -128,6 +129,11 @@ export function UnifiedLeagueDashboard({
     const handleOpenLoginEvent = () => setShowLoginModal(true);
     window.addEventListener("open_unified_login", handleOpenLoginEvent);
     return () => window.removeEventListener("open_unified_login", handleOpenLoginEvent);
+  }, []);
+
+  // Synchronize authoritative shared league records from server
+  useEffect(() => {
+    fetchSharedLeagueState().catch(() => {});
   }, []);
 
   const showToast = (msg: string) => {

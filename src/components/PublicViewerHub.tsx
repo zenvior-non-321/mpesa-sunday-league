@@ -37,6 +37,7 @@ import { RecentMatchHistory } from "./RecentMatchHistory";
 import { getCurrentRbacUser } from "../lib/rbacSystem";
 import { useRoleAccess } from "../hooks/useRoleAccess";
 import { computeTeamFormFromFixtures } from "../lib/inbuiltDbSync";
+import { UpcomingMatchweekSection } from "./UpcomingMatchweekSection";
 
 export interface PublicNewsArticle {
   id: string;
@@ -649,6 +650,9 @@ export function PublicViewerHub({
             {/* Decorative background glow */}
             <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-gradient-to-l from-cyan-500/10 to-transparent pointer-events-none" />
           </div>
+
+          {/* Upcoming Matchweek Fixtures & Real-Time Countdown Timers */}
+          <UpcomingMatchweekSection />
 
           {/* Recent Match History Component */}
           <RecentMatchHistory maxItems={4} showFilters={true} />

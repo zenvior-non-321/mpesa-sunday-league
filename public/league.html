@@ -308,7 +308,7 @@
             </div>
             <div>
               <h3 class="font-header text-2xl font-black text-white leading-none">SUPER ADMIN</h3>
-              <p class="text-[10px] text-amber-300 font-mono">Master Code: msl-27</p>
+              <p class="text-[10px] text-amber-300 font-medium">Executive Authority</p>
             </div>
           </div>
           <button
@@ -1708,8 +1708,8 @@
                   <h2 class="font-header text-4xl font-black text-white uppercase leading-none">
                     Super Admin Master Command Center
                   </h2>
-                  <p class="text-xs text-amber-300 font-mono">
-                    Master Code: msl-27 • Complete Dominion & Sovereign Governance
+                  <p class="text-xs text-amber-300 font-medium">
+                    Executive Command • Complete Governance & League Administration
                   </p>
                 </div>
               </div>
@@ -6162,7 +6162,7 @@
                 class="w-full bg-efootball-bg border border-efootball-border rounded-2xl px-4 py-3 text-sm text-white uppercase font-mono tracking-wider focus:outline-none focus:border-efootball-cyan"
               />
               <p class="text-[10px] text-gray-400 mt-1.5">
-                Super Admin master code (msl-27) or authorized official pass required.
+                Authorized administrator or official passkey required.
               </p>
             </div>
             <div
@@ -6226,12 +6226,12 @@
           <form @submit.prevent="verifyAdminPassword()" class="space-y-4">
             <div>
               <label class="block text-xs font-black uppercase text-gray-300 mb-2"
-                >Master Code (msl-27)</label
+                >Super Admin Passkey</label
               >
               <input
                 type="password"
                 x-model="adminPasswordInput"
-                placeholder="Enter msl-27"
+                placeholder="Enter confidential passkey"
                 class="w-full bg-efootball-bg border border-efootball-border rounded-2xl px-4 py-3 text-sm text-white focus:outline-none focus:border-efootball-cyan"
               />
             </div>
@@ -9848,7 +9848,7 @@
                 if (window.lucide) lucide.createIcons();
               });
             } else {
-              this.adminError = "Incorrect Super Admin code. (Expected msl-27)";
+              this.adminError = "Invalid authorization passkey. Access denied.";
             }
           },
 
