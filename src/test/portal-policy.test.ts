@@ -53,3 +53,23 @@ describe("League access rules", () => {
     });
   });
 });
+
+import { classifyStoreKey } from "@/lib/portal-policy";
+describe("saved data access", () => {
+  it("keeps sign-in state on the device", () => {
+    expect(classifyStoreKey("mpesa_pes_super_admin")).toBeNull();
+    expect(classifyStoreKey("mpesa_pes_auth_role")).toBeNull();
+  });
+  it("only Super Admin data for board registry and voter emails", () => {
+    expect(classifyStoreKey("mpesa_pes_registered_board_members_v4")).toBe("private");
+    expect(classifyStoreKey("mpesa_pes_registered_school_emails_v3")).toBe("private");
+  });
+  it("viewers can add votes and comments", () => {
+    expect(classifyStoreKey("mpesa_pes_mvp_votes_v1")).toBe("community");
+    expect(classifyStoreKey("mpesa_pes_comments_v1")).toBe("community");
+  });
+  it("fantasy squads belong to one device, ratings are league-managed", () => {
+    expect(classifyStoreKey("mpesa_fantasy_squad_gw_3")).toBe("device");
+    expect(classifyStoreKey("mpesa_fantasy_admin_ratings_v2")).toBe("managed");
+  });
+});
